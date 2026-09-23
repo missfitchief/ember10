@@ -1,6 +1,6 @@
 import { ensure } from '../core/model.js';
 import Decimal from 'decimal.js';
-import catalogueLimits from '../shared/catalogue-limits.json';
+import catalogueLimits from '../shared/catalogue-limits.json' with { type: 'json' };
 export const CATALOGUE_MAX_BYTES=catalogueLimits.maxBytes;
 export const CATALOGUE_MAX_ROWS=catalogueLimits.maxRows;
 export async function boundedFetch(url:string,init:RequestInit={},maxBytes=12_000_000):Promise<unknown>{

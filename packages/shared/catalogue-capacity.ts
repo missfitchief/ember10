@@ -1,4 +1,4 @@
-import limits from './catalogue-limits.json';
+import limits from './catalogue-limits.json' with { type: 'json' };
 
 /** Warn before either bounded resource is exhausted; never relax schema validation. */
 export function catalogueCapacity(bytes: number, rows: number) {

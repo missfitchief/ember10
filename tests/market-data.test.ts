@@ -2,7 +2,7 @@
 import {expect,it,vi} from 'vitest';
 import {decimalValue,MarketDataService,normalizeCatalogue,publicCatalogueSchema} from '../packages/integrations/market-data.js';
 import {catalogueCapacity} from '../packages/shared/catalogue-capacity.js';
-import catalogueLimits from '../packages/shared/catalogue-limits.json';
+import catalogueLimits from '../packages/shared/catalogue-limits.json' with { type: 'json' };
 import {overview} from '../apps/api/overview.js';
 import {selectBasket} from '../packages/core/selection.js';
 import {defaultPolicy,hash,policyBasketSize} from '../packages/core/model.js';
