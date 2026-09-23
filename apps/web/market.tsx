@@ -3,10 +3,27 @@ import type { PublicMarket, PublicOverview } from '../../packages/shared/public.
 import { api, assertOverview, change, dateTime, eligibilityLabel, filterMarkets, logoUrl, marketCounts, marketRequestState, marketView, mergeMarketPages, money, short, sourceUrl } from './view-model.js';
 import { Empty, Icon, Skeleton } from './components.js';
 
-export function Avatar({ asset }: { asset: PublicMarket }) {
-  const [failed, setFailed] = useState(false);
-  const src = logoUrl(asset.imageUrl);
-  return <span className="token-icon" aria-hidden="true">{src && !failed ? <img src={src} onError={() => setFailed(true)} alt="" loading="lazy" referrerPolicy="no-referrer"/> : asset.symbol.slice(0, 2)}</span>;
+const logoRetryDelays = [800, 2200];
+function LogoImage({ src, symbol, loading }: { src: string; symbol: string; loading: 'eager' | 'lazy' }) {
+  const [{ attempt, failed }, setRequest] = useState({ attempt: 0, failed: false });
+  useEffect(() => {
+    if (!failed || attempt >= logoRetryDelays.length) return;
+    const timer = window.setTimeout(() => setRequest(current => current.failed && current.attempt === attempt ? { attempt: attempt + 1, failed: false } : current), logoRetryDelays[attempt]);
+    return () => window.clearTimeout(timer);
+  }, [attempt, failed]);
+  useEffect(() => {
+    const online = () => setRequest(current => current.failed ? { attempt: 0, failed: false } : current);
+    window.addEventListener('online', online);
+    return () => window.removeEventListener('online', online);
+  }, []);
+  if (failed) return <>{symbol.slice(0, 2)}</>;
+  return <img key={attempt} src={attempt ? `${src}&retry=${attempt}` : src} onError={() => setRequest(current => current.attempt === attempt ? { ...current, failed: true } : current)} alt="" loading={loading} referrerPolicy="no-referrer"/>;
+}
+
+export function Avatar({ asset, loading = 'lazy' }: { asset: PublicMarket; loading?: 'eager' | 'lazy' }) {
+  const source = logoUrl(asset.imageUrl);
+  const src = source?.startsWith('/api/token-image?source=') ? source : null;
+  return <span className="token-icon" aria-hidden="true">{src ? <LogoImage key={JSON.stringify([asset.mint, src])} src={src} symbol={asset.symbol} loading={loading}/> : asset.symbol.slice(0, 2)}</span>;
 }
 export const TokenIcon = Avatar;
 type MarketPage = { key: string; snapshot?: PublicOverview; busy: boolean; error: string; notice: string };
@@ -136,7 +153,7 @@ export function AssetDialog({ asset, data, onClose }: { asset: PublicMarket; dat
   async function copy() { try { await navigator.clipboard.writeText(asset.mint); setCopied('Mint address copied.'); } catch { setCopied('Clipboard unavailable. Select the full mint address below.'); } }
   const link = sourceUrl(asset);
   return <dialog ref={dialog} aria-labelledby="asset-title" onCancel={onClose} onClose={onClose}>
-    <div className="dialog-header"><div className="dialog-token"><Avatar asset={asset}/><div><h2 id="asset-title">{asset.symbol}</h2><p>{asset.name}</p><code className="token-mint">{short(asset.mint)}</code></div></div><button className="dialog-close" aria-label="Close asset details" onClick={onClose}><Icon name="close"/></button></div>
+    <div className="dialog-header"><div className="dialog-token"><Avatar asset={asset} loading="eager"/><div><h2 id="asset-title">{asset.symbol}</h2><p>{asset.name}</p><code className="token-mint">{short(asset.mint)}</code></div></div><button className="dialog-close" aria-label="Close asset details" onClick={onClose}><Icon name="close"/></button></div>
     <p className="dialog-note">An Ember market observation, not proof of a funded purchase or reward payment. Reported volume is separate from verified liquidity and eligibility checks.</p>
     <dl className="detail-list"><div><dt>Observed market rank</dt><dd>{asset.rank ? `#${asset.rank}` : 'Not ranked'}</dd></div><div><dt>Observed market cap</dt><dd>{money(asset.marketCapUsd, false)}</dd></div><div><dt>Reported 24h change</dt><dd>{asset.change24hPct == null ? 'Not reported' : change(asset.change24hPct)}</dd></div><div><dt>Reported 24h volume</dt><dd>{asset.volume24hUsd == null ? 'Not reported' : money(asset.volume24hUsd, false)}</dd></div><div><dt>Eligibility</dt><dd>{eligibilityLabel(asset)}</dd></div><div><dt>Current selection</dt><dd>{asset.selected ? 'Selected for next basket' : 'Not selected for next basket'}</dd></div><div><dt>Funded membership</dt><dd>{data.fundedBasket.members.some(member => member.mint === asset.mint) ? `Round ${data.fundedBasket.epochId}` : data.fundedBasket.status === 'unavailable' ? 'Unreported' : 'Not in the recorded funded basket'}</dd></div></dl>
     <div className="mint-box" tabIndex={0} aria-label="Full asset mint">{asset.mint}</div><div className="dialog-actions"><button className="btn small" onClick={copy}><Icon name="copy"/>Copy mint</button>{link && <a className="btn small" href={link} target="_blank" rel="noopener noreferrer">Inspect on Ember <Icon name="external"/></a>}</div><p className="copy-feedback" role="status">{copied}</p>
