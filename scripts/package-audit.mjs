@@ -19,7 +19,8 @@ mkdirSync(destination,{recursive:true});const stem='EMBER10-external-audit-'+pac
 if(existsSync(archive)||existsSync(manifestPath))throw Error('Refusing to overwrite an existing audit package');
 const digest=b=>createHash('sha256').update(b).digest('hex');
 const files=paths.map(path=>{const body=git('show','HEAD:'+path);return {path,bytes:body.length,sha256:digest(body)};});
-git('archive','--format=zip','--prefix=ember10/','--output='+archive,'HEAD');
+// Windows checkout conversion must not change the committed bytes hashed above.
+git('-c','core.autocrlf=false','-c','core.eol=lf','archive','--format=zip','--prefix=ember10/','--output='+archive,'HEAD');
 const archiveBytes=readFileSync(archive),manifest={schemaVersion:1,createdAt:new Date().toISOString(),repository:'https://github.com/missfitchief/ember10',packageRevision,applicationRevision,sourceTree:git('rev-parse','HEAD^{tree}').toString().trim(),archive:{file:stem+'.zip',bytes:archiveBytes.length,sha256:digest(archiveBytes)},fileCount:files.length,files};
 writeFileSync(manifestPath,JSON.stringify(manifest,null,2)+'\n');
 writeFileSync(resolve(destination,stem+'-SHA256.txt'),`${manifest.archive.sha256}  ${stem}.zip\n${digest(readFileSync(manifestPath))}  ${stem}-MANIFEST.json\n`);
