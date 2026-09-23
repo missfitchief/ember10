@@ -12,7 +12,9 @@ createServer(async (request, response) => {
     const url = new URL(request.url ?? '/', `http://127.0.0.1:${port}`);
     if (url.pathname.startsWith('/api/')) {
       const result = await adapter.fetch(new Request(url, { method: request.method ?? 'GET' }));
-      response.writeHead(result.status, Object.fromEntries(result.headers));
+      const headers: Record<string,string> = {};
+      result.headers.forEach((value, key) => { headers[key] = value; });
+      response.writeHead(result.status, headers);
       response.end(Buffer.from(await result.arrayBuffer()));
       return;
     }
