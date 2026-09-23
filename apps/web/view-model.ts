@@ -52,6 +52,20 @@ export function filterMarkets(rows: PublicMarket[], query: string, selectionOnly
   return rows.filter(row => (!selectionOnly || row.selected) && (!q || `${row.symbol} ${row.name} ${row.mint}`.toLowerCase().includes(q)));
 }
 
+/** Pages can only be combined when they describe the same fetched ranking and request. */
+export function mergeMarketPages(previous: PublicOverview, next: PublicOverview): PublicOverview | null {
+  const a = previous.discovery, b = next.discovery;
+  if (!a.fetchedAt || !a.evidenceHash || a.fetchedAt !== b.fetchedAt || a.evidenceHash !== b.evidenceHash
+    || previous.revision !== next.revision || previous.selection.policyVersion !== next.selection.policyVersion
+    || previous.marketPage.query !== next.marketPage.query || previous.marketPage.view !== next.marketPage.view
+    || previous.marketPage.totalMatches !== next.marketPage.totalMatches
+    || next.marketPage.offset !== previous.marketPage.offset + previous.marketPage.returned) return null;
+  const mints = new Set(previous.markets.map(asset => asset.mint));
+  // An overlap can mean the catalogue moved even if its metadata was not updated. Never hide it by deduplicating.
+  if (next.markets.some(asset => mints.has(asset.mint))) return null;
+  return { ...next, markets: [...previous.markets, ...next.markets] };
+}
+
 export async function api<T>(path: string, signal?: AbortSignal): Promise<T> {
   const response = await fetch(`/api/${path}`, { headers: { accept:'application/json' }, signal });
   const body = await response.json().catch(() => null);

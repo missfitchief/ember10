@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { createElement } from 'react';
 import type { PublicMarket, PublicOverview } from '../packages/shared/public.js';
-import { assertOverview, change, filterMarkets, logoUrl, marketView, money, routeFromHash, safeUrl, units, validPublicKey } from '../apps/web/view-model.js';
+import { assertOverview, change, filterMarkets, logoUrl, marketView, mergeMarketPages, money, routeFromHash, safeUrl, units, validPublicKey } from '../apps/web/view-model.js';
 import { creditState, ledgerResult, transferUrl, uniqueReceipts, walletResult } from '../apps/web/ledger.js';
 import { CreditTable } from '../apps/web/records.js';
 
@@ -90,5 +90,42 @@ describe('Public UI adapters', () => {
     expect(transferUrl(signature, 'devnet')).toContain('?cluster=devnet');
     expect(routeFromHash('#wallet')).toBe('wallet');
     expect(routeFromHash('#claim')).toBe('overview');
+  });
+});
+
+describe('Market snapshot pagination', () => {
+  function page(offset:number, mint:string, fetchedAt='2026-09-23T12:00:00Z') {
+    return {
+      revision:'revision-a', discovery:{fetchedAt,evidenceHash:'catalogue-a',status:'ready'},
+      selection:{policyVersion:'ember10-v2'}, markets:[{mint,rank:offset+1}],
+      marketPage:{offset,returned:1,totalMatches:3,query:'',view:'all',hasMore:offset<2},
+    } as unknown as PublicOverview;
+  }
+  it('combines contiguous pages of one observation and retains the matching response provenance', () => {
+    const first=page(0,'mint-a'), next=page(1,'mint-b');
+    next.discovery.status='stale';
+    const merged=mergeMarketPages(first,next)!;
+    expect(merged.markets.map(row=>row.mint)).toEqual(['mint-a','mint-b']);
+    expect(merged.discovery).toBe(next.discovery);
+    expect(merged.marketPage.offset+merged.marketPage.returned).toBe(2);
+    expect(first.markets).toHaveLength(1);
+    expect(mergeMarketPages(merged,page(2,'mint-c'))?.markets).toHaveLength(3);
+  });
+  it('refuses to mix changed fetch epochs, hashes, search queries or eligibility views', () => {
+    const first=page(0,'mint-a');
+    expect(mergeMarketPages(first,page(1,'mint-b','2026-09-23T12:01:00Z'))).toBeNull();
+    const changed=page(1,'mint-b');changed.discovery.evidenceHash='catalogue-b';
+    expect(mergeMarketPages(first,changed)).toBeNull();
+    const search=page(1,'mint-b');search.marketPage.query='new query';
+    expect(mergeMarketPages(first,search)).toBeNull();
+    const selection=page(1,'mint-b');selection.marketPage.view='selection';
+    expect(mergeMarketPages(first,selection)).toBeNull();
+  });
+  it('refuses missing provenance, duplicate mints and gaps rather than masking rank movement', () => {
+    const first=page(0,'mint-a');
+    expect(mergeMarketPages(first,page(1,'mint-a'))).toBeNull();
+    expect(mergeMarketPages(first,page(2,'mint-c'))).toBeNull();
+    const unverified=page(1,'mint-b');unverified.discovery.evidenceHash=null;
+    expect(mergeMarketPages(first,unverified)).toBeNull();
   });
 });

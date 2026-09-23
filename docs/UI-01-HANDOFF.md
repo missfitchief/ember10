@@ -25,3 +25,7 @@ Status: implemented in the existing `ui-01` Git worktree; ready for the sole int
 The canonical repo supplies `packages/shared/public.ts`, including `marketPage.view`; the local worktree copy was updated only to typecheck against that contract and is intentionally excluded from the UI commit. Root must build the integrated revision, run the complete applicable suite, and allow REV-01 to review all requested viewport sizes and failure-state harness cases. Root owns deployed-revision verification and final screenshots/report. UI-01 does not claim the public deployment is corrected before those steps.
 
 No manifests, lockfiles, migrations, eligibility engine, financial policy or signing code changed in this handoff.
+
+## Snapshot consistency follow-up
+
+Search results, source/eligibility notices and asset dialogs now use the same response snapshot as their displayed rows. Open details preserve that snapshot across background refreshes. Pending responses are discarded when the query, view or base observation changes. Pagination merges only contiguous pages sharing the fetch time, evidence hash, revision, policy, query, view and total count, with no overlapping mints. A changed observation restarts at the newest first page with an explicit notice; it never merges moving ranks. Three focused regression tests added (13 UI tests total), with TypeScript and production build passing. Independent reviewer retains the browser viewport for the integrated retest.
