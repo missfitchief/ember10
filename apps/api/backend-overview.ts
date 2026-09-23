@@ -4,13 +4,12 @@ import { ensure, fresh, hash } from '../../packages/core/model.js';
 import { DeveloperAccounting } from '../../packages/core/developer.js';
 import { developerPolicy } from '../../packages/core/developer-config.js';
 import type { SelectionObservation } from '../../packages/integrations/automatic-selection.js';
-import { MarketDataService } from '../../packages/integrations/market-data.js';
+import { publicMarketSource } from './catalogue.js';
 import { loadApproval, assertProspectiveApproval } from '../../packages/core/approval.js';
 import { overview } from './overview.js';
 import type { PublicOverview } from '../../packages/shared/public.js';
 
-const marketSource = new MarketDataService();
-export async function backendOverview(db: Store, c: Config, page: Parameters<typeof overview>[1] = {}, source = marketSource): Promise<PublicOverview> {
+export async function backendOverview(db: Store, c: Config, page: Parameters<typeof overview>[1] = {}, source = publicMarketSource): Promise<PublicOverview> {
  ensure(c.MODE === 'live' || c.MODE === 'prelaunch', 'non-production ledger cannot supply overview');
  const result = await overview(source, page), { observed } = await source.read(c.OUR_MINT ?? null);
  let approvedPolicy: string | null = null;
