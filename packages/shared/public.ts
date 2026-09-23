@@ -16,6 +16,7 @@ export interface PublicOverview {
   policy: { version: 'ember10-v2'; basketSize: 10; assetWeightBps: 1000; rewardsBps: 8000; buybackBps: 1000; operationsBps: 1000; holderUnits: string; rankingBasis: string; eligibilityRules: string[] };
   discovery: { status: DiscoveryStatus; sourceUrl: string; documentationUrl: string; fetchedAt: string | null; sourceTimestamp: string | null; lastSuccessfulAt: string | null; refreshSeconds: number; message: string; rankingBasis: string; supplyBasis: 'undocumented'; coverage: { status: 'unverified' | 'partial'; rawRows: number; uniqueMints: number; rankedMints: number; duplicateRows: number; invalidRows: number; warming: boolean; complete: false; note: string }; evidenceHash: string | null };
   markets: PublicMarket[];
+  marketPage: { offset: number; limit: number; totalMatches: number; returned: number; query: string; hasMore: boolean };
   selection: { policyVersion: 'ember10-v2'; state: 'ready' | 'insufficient' | 'blocked'; selectedMints: string[]; selectedCount: number; requiredCount: 10; commitmentsAllowed: false; reason: string };
   fundedBasket: { status: 'unavailable' | 'none' | 'funded'; epochId: string | null; fundedAt: string | null; policyVersion: string | null; members: { mint: string; symbol: string; weightBps: number }[]; message: string };
   settlement: { status: 'not_configured'; broadcastEnabled: false; workerActive: false; lastFinalizedAt: null; message: string };
