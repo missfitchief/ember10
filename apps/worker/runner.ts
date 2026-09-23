@@ -1,6 +1,7 @@
 import { Engine, Chain, Intent, Signed } from '../../packages/core/engine.js';
 import { Lease, Tx } from '../../packages/db/store.js';
 import { canonical, ensure, SOL } from '../../packages/core/model.js';
+import { maximumNativeCost } from '../../packages/core/execution-cost.js';
 export type CrashPoint='after_sign'|'after_send'|'after_success';
 export interface ExecutionOptions {
  /** Inspection and accounting only. No preparation, signing or rebroadcast. */
@@ -29,6 +30,7 @@ export async function runIntent(engine:Engine,chain:Chain,id:string,lease:Lease,
     ensure(!(await t.query('SELECT paused FROM control')).rows[0].paused,'new transaction signing paused');
     ensure(await db.balance(i.asset,i.expected.from,t)>=BigInt(i.amount),'intent reserve missing');
     const availableCost=(await db.balance(SOL,i.expected.costAccount,t))-(i.expected.costAccount==='reserve'?engine.minimumReserve:0n);
+    // This is a cash authorization only; the adapter must bind a separate transaction cost cap.
     ensure(availableCost>=BigInt(i.expected.maxFee),'cost reserve too small');i.expected={...i.expected,maxTotalCost:availableCost.toString()};
     const busy=await t.query(`SELECT id FROM intents WHERE id<>$1 AND status IN ${inflightStatuses}`,[id]);ensure(!busy.rowCount,'reconcile in-flight treasury operations first');
    });
@@ -39,6 +41,7 @@ export async function runIntent(engine:Engine,chain:Chain,id:string,lease:Lease,
   try {signed=await chain.prepare(i,authorize);}catch(e){await defer(engine,id,(e as Error).message,lease);return;}
   await db.tx(async t=>{await db.fence(t,lease);await db.lock(t);
    if(signed.approvedPlan){ensure(signed.approvedPlan.inputAsset===i.expected.inputAsset&&signed.approvedPlan.outputAsset===i.expected.outputAsset&&signed.approvedPlan.from===i.expected.from&&signed.approvedPlan.to===i.expected.to,'prepared plan changed economic identity');ensure(BigInt(signed.approvedPlan.minOutput??'0')>=BigInt(i.expected.minOutput??'0'),'prepared quote loosened minimum output');i.expected=signed.approvedPlan;}
+   const nativeCap=maximumNativeCost(i);ensure(nativeCap!==null&&nativeCap<=BigInt(String(i.expected.maxTotalCost)),'prepared transaction omitted or exceeded its native cost bound');
    await t.query('UPDATE intents SET expected=$2,last_attempt_at=clock_timestamp() WHERE id=$1',[id,canonical(i.expected)]);
    await t.query(`INSERT INTO attempts(intent_id,attempt_no,signature,signed_payload,blockhash,last_valid_height,approved_message_hash) SELECT $1,coalesce(max(attempt_no),0)+1,$2,$3,$4,$5,$6 FROM attempts WHERE intent_id=$1`,[id,signed.signature,signed.bytes,signed.blockhash,signed.lastValidHeight,signed.messageHash]);
    await t.query("UPDATE intents SET status='signed',reason=null WHERE id=$1",[id]);

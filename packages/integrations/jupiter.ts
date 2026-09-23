@@ -41,17 +41,22 @@ export async function safeJupiterBuild(connection:Connection,jupiter:JupiterClie
  const swap=new TransactionInstruction({programId:new PublicKey(quote.swapInstruction.programId),keys:quote.swapInstruction.accounts.map(k=>({...k,pubkey:new PublicKey(k.pubkey)})),data:Buffer.from(quote.swapInstruction.data,'base64')});
  const minimum=validateSwapInstruction(swap,i,payer,quote.outAmount,quote.slippageBps);ensure(minimum>0n&&BigInt(quote.otherAmountThreshold)===minimum,'minimum-output mismatch');
  const source=getAssociatedTokenAddressSync(new PublicKey(WSOL),payer),destination=getAssociatedTokenAddressSync(mint,payer);
- const rentBound=BigInt(await connection.getMinimumBalanceForRentExemption(165,'finalized'))*2n;
- ensure(rentBound+BigInt(i.expected.maxFee)<=BigInt(String(i.expected.maxTotalCost??'0')),'swap rent/fee allowance insufficient');
  ensure(!(await connection.getAccountInfo(source,'finalized')),'pre-existing wrapped SOL account requires operator review');
  const infos=await connection.getMultipleAccountsInfo(swap.keys.map(k=>k.pubkey),'finalized');
+ const destinationInfo=infos[3];
+ if(destinationInfo){ensure(destinationInfo.owner.equals(TOKEN_PROGRAM_ID)&&destinationInfo.data.length===165,'invalid output token account');const account=AccountLayout.decode(destinationInfo.data);ensure(account.mint.equals(mint)&&account.owner.equals(payer)&&account.state===1,'invalid or frozen output token account');}
+ const ataRent=BigInt(await connection.getMinimumBalanceForRentExemption(165,'finalized'));
+ // The WSOL account is always created and closed locally in the same atomic transaction.
+ // Its rent needs upfront liquidity but returns to the payer, so it is not a net debit.
+ const maxRent=destinationInfo?0n:ataRent,requiredRent=ataRent+maxRent;
+ ensure(requiredRent+BigInt(i.expected.maxFee)<=BigInt(String(i.expected.maxTotalCost??'0')),'swap rent/fee allowance insufficient');
  for(let k=0;k<infos.length;k++){const a=infos[k];if(a?.executable)ensure(approvedPrograms.includes(swap.keys[k].pubkey.toBase58()),'route invokes an unapproved executable program');
   if(a?.owner.equals(TOKEN_PROGRAM_ID)&&a.data.length===165){const account=AccountLayout.decode(a.data);if(account.owner.equals(payer))ensure(swap.keys[k].pubkey.equals(source)||swap.keys[k].pubkey.equals(destination),'unrelated treasury token account in route');}}
  const lookups=[];for(const key of Object.keys(quote.addressesByLookupTableAddress??{})){const actual=(await connection.getAddressLookupTable(new PublicKey(key),{commitment:'finalized'})).value;ensure(actual,'lookup table unavailable');ensure(actual.state.deactivationSlot===18446744073709551615n,'lookup table deactivated');lookups.push(actual);}
  const block=await connection.getLatestBlockhash('finalized');
- const instructions=[ComputeBudgetProgram.setComputeUnitLimit({units:400000}),createAssociatedTokenAccountIdempotentInstruction(payer,source,payer,new PublicKey(WSOL)),createAssociatedTokenAccountIdempotentInstruction(payer,destination,payer,mint),SystemProgram.transfer({fromPubkey:payer,toPubkey:source,lamports:BigInt(i.amount)}),createSyncNativeInstruction(source),swap,createCloseAccountInstruction(source,payer,payer)];
+ const instructions=[ComputeBudgetProgram.setComputeUnitLimit({units:400000}),createAssociatedTokenAccountIdempotentInstruction(payer,source,payer,new PublicKey(WSOL)),...(destinationInfo?[]:[createAssociatedTokenAccountIdempotentInstruction(payer,destination,payer,mint)]),SystemProgram.transfer({fromPubkey:payer,toPubkey:source,lamports:BigInt(i.amount)}),createSyncNativeInstruction(source),swap,createCloseAccountInstruction(source,payer,payer)];
  const tx=new VersionedTransaction(new TransactionMessage({payerKey:payer,recentBlockhash:block.blockhash,instructions}).compileToV0Message(lookups));
  ensure(Date.now()-started<15000,'quote stale during validation');
- i.expected={...i.expected,minOutput:minimum.toString(),lastValidHeight:block.lastValidBlockHeight,decimals:metadata.decimals,quotedAt:started,quoteSource:'Jupiter Swap v2 /build',slippageBps:quote.slippageBps,priceImpactPct:quote.priceImpactPct};
+ i.expected={...i.expected,minOutput:minimum.toString(),lastValidHeight:block.lastValidBlockHeight,decimals:metadata.decimals,quotedAt:started,quoteSource:'Jupiter Swap v2 /build',slippageBps:quote.slippageBps,priceImpactPct:quote.priceImpactPct,maxRent:maxRent.toString(),requiredRent:requiredRent.toString()};
  return tx;
 }

@@ -14,7 +14,7 @@ export class DemoChain implements Chain {
  destination(owner:string,asset:string){return getAssociatedTokenAddressSync(new PublicKey(asset),new PublicKey(owner),true).toBase58();}
  async prepare(i:Intent):Promise<Signed>{ensure(!this.unavailable.has(i.expected.outputAsset??i.asset),'synthetic route unavailable');
  const attempt=Number((await this.db.pool.query('SELECT count(*)::int AS n FROM attempts WHERE intent_id=$1',[i.id])).rows[0].n);
- const bytes=Buffer.from(canonical({label:'DEMO ONLY — NOT A SOLANA TRANSACTION',intent:i,attempt}));return {signature:'demo:'+hash(bytes.toString()),bytes,blockhash:'demo-blockhash',lastValidHeight:1000000000,messageHash:hash(bytes.toString())};}
+ const bytes=Buffer.from(canonical({label:'DEMO ONLY — NOT A SOLANA TRANSACTION',intent:i,attempt}));return {signature:'demo:'+hash(bytes.toString()),bytes,blockhash:'demo-blockhash',lastValidHeight:1000000000,messageHash:hash(bytes.toString()),approvedPlan:{...i.expected,maxNativeCost:i.expected.maxFee,maxRent:'0',requiredRent:'0'}};}
  async inspect(_i:Intent,s:Signed):Promise<Outcome>{if(this.expired)return {status:'expired',signature:s.signature,testOnly:true};if(this.unknown)return {status:'unknown',signature:s.signature,testOnly:true};const r=await this.db.pool.query('SELECT result FROM demo_chain WHERE signature=$1',[s.signature]);return r.rows[0]?.result??{status:'pending',signature:s.signature,testOnly:true};}
  async broadcast(s:Signed){ensure(s.signature.startsWith('demo:'),'demo rejects real payloads');ensure(!this.expired,'expired synthetic transaction');const {intent:i}=JSON.parse(s.bytes.toString()) as {intent:Intent};
  const failure=this.failNext.delete(i.id);

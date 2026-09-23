@@ -5,9 +5,13 @@ import {Engine,type Intent,type Signed} from '../packages/core/engine.js';
 import {DemoChain,testAddress,testKey} from '../packages/integrations/demo.js';
 import {FileTestSigner,SolanaChain} from '../packages/integrations/solana.js';
 import {loadConfig} from '../packages/core/config.js';
-import {SOL} from '../packages/core/model.js';
+import {SOL,WSOL} from '../packages/core/model.js';
 import {runIntent,tick} from '../apps/worker/runner.js';
 import {recoverIntent} from '../apps/worker/recovery.js';
+import {PublicKey,SystemProgram,TransactionInstruction,TransactionMessage,VersionedTransaction} from '@solana/web3.js';
+import {AccountLayout,ASSOCIATED_TOKEN_PROGRAM_ID,MintLayout,TOKEN_PROGRAM_ID,getAssociatedTokenAddressSync} from '@solana/spl-token';
+import {program} from '@jup-ag/instruction-parser';
+import {JupiterClient,safeJupiterBuild} from '../packages/integrations/jupiter.js';
 const base=process.env.TEST_DATABASE_URL??'postgresql://ember5:local-development-only@127.0.0.1:55432/ember5_test';
 const admin=new Store(base),schema='execution_'+Date.now();
 let db:Store,engine:Engine,chain:ControlledChain,lease:Lease;
@@ -15,15 +19,35 @@ class ControlledChain extends DemoChain {
  prepared:string[]=[]; signed:string[]=[]; beforeSigning?:()=>Promise<void>;
  override async prepare(i:Intent,guard?:()=>Promise<void>):Promise<Signed>{
   this.prepared.push(i.id);const unsigned=await super.prepare(i);await this.beforeSigning?.();await guard?.();this.signed.push(i.id);
-  return {...unsigned,approvedPlan:{...i.expected,maxTotalCost:'10000'}};
+  return {...unsigned,approvedPlan:{...i.expected,maxNativeCost:i.expected.maxFee,maxRent:'0',requiredRent:'0'}};
  }
 }
-async function intent(id:string,asset=SOL){
- const i:Intent={id,epoch_id:null,kind:'operations',asset,amount:'100',status:'planned',expected:{inputAsset:asset,from:'reserve:'+id,maxFee:'5000',costAccount:'reserve',sourceTokenAccount:'source',transfers:[{owner:'recipient',destination:'recipient',amount:'100',entitlements:[]}]}};
+async function intent(id:string,asset=SOL,kind:Intent['kind']='operations'){
+ const i:Intent={id,epoch_id:null,kind,asset,amount:'100',status:'planned',expected:{inputAsset:asset,from:'reserve:'+id,maxFee:'5000',costAccount:'reserve',sourceTokenAccount:'source',transfers:[{owner:'recipient',destination:'recipient',amount:'100',entitlements:[]}]}};
  await db.tx(async t=>{await db.lock(t);await db.move(t,'seed:'+id,asset,'external:test','reserve:'+id,100n);await engine.addIntent(t,i);});return i;
 }
 async function status(id:string){return (await db.pool.query('SELECT status,retry_count,next_attempt_at,last_attempt_at FROM intents WHERE id=$1',[id])).rows[0];}
 async function signature(id:string){return (await db.pool.query('SELECT signature FROM attempts WHERE intent_id=$1',[id])).rows[0].signature as string;}
+async function legacyAttempt(i:Intent){
+ await db.pool.query('UPDATE intents SET expected=$2 WHERE id=$1',[i.id,JSON.stringify({...i.expected,maxTotalCost:'100000'})]);
+ await db.pool.query('INSERT INTO attempts(intent_id,attempt_no,signature,signed_payload,blockhash,last_valid_height,approved_message_hash) VALUES($1,1,$2,$3,$4,1000,$5)',[i.id,'legacy:'+i.id,Buffer.from('original legacy signed bytes'),'legacy-block','legacy-message']);
+ await db.pool.query("UPDATE intents SET status='unknown' WHERE id=$1",[i.id]);
+}
+function actualAdapter(){
+ const signer=new FileTestSigner(testKey('cost-signer'),'devnet'),recipient=testAddress('cost-recipient');
+ const adapter=new SolanaChain(loadConfig({MODE:'test',CLUSTER:'devnet',BROADCAST_ENABLED:'true',MASTER_PAUSE:'false',TREASURY:signer.publicKey.toBase58(),OPERATIONS:recipient}),signer);
+ const mintData=Buffer.alloc(MintLayout.span);MintLayout.encode({mintAuthorityOption:0,mintAuthority:PublicKey.default,supply:1000000n,decimals:6,isInitialized:true,freezeAuthorityOption:0,freezeAuthority:PublicKey.default},mintData);
+ vi.spyOn(adapter.connection,'getGenesisHash').mockResolvedValue('devnet-genesis');
+ vi.spyOn(adapter.connection,'getAccountInfo').mockResolvedValue({owner:TOKEN_PROGRAM_ID,data:mintData,lamports:1461600,executable:false,rentEpoch:0});
+ vi.spyOn(adapter.connection,'getLatestBlockhash').mockResolvedValue({blockhash:testAddress('cost-block'),lastValidBlockHeight:1000});
+ vi.spyOn(adapter.connection,'getMinimumBalanceForRentExemption').mockResolvedValue(2039280);
+ vi.spyOn(adapter.connection,'getFeeForMessage').mockResolvedValue({context:{slot:600},value:5000});
+ vi.spyOn(adapter.connection,'simulateTransaction').mockResolvedValue({context:{slot:600},value:{err:null,logs:[],unitsConsumed:10000}});
+ vi.spyOn(adapter.connection,'isBlockhashValid').mockResolvedValue({context:{slot:600},value:true});
+ vi.spyOn(adapter,'inspect').mockImplementation(async(_i,s)=>({status:'unknown',signature:s.signature}));
+ vi.spyOn(adapter,'broadcast').mockResolvedValue();
+ return {adapter,signer,recipient};
+}
 beforeAll(async()=>{await admin.pool.query(`CREATE SCHEMA ${schema}`);const url=new URL(base);url.searchParams.set('options','-c search_path='+schema);db=new Store(url.toString());await migrate(db);await db.bindMode('demo');chain=new ControlledChain(db);await chain.init();});
 beforeEach(async()=>{await db.pool.query('TRUNCATE intents,attempts,execution_recoveries,ledger_events,postings,leases,jobs,incidents,operator_audit,chain_receipts,demo_chain,documents CASCADE');await db.pool.query("UPDATE control SET paused=false,reason='test'");engine=new Engine(db,'demo');chain=new ControlledChain(db);lease=(await db.lease('execution',300))!;await db.tx(t=>db.move(t,'capital',SOL,'external:test','reserve',100000n));});
 afterAll(async()=>{await db?.close();await admin.pool.query(`DROP SCHEMA ${schema} CASCADE`);await admin.close();});
@@ -87,5 +111,67 @@ describe('Execution orchestration regressions',()=>{
   await intent('slot-race','TOKEN');await runIntent(engine,chain,'slot-race',lease);await runIntent(engine,chain,'slot-race',lease);
   const stale=await engine.reconcile([{asset:SOL,amount:'100000',slot:500000}]);expect(stale[0].state).toBe('stale_observation');expect((await db.pool.query('SELECT * FROM incidents')).rowCount).toBe(0);
   const fresh=await engine.reconcile([{asset:SOL,amount:'95000',slot:500001}]);expect(fresh[0].state).toBe('balanced');
+ });
+ it.each(['burn','operations'] as const)('actual %s preparation cannot treat the shared cost reserve as its transaction debit',async kind=>{
+  const {adapter,signer,recipient}=actualAdapter(),mint=testAddress('cost-mint'),asset=kind==='burn'?mint:SOL;
+  const i=await intent('actual-cost',asset,kind);i.expected.sourceTokenAccount=signer.publicKey.toBase58();i.expected.transfers=[{owner:recipient,destination:recipient,amount:'100',entitlements:[]}];
+  await db.pool.query('UPDATE intents SET expected=$2 WHERE id=$1',[i.id,JSON.stringify(i.expected)]);engine=new Engine(db,'test');
+  await runIntent(engine,adapter,i.id,lease);
+  const stored=(await db.pool.query('SELECT *,amount::text FROM intents WHERE id=$1',[i.id])).rows[0] as Intent;
+  expect(stored.expected.maxTotalCost).toBe('100000');expect(stored.expected.maxNativeCost).toBe('5000');expect(stored.expected.maxRent).toBe('0');expect(adapter.connection.getMinimumBalanceForRentExemption).not.toHaveBeenCalled();
+  const pending=await engine.reconcile([{asset:SOL,amount:'95000',slot:600}]);expect(pending[0].state).toBe('in_flight');expect(pending[0].maximumPendingDebit).toBe(kind==='burn'?'5000':'5100');
+  const shortfall=await engine.reconcile([{asset:SOL,amount:'80000',slot:600}]);expect(shortfall[0].state).toBe('deficit');
+  if(kind==='burn')await expect(engine.apply(stored,{status:'finalized',signature:await signature(i.id),slot:601,fee:'5000',rent:'1',burned:'100'},lease)).rejects.toThrow('transaction native cap');
+ });
+ it.each(['burn','operations'] as const)('legacy %s attempts retain a safe fee-only fallback',async kind=>{
+  await legacyAttempt(await intent('legacy-safe',kind==='burn'?'TOKEN':SOL,kind));
+  const result=(await engine.reconcile([{asset:SOL,amount:'80000',slot:600}]))[0];expect(result.state).toBe('deficit');expect(result.maximumPendingDebit).toBe(kind==='burn'?'5000':'5100');
+ });
+ it('actual SPL preparation includes only missing recipient ATA rent and rechecks cash after authorization',async()=>{
+  const {adapter,signer}=actualAdapter(),mint=testAddress('cost-token'),existing=testAddress('existing-recipient'),missing=testAddress('missing-recipient');
+  await db.tx(t=>db.move(t,'extra-capital',SOL,'external:test','reserve',10000000n));
+  const i=await intent('actual-token-cost',mint);i.expected.decimals=6;i.expected.sourceTokenAccount=getAssociatedTokenAddressSync(new PublicKey(mint),signer.publicKey).toBase58();
+  i.expected.transfers=[existing,missing].map(owner=>({owner,destination:adapter.destination(owner,mint),amount:'50',entitlements:[]}));
+  await db.pool.query('UPDATE intents SET expected=$2 WHERE id=$1',[i.id,JSON.stringify(i.expected)]);
+  vi.spyOn(adapter,'destinationStatus').mockImplementation(async owner=>({exists:owner===existing,valid:true,rent:owner===existing?0n:2039280n}));engine=new Engine(db,'test');
+  await runIntent(engine,adapter,i.id,lease);const stored=(await db.pool.query('SELECT expected FROM intents WHERE id=$1',[i.id])).rows[0].expected;
+  expect(stored).toMatchObject({maxTotalCost:'10100000',maxNativeCost:'2044280',maxRent:'2039280',requiredRent:'2039280'});
+  expect((await engine.reconcile([{asset:SOL,amount:'8055720',slot:600}]))[0].state).toBe('in_flight');
+  expect((await engine.reconcile([{asset:SOL,amount:'8055719',slot:600}]))[0].state).toBe('deficit');
+  // Use the same prepared object at the guard boundary to model an available-balance reduction.
+  const retry={...i,expected:{...i.expected,maxTotalCost:'10100000'}},sign=vi.spyOn(signer,'sign');
+  await expect(adapter.prepare(retry,async()=>{retry.expected.maxTotalCost='5000';})).rejects.toThrow('rent/fee allowance insufficient');expect(sign).not.toHaveBeenCalled();
+ });
+ it('legacy token attempts without a transaction cost bound remain uncertain and paused',async()=>{
+  await legacyAttempt(await intent('legacy-cost','TOKEN'));
+  const report=(await engine.reconcile([{asset:SOL,amount:'95000',slot:600}]))[0];expect(report.state).toBe('cost_bound_unavailable');expect(report.maximumPendingDebit).toBeNull();expect((await db.pool.query('SELECT paused FROM control')).rows[0].paused).toBe(true);expect(await db.balance('TOKEN','reserve:legacy-cost')).toBe(100n);
+ });
+ it('a swap quote that ages during authorization is rejected before signing',async()=>{
+  const {adapter,signer,recipient}=actualAdapter(),clock=vi.spyOn(Date,'now');let now=100000;clock.mockImplementation(()=>now);
+  try{
+   adapter.swapBuilder=async i=>{i.expected={...i.expected,quotedAt:now,maxRent:'0',requiredRent:'2039280',lastValidHeight:1000};return new VersionedTransaction(new TransactionMessage({payerKey:signer.publicKey,recentBlockhash:testAddress('quote-block'),instructions:[SystemProgram.transfer({fromPubkey:signer.publicKey,toPubkey:new PublicKey(recipient),lamports:1n})]}).compileToV0Message());};
+   const sign=vi.spyOn(signer,'sign'),i:Intent={id:'aged-quote',epoch_id:null,kind:'swap',asset:SOL,amount:'100',status:'planned',expected:{inputAsset:SOL,outputAsset:testAddress('quote-output'),from:'budget',costAccount:'reserve',maxFee:'5000',maxTotalCost:'10000000'}};
+   await expect(adapter.prepare(i,async()=>{now+=15000;})).rejects.toThrow('quote stale at signing');expect(sign).not.toHaveBeenCalled();
+  }finally{clock.mockRestore();}
+ });
+ it.each([true,false])('Jupiter build separates temporary WSOL funding from output ATA rent (existing=%s)',async existing=>{
+  const {adapter,signer}=actualAdapter(),payer=signer.publicKey,mint=new PublicKey(testAddress('jupiter-cost-mint'));
+  const source=getAssociatedTokenAddressSync(new PublicKey(WSOL),payer),destination=getAssociatedTokenAddressSync(mint,payer);
+  const u64=(n:bigint)=>({toArrayLike:(_Type:unknown,_endian:unknown,length:number)=>{const b=Buffer.alloc(length);b.writeBigUInt64LE(n);return b;}});
+  const swap=new TransactionInstruction({programId:program.programId,keys:[TOKEN_PROGRAM_ID,payer,source,destination,program.programId,mint,program.programId].map((pubkey,k)=>({pubkey,isSigner:k===1,isWritable:[2,3].includes(k)})),data:program.coder.instruction.encode('route',{routePlan:[{swap:{raydium:{}},percent:100,inputIndex:0,outputIndex:1}],inAmount:u64(100n),quotedOutAmount:u64(200n),slippageBps:100,platformFeeBps:0})});
+  const jupiter=new JupiterClient('local-mock-only');vi.spyOn(jupiter,'build').mockResolvedValue({inputMint:WSOL,outputMint:mint.toBase58(),inAmount:'100',outAmount:'200',otherAmountThreshold:'198',swapMode:'ExactIn',slippageBps:100,priceImpactPct:'0.001',routePlan:[{}],swapInstruction:{programId:program.programId.toBase58(),accounts:swap.keys.map(k=>({...k,pubkey:k.pubkey.toBase58()})),data:swap.data.toString('base64')},blockhashWithMetadata:{blockhash:Array(32).fill(0),lastValidBlockHeight:1000}});
+  const mintData=Buffer.alloc(MintLayout.span);MintLayout.encode({mintAuthorityOption:0,mintAuthority:PublicKey.default,supply:1000000n,decimals:6,isInitialized:true,freezeAuthorityOption:0,freezeAuthority:PublicKey.default},mintData);
+  const accountData=Buffer.alloc(AccountLayout.span);AccountLayout.encode({mint,owner:payer,amount:0n,delegateOption:0,delegate:PublicKey.default,state:1,isNativeOption:0,isNative:0n,delegatedAmount:0n,closeAuthorityOption:0,closeAuthority:PublicKey.default},accountData);
+  const info=(data:Buffer)=>({owner:TOKEN_PROGRAM_ID,data,lamports:2039280,executable:false,rentEpoch:0});
+  vi.mocked(adapter.connection.getAccountInfo).mockImplementation(async key=>key.equals(mint)?info(mintData):null);
+  vi.spyOn(adapter.connection,'getMultipleAccountsInfo').mockResolvedValue(swap.keys.map((_,k)=>existing&&k===3?info(accountData):null));
+  adapter.swapBuilder=i=>safeJupiterBuild(adapter.connection,jupiter,payer,i,[],[mint.toBase58()]);
+  const i:Intent={id:'jupiter-rent',epoch_id:null,kind:'swap',asset:SOL,amount:'100',status:'planned',expected:{inputAsset:SOL,outputAsset:mint.toBase58(),from:'budget',costAccount:'reserve',maxFee:'5000',maxTotalCost:'10000000'}};
+  const signed=await adapter.prepare(i,async()=>{}),tx=VersionedTransaction.deserialize(signed.bytes);
+  expect(signed.approvedPlan).toMatchObject({maxRent:existing?'0':'2039280',requiredRent:existing?'2039280':'4078560',maxNativeCost:existing?'5000':'2044280'});
+  expect(tx.message.compiledInstructions.filter(ix=>tx.message.staticAccountKeys[ix.programIdIndex].equals(ASSOCIATED_TOKEN_PROGRAM_ID))).toHaveLength(existing?1:2);
+  // Cover final authorization reducing cash to the net cost: upfront WSOL rent still must fit.
+  const sign=vi.spyOn(signer,'sign'),retry:Intent={...i,expected:{...i.expected,maxTotalCost:'10000000'}};
+  await expect(adapter.prepare(retry,async()=>{retry.expected.maxTotalCost=String(retry.expected.maxNativeCost);})).rejects.toThrow('rent/fee allowance insufficient');expect(sign).not.toHaveBeenCalled();
  });
 });

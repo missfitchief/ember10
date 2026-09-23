@@ -4,6 +4,7 @@ import { Asset, canonical, ensure, fresh, hash, Policy, Price, SOL, policyBasket
 import { Basket, Snapshot } from './selection.js';
 import { revalidateBasket, selectBasket } from './selection.js';
 import { finalizeDeveloperPayout } from './developer.js';
+import { maximumNativeCost } from './execution-cost.js';
 export interface TransferEvidence {instruction:string;asset:string;source:string;destination:string;amount:string}
 export interface Receipt {signature:string;instruction:string;asset:string;amount:string;destination:string;source:string;slot:number;finalized:boolean;error:unknown;pool?:string;publishedPool?:string;kind:'creator_fee'|'deposit'|'seed';attributionVerified:boolean;rawEvidence:unknown}
 export interface Plan {inputAsset:string;outputAsset?:string;from:string;to?:string;owner?:string;minOutput?:string;maxFee:string;costAccount:string;transfers?:{owner:string;destination:string;amount:string;entitlements:string[]}[];decimals?:number;[key:string]:unknown}
@@ -79,6 +80,7 @@ export class Engine {
   ensure(out.status==='finalized'&&out.error==null&&out.slot&&out.signature,'not finalized success');
   ensure((this.mode==='demo')===!!out.testOnly||this.mode==='test','synthetic/live evidence mismatch');
   const fee=BigInt(out.fee??'0'),rent=BigInt(out.rent??'0');ensure(fee<=BigInt(i.expected.maxFee),'fee exceeds approved cap');ensure(fee>=0n&&rent>=0n,'negative execution costs');if(i.expected.maxTotalCost)ensure(fee+rent<=BigInt(String(i.expected.maxTotalCost)),'execution cost exceeds reserved allowance');
+  const nativeCap=maximumNativeCost(i);ensure(nativeCap!==null,'transaction native cost bound unavailable; review original signed transaction');ensure(fee+rent<=nativeCap,'execution cost exceeds transaction native cap');ensure(rent<=nativeCap-BigInt(i.expected.maxFee),'rent exceeds transaction rent cap');
   if(i.kind==='swap'||i.kind==='buyback')ensure(BigInt(out.input??'0')===BigInt(i.amount)&&BigInt(out.output??'0')>=BigInt(i.expected.minOutput??'1'),'swap debit/output mismatch');
   if(i.kind==='burn')ensure(out.burned===i.amount,'burn amount mismatch');
   if(i.kind==='payout'||i.kind==='operations'){
@@ -157,7 +159,7 @@ export class Engine {
   return this.db.tx(async t=>{
    // Every accounting mutation uses the control lock. Read ledger and pending work coherently.
    await this.db.lock(t);const balances=await this.db.balances(t);const reports=[];
-   const intents=(await t.query("SELECT id,asset,amount::text,expected FROM intents WHERE status IN ('signed','submitted','unknown','confirmed','needs_review')")).rows as Intent[];
+   const intents=(await t.query("SELECT id,kind,asset,amount::text,expected FROM intents WHERE status IN ('signed','submitted','unknown','confirmed','needs_review')")).rows as Intent[];
    // RPC balances may have been sampled before this lock was acquired. Include
    // every finalized cash movement, not only worker-owned transaction attempts.
    const latest=(await t.query(`SELECT coalesce(max(slot),0)::text AS slot FROM (
@@ -169,14 +171,15 @@ export class Engine {
     ensure(Number.isSafeInteger(a.slot)&&a.slot>0&&/^\d+$/.test(a.amount),'invalid reconciliation observation');
     const expected=balances.filter(b=>b.asset===a.asset&&!b.account.startsWith('external:')).reduce((n,b)=>n+BigInt(b.amount),0n);
     const inflight=intents.filter(i=>i.asset===a.asset||i.expected.outputAsset===a.asset||a.asset===SOL);
-    const debitBound=inflight.reduce((n,i)=>n+(i.asset===a.asset?BigInt(i.amount):0n)+(a.asset===SOL?BigInt(String(i.expected.maxTotalCost??i.expected.maxFee)):0n),0n);
+    const unknownNativeCost=a.asset===SOL&&inflight.some(i=>maximumNativeCost(i)===null);
+    const debitBound=inflight.reduce((n,i)=>n+(i.asset===a.asset?BigInt(i.amount):0n)+(a.asset===SOL?(maximumNativeCost(i)??0n):0n),0n);
     const mayCredit=inflight.some(i=>i.expected.outputAsset===a.asset);
     const delta=BigInt(a.amount)-expected;
     const stale=a.slot<Number(latest.slot);
     // An in-flight token transfer also spends SOL fees/rent, but cannot hide an arbitrary deficit.
-    const explained=inflight.length>0&&(delta===0n||delta<0n&&-delta<=debitBound||delta>0n&&mayCredit);
-    const state=stale?'stale_observation':explained?'in_flight':delta===0n?'balanced':delta<0n?'deficit':'unclassified_surplus';
-    const report={...a,expected:expected.toString(),delta:delta.toString(),state,inflight:inflight.map(i=>i.id),maximumPendingDebit:debitBound.toString(),ledgerFinalizedSlot:Number(latest.slot)};reports.push(report);
+    const explained=inflight.length>0&&(delta===0n||delta<0n&&!unknownNativeCost&&-delta<=debitBound||delta>0n&&mayCredit);
+    const state=stale?'stale_observation':delta<0n&&unknownNativeCost?'cost_bound_unavailable':explained?'in_flight':delta===0n?'balanced':delta<0n?'deficit':'unclassified_surplus';
+    const report={...a,expected:expected.toString(),delta:delta.toString(),state,inflight:inflight.map(i=>i.id),maximumPendingDebit:unknownNativeCost?null:debitBound.toString(),ledgerFinalizedSlot:Number(latest.slot)};reports.push(report);
     if(!stale&&!explained&&delta!==0n){await t.query('INSERT INTO incidents(kind,details) VALUES($1,$2)',['reconciliation_'+state,canonical(report)]);await t.query('UPDATE control SET paused=true,reason=$1',['reconciliation_'+state]);}
    }
    await this.db.doc('reconciliation',{at:new Date().toISOString(),reports},t);return reports;

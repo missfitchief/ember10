@@ -7,6 +7,7 @@ import { Chain, Intent, Outcome, Signed, TransferEvidence } from '../core/engine
 import { ensure, hash, Policy, SOL, SPL, MAINNET_GENESIS } from '../core/model.js';
 import { snapshot, TokenAccount } from '../core/selection.js';
 import { boundedFetch } from './http.js';
+import { bindNativeCost } from '../core/execution-cost.js';
 export interface Signer {publicKey:PublicKey;sign(tx:VersionedTransaction):Promise<VersionedTransaction>}
 export class FileTestSigner implements Signer {
  publicKey:PublicKey; constructor(private key:Keypair,cluster:string){ensure(cluster!=='mainnet-beta','test signer forbidden on mainnet');this.publicKey=key.publicKey;}
@@ -65,7 +66,11 @@ export class SolanaChain implements Chain {
     const market=this.simulatedMarket.signer,mint=new PublicKey(i.expected.outputAsset!);const metadata=await getMint(this.connection,mint,'finalized');ensure(metadata.freezeAuthority===null,'test mint freeze authority unsupported');
     const dest=addAta(payer,mint);ix.push(SystemProgram.transfer({fromPubkey:payer,toPubkey:market.publicKey,lamports:BigInt(i.amount)}));
     ix.push(createTransferCheckedInstruction(getAssociatedTokenAddressSync(mint,market.publicKey),mint,dest,market.publicKey,this.simulatedMarket.outputFor(i),metadata.decimals));
-   }else {ensure(this.swapBuilder,'live swap validator/build adapter not configured');tx=await this.swapBuilder(i);const fee=await this.connection.getFeeForMessage(tx.message,'finalized');ensure(fee.value!==null&&BigInt(fee.value)<=BigInt(i.expected.maxFee),'fee cap');await authorizeSigning?.();const signed=await this.signer.sign(tx);return this.checkedSigned(signed,i);}
+   }else {ensure(this.swapBuilder,'live swap validator/build adapter not configured');tx=await this.swapBuilder(i);const fee=await this.connection.getFeeForMessage(tx.message,'finalized');ensure(fee.value!==null&&BigInt(fee.value)<=BigInt(i.expected.maxFee),'fee cap');
+    ensure(typeof i.expected.maxRent==='string'&&/^\d+$/.test(i.expected.maxRent)&&typeof i.expected.requiredRent==='string'&&/^\d+$/.test(i.expected.requiredRent),'swap builder omitted verified rent bounds');
+    const rent=BigInt(i.expected.maxRent),requiredRent=BigInt(i.expected.requiredRent);await authorizeSigning?.();bindNativeCost(i,rent,requiredRent);
+    ensure(typeof i.expected.quotedAt==='number'&&Date.now()>=i.expected.quotedAt&&Date.now()-i.expected.quotedAt<15000,'quote stale at signing');
+    const signed=await this.signer.sign(tx);return this.checkedSigned(signed,i);}
   }else if(i.kind==='burn'){
    const mint=new PublicKey(i.asset),metadata=await getMint(this.connection,mint,'finalized');ix.push(createBurnCheckedInstruction(getAssociatedTokenAddressSync(mint,payer),mint,payer,BigInt(i.amount),metadata.decimals));
   }else{
@@ -79,10 +84,10 @@ export class SolanaChain implements Chain {
   }
   const block=await this.connection.getLatestBlockhash('finalized');const legacy=new Transaction({feePayer:payer,recentBlockhash:block.blockhash}).add(...ix);
   const ataCount=ix.filter(x=>x.programId.equals(ASSOCIATED_TOKEN_PROGRAM_ID)).length;
-  const rentBound=BigInt(await this.connection.getMinimumBalanceForRentExemption(ACCOUNT_SIZE,'finalized'))*BigInt(ataCount);
+  const rentBound=ataCount?BigInt(await this.connection.getMinimumBalanceForRentExemption(ACCOUNT_SIZE,'finalized'))*BigInt(ataCount):0n;
   ensure(rentBound+BigInt(i.expected.maxFee)<=BigInt(String(i.expected.maxTotalCost??'0')),'rent/fee allowance insufficient; defer before signing');
   tx=new VersionedTransaction(legacy.compileMessage());if(this.simulatedMarket&&(i.kind==='swap'||i.kind==='buyback'))tx.sign([this.simulatedMarket.signer]);
-  const fee=await this.connection.getFeeForMessage(tx.message,'finalized');ensure(fee.value!==null&&BigInt(fee.value)<=BigInt(i.expected.maxFee),'transaction fee cap');await authorizeSigning?.();tx=await this.signer.sign(tx);
+  const fee=await this.connection.getFeeForMessage(tx.message,'finalized');ensure(fee.value!==null&&BigInt(fee.value)<=BigInt(i.expected.maxFee),'transaction fee cap');await authorizeSigning?.();bindNativeCost(i,rentBound);tx=await this.signer.sign(tx);
   return this.checkedSigned(tx,i,block.lastValidBlockHeight);
  }
  async checkedSigned(tx:VersionedTransaction,i:Intent,height?:number){
