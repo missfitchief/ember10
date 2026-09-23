@@ -12,5 +12,4 @@ docs/evidence
 dist
 
 .vercel
-tests
 docs
