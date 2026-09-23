@@ -2,9 +2,10 @@ import { describe, expect, it } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { createElement } from 'react';
 import type { PublicMarket, PublicOverview } from '../packages/shared/public.js';
-import { assertOverview, change, filterMarkets, logoUrl, marketView, mergeMarketPages, money, routeFromHash, safeUrl, units, validPublicKey } from '../apps/web/view-model.js';
-import { creditState, ledgerResult, transferUrl, uniqueReceipts, walletResult } from '../apps/web/ledger.js';
-import { CreditTable } from '../apps/web/records.js';
+import { assertOverview, change, filterMarkets, logoUrl, marketView, marketCounts, marketRequestState, mergeMarketPages, money, routeFromHash, safeUrl, units, validPublicKey } from '../apps/web/view-model.js';
+import { creditState, ledgerConnection, ledgerResult, transferUrl, uniqueReceipts, walletResult } from '../apps/web/ledger.js';
+import { CreditTable, WalletAvailability } from '../apps/web/records.js';
+import { AssetDialog, MarketPanel } from '../apps/web/market.js';
 
 describe('Public UI adapters', () => {
   it('keeps exact raw-unit balances above Number precision and unknown values distinct from zero', () => {
@@ -127,5 +128,122 @@ describe('Market snapshot pagination', () => {
     expect(mergeMarketPages(first,page(2,'mint-c'))).toBeNull();
     const unverified=page(1,'mint-b');unverified.discovery.evidenceHash=null;
     expect(mergeMarketPages(first,unverified)).toBeNull();
+  });
+});
+
+describe('Frontend audit regressions', () => {
+  const firstMint = '11111111111111111111111111111111';
+  const secondMint = 'So11111111111111111111111111111111111111112';
+  function observation(): PublicOverview {
+    const market: PublicMarket = {
+      mint:firstMint, symbol:'SAME', name:'Same name', imageUrl:null,
+      canonicalPool:null, config:null, quoteMint:null, marketCapUsd:'12345.67', priceUsd:null,
+      volume24hUsd:'456.78', change24hPct:'-2.5', currency:'USD', supplyBasis:'undocumented',
+      sourceTimestamp:null, createdAt:null, rank:1, eligibility:'unknown', reasons:[], selected:false,
+      weightBps:null, sourceUrl:'https://embercurve.fun/markets',
+    };
+    return {
+      schemaVersion:1, revision:'audit-test', project:{name:'EMBER10',phase:'prelaunch',dataMode:'real',mint:null,mintStatus:'not_deployed',buyUrl:null},
+      policy:{version:'ember10-v2',basketSize:10,assetWeightBps:1000,rewardsBps:8000,buybackBps:1000,operationsBps:1000,holderUnits:'100000',rankingBasis:'Ember market cap USD',eligibilityRules:[]},
+      discovery:{status:'ready',sourceUrl:'https://embercurve.fun/markets',documentationUrl:'https://embercurve.fun/developers',fetchedAt:'2026-09-23T12:00:00Z',sourceTimestamp:null,lastSuccessfulAt:'2026-09-23T12:00:00Z',refreshSeconds:45,message:'Source observations',rankingBasis:'Ember market cap USD',supplyBasis:'undocumented',coverage:{status:'unverified',rawRows:18,uniqueMints:17,rankedMints:15,duplicateRows:1,invalidRows:0,warming:false,complete:false,note:'Unverified source coverage'},evidenceHash:'source-a'},
+      markets:[market,{...market,mint:secondMint,rank:2,eligibility:'excluded'}],
+      marketPage:{offset:0,limit:100,totalMatches:17,returned:2,query:'',view:'all',hasMore:false},
+      selection:{policyVersion:'ember10-v2',state:'insufficient',selectedMints:[],selectedCount:0,requiredCount:10,commitmentsAllowed:false,reason:'No verified assets'},
+      fundedBasket:{status:'unavailable',epochId:null,fundedAt:null,policyVersion:null,members:[],message:'No funded record'},
+      settlement:{status:'not_configured',broadcastEnabled:false,workerActive:false,lastFinalizedAt:null,message:'Not configured'},
+      accounting:{status:'unavailable',currency:'SOL',creatorRevenue:null,holderRewards:null,buybackBurn:null,opsAllocation:null,approvedExpenses:null,retainedReserve:null,withdrawableRemainder:null,pendingTransfers:null,finalizedDevPayments:null,message:'No connected ledger'},
+    };
+  }
+  it('renders an existing observation immediately on route entry without a false unavailable or empty flash', () => {
+    const html=renderToStaticMarkup(createElement(MarketPanel,{data:observation(),loading:false,error:'',retry:()=>{}}));
+    expect(html).toContain('SAME');
+    expect(html).toContain('$12.3K');
+    expect(html).not.toContain('Source unavailable');
+    expect(html).not.toContain('Market data is unavailable');
+    expect(html).not.toContain('No market observations reported');
+    expect(html).not.toContain('Loading market observations');
+  });
+  it('cold loads with a skeleton and shows a failure only after the request fails', () => {
+    const html=renderToStaticMarkup(createElement(MarketPanel,{loading:true,error:'',retry:()=>{}}));
+    expect(html).toContain('Loading market observations');
+    expect(html).not.toContain('unavailable');
+    expect(html).not.toContain('No market observations');
+    const failed=renderToStaticMarkup(createElement(MarketPanel,{loading:false,error:'Network failed',retry:()=>{}}));
+    expect(failed).toContain('Market request failed');
+    expect(failed).toContain('Network failed');
+    expect(failed).not.toContain('No market observations');
+  });
+  it('keeps duplicate symbols independently visible by short mint and offers mobile eligibility and explicit details', () => {
+    const html=renderToStaticMarkup(createElement(MarketPanel,{data:observation(),loading:false,error:'',retry:()=>{}}));
+    expect(html).toContain('111111…11111');
+    expect(html).toContain('So1111…11112');
+    expect(html).toContain('token-mobile-status status-small">Not verified');
+    expect(html).toContain('token-mobile-status status-small">Excluded');
+    expect(html.match(/class="row-open"/g)).toHaveLength(2);
+    expect(filterMarkets(observation().markets,secondMint,false).map(row=>row.mint)).toEqual([secondMint]);
+  });
+  it('puts desktop metrics in one detail interaction and keeps missing metrics distinct from zero', () => {
+    const data=observation();
+    const html=renderToStaticMarkup(createElement(AssetDialog,{asset:data.markets[0],data,onClose:()=>{}}));
+    expect(html).toContain('Reported 24h volume');
+    expect(html).toContain('$456.78');
+    expect(html).toContain('-2.50%');
+    expect(html).toContain('Reported volume is separate from verified liquidity');
+    expect(html).toContain(firstMint);
+    expect(html).toContain('Source evidence &amp; observation time');
+    const unknown=renderToStaticMarkup(createElement(AssetDialog,{asset:{...data.markets[0],volume24hUsd:null,change24hPct:null},data,onClose:()=>{}}));
+    expect(unknown).toContain('Reported 24h volume</dt><dd>Not reported');
+    expect(unknown).toContain('Reported 24h change</dt><dd>Not reported');
+    const zero=renderToStaticMarkup(createElement(AssetDialog,{asset:{...data.markets[0],volume24hUsd:'0',change24hPct:'0'},data,onClose:()=>{}}));
+    expect(zero).toContain('$0.000000');
+    expect(zero).toContain('0.00%');
+  });
+  it('distinguishes cold load, query refresh, valid empty, stale, warming and explicit unavailable responses', () => {
+    const data=observation();
+    expect(marketRequestState(undefined,true,'')).toBe('loading');
+    expect(marketRequestState(undefined,false,'failed')).toBe('failed');
+    expect(marketRequestState(data,true,'')).toBe('refreshing');
+    expect(marketRequestState({...data,markets:[]},false,'')).toBe('empty');
+    expect(marketRequestState(data,false,'failed')).toBe('stale');
+    expect(marketRequestState({...data,discovery:{...data.discovery,status:'stale'}},false,'')).toBe('stale');
+    expect(marketRequestState({...data,discovery:{...data.discovery,status:'warming'}},false,'')).toBe('warming');
+    expect(marketRequestState({...data,discovery:{...data.discovery,status:'unavailable'},markets:[]},false,'')).toBe('unavailable');
+    const refresh=renderToStaticMarkup(createElement(MarketPanel,{data,loading:true,error:'',retry:()=>{}}));
+    expect(refresh).toContain('SAME');
+    expect(refresh).toContain('Refreshing these observations');
+  });
+  it('keeps catalogue, rankable and search-result counts distinct even for a no-match query', () => {
+    const data=observation();
+    expect(marketCounts(data)).toEqual({catalogue:17,ranked:15,matches:17,filtered:false});
+    const search={...data,markets:[],marketPage:{...data.marketPage,totalMatches:0,query:'no match'}};
+    expect(marketCounts(search)).toEqual({catalogue:17,ranked:15,matches:0,filtered:true});
+    expect(search.selection).toBe(data.selection);
+    expect(search.fundedBasket).toBe(data.fundedBasket);
+  });
+  it('requires an explicit reward-service response to establish a known unavailable connection', () => {
+    expect(ledgerConnection({status:'unavailable',message:'No verified ledger'})).toEqual({availability:'unavailable',ledger:null,message:'No verified ledger'});
+    expect(ledgerConnection({assets:[],accrued:[]})).toMatchObject({availability:'available'});
+    expect(()=>ledgerConnection({})).toThrow('unreadable');
+    expect(()=>ledgerConnection({mode:'demo',status:'unavailable'})).toThrow('Test accounting');
+  });
+  it('does not turn malformed or mismatched wallet responses into a valid empty balance', () => {
+    expect(()=>walletResult({})).toThrow('No balance has been inferred');
+    expect(()=>walletResult({address:firstMint,status:'warming',entitlements:[],deliveries:[]})).toThrow('No balance has been inferred');
+    expect(()=>walletResult({address:firstMint,entitlements:[],deliveries:[]},secondMint)).toThrow('did not match');
+    expect(walletResult({address:firstMint,entitlements:[],deliveries:[]},firstMint).entitlements).toEqual([]);
+  });
+  it('exposes the known wallet limitation before submission and gives temporary failures distinct retry copy', () => {
+    const props={message:'No verified ledger',error:'Network failure',loading:false,phase:'prelaunch',retry:()=>{}};
+    const unavailable=renderToStaticMarkup(createElement(WalletAvailability,{...props,availability:'unavailable'}));
+    expect(unavailable).toContain('Reward records are not connected yet');
+    expect(unavailable).toContain('cannot return its reward balance');
+    expect(unavailable).toContain('Unknown rewards are not zero');
+    const checking=renderToStaticMarkup(createElement(WalletAvailability,{...props,availability:'checking'}));
+    expect(checking).toContain('Prelaunch. Checking');
+    expect(checking).not.toContain('not connected yet');
+    const failed=renderToStaticMarkup(createElement(WalletAvailability,{...props,availability:'failed'}));
+    expect(failed).toContain('could not be checked');
+    expect(failed).toContain('Retry connection');
+    expect(failed).not.toContain('cannot return its reward balance');
   });
 });

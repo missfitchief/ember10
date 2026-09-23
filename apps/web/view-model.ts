@@ -47,6 +47,27 @@ export function marketView(data: PublicOverview) {
     selectedLabel: `${data.selection.selectedCount} / ${data.selection.requiredCount} selected`,
   };
 }
+export const eligibilityLabel = (asset: PublicMarket) => asset.selected ? 'Selected · unfunded' : asset.eligibility === 'eligible' ? 'Eligible' : asset.eligibility === 'excluded' ? 'Excluded' : 'Not verified';
+
+/** Counts describe different sets; inspecting a search never changes selection. */
+export function marketCounts(data: PublicOverview) {
+  return {
+    catalogue: data.discovery.coverage.uniqueMints,
+    ranked: data.discovery.coverage.rankedMints,
+    matches: data.marketPage.totalMatches,
+    filtered: !!data.marketPage.query || data.marketPage.view !== 'all',
+  };
+}
+
+/** A missing page during a request is loading, never evidence of an outage or empty result. */
+export function marketRequestState(snapshot: PublicOverview | undefined, pending: boolean, error: string) {
+  if (!snapshot) return error ? 'failed' : 'loading';
+  if (snapshot.discovery.status === 'unavailable') return pending ? 'loading' : 'unavailable';
+  if (error || snapshot.discovery.status === 'stale') return 'stale';
+  if (pending) return 'refreshing';
+  if (snapshot.discovery.status === 'warming') return 'warming';
+  return snapshot.markets.length ? 'ready' : 'empty';
+}
 export function filterMarkets(rows: PublicMarket[], query: string, selectionOnly: boolean) {
   const q = query.trim().toLowerCase();
   return rows.filter(row => (!selectionOnly || row.selected) && (!q || `${row.symbol} ${row.name} ${row.mint}`.toLowerCase().includes(q)));
