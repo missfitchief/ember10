@@ -1,0 +1,8 @@
+{
+  "checks": [
+    "140 visible market rows survive a scheduled parent refresh",
+    "explicit refresh resets paging",
+    "older round pagination appends instead of replacing records (intercepted test responses only)"
+  ],
+  "passed": true
+}

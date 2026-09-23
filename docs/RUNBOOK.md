@@ -67,3 +67,9 @@ Use PostgreSQL `pg_dump --format=custom` for a consistent logical backup, plus m
 ## Deployment and public launch
 
 Run the API and worker on a persistent Node host with PostgreSQL, independent of a static frontend host. The local Compose example is not a tested public deployment. Configure TLS, private operator routing, least-privilege database credentials, backup retention, signer policy and alerts before live use. No deployment, domain registration, token creation, mainnet funding or public launch was authorized/performed in this build.
+
+## Current audit handoff
+
+See [external audit](EXTERNAL-AUDIT.md) before operational use. New migration 008 has only been exercised in isolated tests; deploy the API and worker together after a backup and normal migration while paused. Vercel publication does not migrate a financial database.
+
+Incident resolution is an authenticated POST to /operator/incidents/:id/resolve with reason and evidenceReference; it leaves execution paused. A persisting fault can create another incident. Current policy publication is constrained to versions 1 and 2 and needs revision semantics before later policy updates. Windows forced termination can leave a lease until expiry; do not assume graceful release on every shutdown.

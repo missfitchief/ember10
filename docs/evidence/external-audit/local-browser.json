@@ -1,0 +1,13 @@
+{
+  "base": "http://127.0.0.1:5194",
+  "stage": "local",
+  "checks": [
+    "1440: ten real logos loaded, no overflow",
+    "1440: skip link focuses content without changing history",
+    "375: ten real logos loaded, no overflow",
+    "375: skip link focuses content without changing history",
+    "history HTTP failure is not shown as empty"
+  ],
+  "errors": [],
+  "passed": true
+}

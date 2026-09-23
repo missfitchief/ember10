@@ -1,3 +1,5 @@
+> Historical implementation handoff. Its revision, test counts and local paths refer to that stage. For the current audit snapshot, use [EXTERNAL-AUDIT.md](EXTERNAL-AUDIT.md) and [VERIFICATION.md](VERIFICATION.md).
+
 # EMBER10 frontend audit handoff
 
 This iteration continues deployed baseline `61d265ada62703093c575603f5540e202b64f3c2`. The user approved the supplied frontend audit and warm light direction. The existing real-data API, ranking policy, financial worker and accounting contracts are unchanged.

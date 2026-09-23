@@ -1,0 +1,12 @@
+{
+  "base": "https://ember5-pilot.vercel.app",
+  "stage": "public",
+  "checks": [
+    "1440: ten real logos loaded, no overflow",
+    "1440: skip link focuses content without changing history",
+    "375: ten real logos loaded, no overflow",
+    "375: skip link focuses content without changing history"
+  ],
+  "errors": [],
+  "passed": true
+}

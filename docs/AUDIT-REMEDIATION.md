@@ -32,6 +32,7 @@ The current app prevents overlapping overview refreshes (S2-02), configured host
 - Review and implement safe pre-existing WSOL account handling (L-02); current behavior still fails closed.
 - Implement append-only verified attribution of previously quarantined fees and isolated malformed payout-row handling (L-07). Do not rewrite incoming receipts or count quarantined balances as revenue.
 - Finish large export pagination/streaming (S2-06), stable multi-page catalogue observations (S2-01), nginx client-rate-limit attribution (L-11), and remaining policy revision, database-role/TRUNCATE, test-chain replay and Windows graceful-shutdown findings in L-13.
+- L-12 remains open: the builder receives the same mutable intent that later economic-identity comparisons use. Independently inspect and test against malicious builder mutation; this release does not claim an immutable pre-build guard.
 - Re-audit remaining L/D subfindings and dependency advisories against this revision. Historical documents and sample outputs are not current verification results.
 - Provide the previously documented project identity, verified source coverage, fresh evidence providers and separately approved live infrastructure. No funded chain settlement or production database migration was performed.
 - Obtain independent review of this new audit patch. The attempted specialist review was unavailable due to the account usage limit. Root performed the review and validation reported here; it is not an independent sign-off.

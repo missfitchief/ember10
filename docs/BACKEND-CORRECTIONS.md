@@ -1,3 +1,5 @@
+> Historical implementation handoff. Its revision, test counts and local paths refer to that stage. For the current audit snapshot, use [EXTERNAL-AUDIT.md](EXTERNAL-AUDIT.md) and [VERIFICATION.md](VERIFICATION.md).
+
 # EMBER10 backend correction handoff
 
 This change continues the existing repository on one PC. Backend specialists used separate Git worktrees; the integrator merged their changes into `backend/corrections`. No frontend visual files were changed. The public deployment and financial worker were not updated by this handoff.

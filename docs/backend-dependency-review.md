@@ -1,3 +1,5 @@
+> Historical implementation handoff. Its revision, test counts and local paths refer to that stage. For the current audit snapshot, use [EXTERNAL-AUDIT.md](EXTERNAL-AUDIT.md) and [VERIFICATION.md](VERIFICATION.md).
+
 # Backend dependency audit and compatibility review
 
 Reviewed 2026-09-23 against the production dependency audit saved as `outputs/EMBER10-backend-review/dependency-audit-before.json`. Source review: `db041a0` plus execution correction `4adbc75`; dependency lock unchanged during this review. The supplied audit contains 17 affected package entries (10 high, 7 moderate). These include inherited findings along dependency chains, not 17 independent exploits.

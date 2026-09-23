@@ -1,0 +1,485 @@
+{
+  "schemaVersion": 1,
+  "originalAuditRevision": "db041a0",
+  "applicationRevision": "1f67d0dff19c9509f586e3a4c9d98852be1b1ecc",
+  "originalReportSha256": "669a214865810c9cee746ded4ba7f306d65c15ce688d2ea90275c856e9e6aa2d",
+  "topLevelFindings": 37,
+  "warning": "All independent dispositions remain pending. Compound original findings require subfinding-level review.",
+  "findings": [
+    {
+      "id": "S1-01",
+      "inheritedSummary": "EXECUTED  apps/api/server.ts:18  Operator auth bypass via encoded path",
+      "implementationStatus": "implemented-awaiting-independent-review",
+      "independentDisposition": "pending",
+      "note": "Implementation claim only. Independently reproduce the original mechanism and challenge the regression coverage.",
+      "source": "Supplied audit of db041a0",
+      "reviewTargets": [
+        "tests/audit-s1.test.ts",
+        "docs/AUDIT-REMEDIATION.md"
+      ]
+    },
+    {
+      "id": "S1-02",
+      "inheritedSummary": "EXECUTED  packages/integrations/solana.ts:26  fullSnapshot can never succeed against a real RPC",
+      "implementationStatus": "implemented-awaiting-independent-review",
+      "independentDisposition": "pending",
+      "note": "Implementation claim only. Independently reproduce the original mechanism and challenge the regression coverage.",
+      "source": "Supplied audit of db041a0",
+      "reviewTargets": [
+        "tests/audit-s1.test.ts",
+        "docs/AUDIT-REMEDIATION.md"
+      ]
+    },
+    {
+      "id": "S1-03",
+      "inheritedSummary": "MEASURED  packages/integrations/market-data.ts:100-102 (+ http.ts:2 same 12 MB default, used by ember.ts:10)",
+      "implementationStatus": "implemented-awaiting-independent-review",
+      "independentDisposition": "pending",
+      "note": "Implementation claim only. Independently reproduce the original mechanism and challenge the regression coverage.",
+      "source": "Supplied audit of db041a0",
+      "reviewTargets": [
+        "tests/audit-s1.test.ts",
+        "docs/AUDIT-REMEDIATION.md"
+      ]
+    },
+    {
+      "id": "S1-04",
+      "inheritedSummary": "CODE, both channels  packages/integrations/ingestion.ts:22 (SPL variant :40), engine.ts:20, solana.ts:33",
+      "implementationStatus": "implemented-awaiting-independent-review",
+      "independentDisposition": "pending",
+      "note": "Implementation claim only. Independently reproduce the original mechanism and challenge the regression coverage.",
+      "source": "Supplied audit of db041a0",
+      "reviewTargets": [
+        "tests/audit-s1.test.ts",
+        "docs/AUDIT-REMEDIATION.md"
+      ]
+    },
+    {
+      "id": "S1-05",
+      "inheritedSummary": "EXECUTED  packages/db/store.ts:6  pg.Pool has no 'error' listener -> DB restart crashes API and worker",
+      "implementationStatus": "implemented-awaiting-independent-review",
+      "independentDisposition": "pending",
+      "note": "Implementation claim only. Independently reproduce the original mechanism and challenge the regression coverage.",
+      "source": "Supplied audit of db041a0",
+      "reviewTargets": [
+        "tests/audit-s1.test.ts",
+        "docs/AUDIT-REMEDIATION.md"
+      ]
+    },
+    {
+      "id": "S1-06",
+      "inheritedSummary": "MEASURED (arithmetic)  apps/worker/main.ts:46 with money.ts:16",
+      "implementationStatus": "implemented-awaiting-independent-review",
+      "independentDisposition": "pending",
+      "note": "Implementation claim only. Independently reproduce the original mechanism and challenge the regression coverage.",
+      "source": "Supplied audit of db041a0",
+      "reviewTargets": [
+        "tests/audit-s1.test.ts",
+        "docs/AUDIT-REMEDIATION.md"
+      ]
+    },
+    {
+      "id": "S2-01",
+      "inheritedSummary": "MEASURED  apps/web/market.tsx:41-59 (+ src.tsx:26, view-model.ts:79)",
+      "implementationStatus": "partial",
+      "independentDisposition": "pending",
+      "note": "Expanded lists retained with explicit refresh; stable observations across pages still require a design.",
+      "source": "Supplied audit of db041a0",
+      "reviewTargets": [
+        "tests/audit-public.test.ts",
+        "tests/ui-view-model.test.ts",
+        "docs/evidence/external-audit/interaction-results.json"
+      ]
+    },
+    {
+      "id": "S2-02",
+      "inheritedSummary": "CODE  apps/web/src.tsx:20-26  reload() has no request versioning",
+      "implementationStatus": "prior-fix-awaiting-independent-review",
+      "independentDisposition": "pending",
+      "note": "Implementation claim only. Independently reproduce the original mechanism and challenge the regression coverage.",
+      "source": "Supplied audit of db041a0",
+      "reviewTargets": [
+        "tests/audit-public.test.ts",
+        "tests/ui-view-model.test.ts",
+        "docs/evidence/external-audit/interaction-results.json"
+      ]
+    },
+    {
+      "id": "S2-03",
+      "inheritedSummary": "EXECUTED  apps/api/server.ts:23, apps/web/ledger.ts:15/27, apps/api/queries.ts:29/39, records.tsx:11",
+      "implementationStatus": "implemented-awaiting-independent-review",
+      "independentDisposition": "pending",
+      "note": "Implementation claim only. Independently reproduce the original mechanism and challenge the regression coverage.",
+      "source": "Supplied audit of db041a0",
+      "reviewTargets": [
+        "tests/audit-public.test.ts",
+        "tests/ui-view-model.test.ts",
+        "docs/evidence/external-audit/interaction-results.json"
+      ]
+    },
+    {
+      "id": "S2-04",
+      "inheritedSummary": "CODE (Codex F01)  apps/api/hosted.ts:48-53 before :54, overview.ts:10-14,32-36",
+      "implementationStatus": "prior-fix-awaiting-independent-review",
+      "independentDisposition": "pending",
+      "note": "Implementation claim only. Independently reproduce the original mechanism and challenge the regression coverage.",
+      "source": "Supplied audit of db041a0",
+      "reviewTargets": [
+        "tests/audit-public.test.ts",
+        "tests/ui-view-model.test.ts",
+        "docs/evidence/external-audit/interaction-results.json"
+      ]
+    },
+    {
+      "id": "S2-05",
+      "inheritedSummary": "CODE  apps/web/records.tsx:22-41  useLedger partial failures",
+      "implementationStatus": "implemented-awaiting-independent-review",
+      "independentDisposition": "pending",
+      "note": "Implementation claim only. Independently reproduce the original mechanism and challenge the regression coverage.",
+      "source": "Supplied audit of db041a0",
+      "reviewTargets": [
+        "tests/audit-public.test.ts",
+        "tests/ui-view-model.test.ts",
+        "docs/evidence/external-audit/interaction-results.json"
+      ]
+    },
+    {
+      "id": "S2-06",
+      "inheritedSummary": "CODE  apps/api/hosted.ts:35-37, :24-26, :31",
+      "implementationStatus": "partial",
+      "independentDisposition": "pending",
+      "note": "Shared request deadline and CSV header fixed; 4 MB export buffer limit remains.",
+      "source": "Supplied audit of db041a0",
+      "reviewTargets": [
+        "tests/audit-public.test.ts",
+        "tests/ui-view-model.test.ts",
+        "docs/evidence/external-audit/interaction-results.json"
+      ]
+    },
+    {
+      "id": "S2-07",
+      "inheritedSummary": "CODE  apps/web/view-model.ts:7 + src.tsx:28  Skip link writes #main into history: #basket -> skip -> #wallet",
+      "implementationStatus": "implemented-awaiting-independent-review",
+      "independentDisposition": "pending",
+      "note": "Implementation claim only. Independently reproduce the original mechanism and challenge the regression coverage.",
+      "source": "Supplied audit of db041a0",
+      "reviewTargets": [
+        "tests/audit-public.test.ts",
+        "tests/ui-view-model.test.ts",
+        "docs/evidence/external-audit/interaction-results.json"
+      ]
+    },
+    {
+      "id": "S2-08",
+      "inheritedSummary": "EXECUTED (server side) apps/api/hosted.ts:51 + view-model.ts:93  A search over 100 chars (a pasted URL)",
+      "implementationStatus": "implemented-awaiting-independent-review",
+      "independentDisposition": "pending",
+      "note": "Implementation claim only. Independently reproduce the original mechanism and challenge the regression coverage.",
+      "source": "Supplied audit of db041a0",
+      "reviewTargets": [
+        "tests/audit-public.test.ts",
+        "tests/ui-view-model.test.ts",
+        "docs/evidence/external-audit/interaction-results.json"
+      ]
+    },
+    {
+      "id": "S2-09",
+      "inheritedSummary": "CODE  apps/web/market.tsx:6-9  Avatar keeps failed=true after the image URL changes (no reset on prop change).",
+      "implementationStatus": "prior-fix-awaiting-independent-review",
+      "independentDisposition": "pending",
+      "note": "Implementation claim only. Independently reproduce the original mechanism and challenge the regression coverage.",
+      "source": "Supplied audit of db041a0",
+      "reviewTargets": [
+        "tests/audit-public.test.ts",
+        "tests/ui-view-model.test.ts",
+        "docs/evidence/external-audit/interaction-results.json"
+      ]
+    },
+    {
+      "id": "S2-10",
+      "inheritedSummary": "EXECUTED  apps/web/view-model.ts:28  Compact money rounds past the unit: 999,950-999,999 -> \"$1000.0K\"",
+      "implementationStatus": "implemented-awaiting-independent-review",
+      "independentDisposition": "pending",
+      "note": "Implementation claim only. Independently reproduce the original mechanism and challenge the regression coverage.",
+      "source": "Supplied audit of db041a0",
+      "reviewTargets": [
+        "tests/audit-public.test.ts",
+        "tests/ui-view-model.test.ts",
+        "docs/evidence/external-audit/interaction-results.json"
+      ]
+    },
+    {
+      "id": "S2-11",
+      "inheritedSummary": "CODE  apps/api/hosted.ts:64  /api/basket \"universe\" is the top-100 page only, no marketPage/hasMore;",
+      "implementationStatus": "implemented-awaiting-independent-review",
+      "independentDisposition": "pending",
+      "note": "Implementation claim only. Independently reproduce the original mechanism and challenge the regression coverage.",
+      "source": "Supplied audit of db041a0",
+      "reviewTargets": [
+        "tests/audit-public.test.ts",
+        "tests/ui-view-model.test.ts",
+        "docs/evidence/external-audit/interaction-results.json"
+      ]
+    },
+    {
+      "id": "L-01",
+      "inheritedSummary": "CODE, both channels  apps/worker/runner.ts:57  tick() picks ONE planned/waiting_for_route intent per loop",
+      "implementationStatus": "prior-fix-awaiting-independent-review",
+      "independentDisposition": "pending",
+      "note": "Implementation claim only. Independently reproduce the original mechanism and challenge the regression coverage.",
+      "source": "Supplied audit of db041a0",
+      "reviewTargets": [
+        "docs/AUDIT-REMEDIATION.md",
+        "tests/backend-orchestration.test.ts",
+        "tests/execution-regressions.test.ts"
+      ]
+    },
+    {
+      "id": "L-02",
+      "inheritedSummary": "CODE  packages/integrations/jupiter.ts:45  ensure(!getAccountInfo(treasury WSOL ATA)): anyone can create",
+      "implementationStatus": "open",
+      "independentDisposition": "pending",
+      "note": "Pre-existing WSOL ATA still blocks the conservative builder.",
+      "source": "Supplied audit of db041a0",
+      "reviewTargets": [
+        "docs/AUDIT-REMEDIATION.md",
+        "tests/backend-orchestration.test.ts",
+        "tests/execution-regressions.test.ts"
+      ]
+    },
+    {
+      "id": "L-03",
+      "inheritedSummary": "EXECUTED  apps/worker/main.ts:29 + queries.ts:6  In prelaunch AND live the worker stores the whole discovery",
+      "implementationStatus": "implemented-awaiting-independent-review",
+      "independentDisposition": "pending",
+      "note": "Implementation claim only. Independently reproduce the original mechanism and challenge the regression coverage.",
+      "source": "Supplied audit of db041a0",
+      "reviewTargets": [
+        "docs/AUDIT-REMEDIATION.md",
+        "tests/backend-orchestration.test.ts",
+        "tests/execution-regressions.test.ts"
+      ]
+    },
+    {
+      "id": "L-04",
+      "inheritedSummary": "CODE  packages/core/engine.ts:155 + server.ts:32  Incidents are inserted on EVERY loop while a condition",
+      "implementationStatus": "implemented-awaiting-independent-review",
+      "independentDisposition": "pending",
+      "note": "Implementation claim only. Independently reproduce the original mechanism and challenge the regression coverage.",
+      "source": "Supplied audit of db041a0",
+      "reviewTargets": [
+        "docs/AUDIT-REMEDIATION.md",
+        "tests/backend-orchestration.test.ts",
+        "tests/execution-regressions.test.ts"
+      ]
+    },
+    {
+      "id": "L-05",
+      "inheritedSummary": "CODE  apps/web/records.tsx:78, components.tsx:20, src.tsx:49 vs engine.ts:143-145, main.ts:58",
+      "implementationStatus": "prior-fix-awaiting-independent-review",
+      "independentDisposition": "pending",
+      "note": "Implementation claim only. Independently reproduce the original mechanism and challenge the regression coverage.",
+      "source": "Supplied audit of db041a0",
+      "reviewTargets": [
+        "docs/AUDIT-REMEDIATION.md",
+        "tests/backend-orchestration.test.ts",
+        "tests/execution-regressions.test.ts"
+      ]
+    },
+    {
+      "id": "L-06",
+      "inheritedSummary": "CODE (Codex F02, A3)  packages/integrations/solana.ts:103-109  Rent is reconstructed from CURRENT account",
+      "implementationStatus": "prior-fix-awaiting-independent-review",
+      "independentDisposition": "pending",
+      "note": "Implementation claim only. Independently reproduce the original mechanism and challenge the regression coverage.",
+      "source": "Supplied audit of db041a0",
+      "reviewTargets": [
+        "docs/AUDIT-REMEDIATION.md",
+        "tests/backend-orchestration.test.ts",
+        "tests/execution-regressions.test.ts"
+      ]
+    },
+    {
+      "id": "L-07",
+      "inheritedSummary": "CODE, both channels  packages/integrations/ingestion.ts:19-25, ember.ts:15, http.ts:13-14, engine.ts:23-26",
+      "implementationStatus": "partial",
+      "independentDisposition": "pending",
+      "note": "Exact scientific notation supported; quarantine re-attribution and malformed-row isolation remain open.",
+      "source": "Supplied audit of db041a0",
+      "reviewTargets": [
+        "docs/AUDIT-REMEDIATION.md",
+        "tests/backend-orchestration.test.ts",
+        "tests/execution-regressions.test.ts"
+      ]
+    },
+    {
+      "id": "L-08",
+      "inheritedSummary": "CODE (Codex F03)  approval.ts:5 + selection.ts:44-46 + money.ts:4  holderUnits:'0' is accepted by the policy",
+      "implementationStatus": "implemented-awaiting-independent-review",
+      "independentDisposition": "pending",
+      "note": "Implementation claim only. Independently reproduce the original mechanism and challenge the regression coverage.",
+      "source": "Supplied audit of db041a0",
+      "reviewTargets": [
+        "docs/AUDIT-REMEDIATION.md",
+        "tests/backend-orchestration.test.ts",
+        "tests/execution-regressions.test.ts"
+      ]
+    },
+    {
+      "id": "L-09",
+      "inheritedSummary": "CODE (Codex F04/F07/F08/F06/F11)  Recovery and gating gaps: needs_review attempts are never re-inspected even",
+      "implementationStatus": "partial",
+      "independentDisposition": "pending",
+      "note": "Recovery, authorization and pre-sign simulation have regressions; independently assess every original subfinding.",
+      "source": "Supplied audit of db041a0",
+      "reviewTargets": [
+        "docs/AUDIT-REMEDIATION.md",
+        "tests/backend-orchestration.test.ts",
+        "tests/execution-regressions.test.ts"
+      ]
+    },
+    {
+      "id": "L-10",
+      "inheritedSummary": "CODE  apps/worker/main.ts:42 vs :47 vs engine.ts:43  Holder snapshot is captured BEFORE verifiedUniverse walks",
+      "implementationStatus": "implemented-awaiting-independent-review",
+      "independentDisposition": "pending",
+      "note": "Implementation claim only. Independently reproduce the original mechanism and challenge the regression coverage.",
+      "source": "Supplied audit of db041a0",
+      "reviewTargets": [
+        "docs/AUDIT-REMEDIATION.md",
+        "tests/backend-orchestration.test.ts",
+        "tests/execution-regressions.test.ts"
+      ]
+    },
+    {
+      "id": "L-11",
+      "inheritedSummary": "CODE, three angles  apps/api/server.ts:14,17 + deploy/nginx.conf:8  Rate limiter keys on req.ip with",
+      "implementationStatus": "partial",
+      "independentDisposition": "pending",
+      "note": "Trusted hosted proxy identity exists; nginx client attribution remains open.",
+      "source": "Supplied audit of db041a0",
+      "reviewTargets": [
+        "docs/AUDIT-REMEDIATION.md",
+        "tests/backend-orchestration.test.ts",
+        "tests/execution-regressions.test.ts"
+      ]
+    },
+    {
+      "id": "L-12",
+      "inheritedSummary": "CODE, three angles  apps/worker/runner.ts:22 + jupiter.ts:54 + solana.ts:90  The \"prepared plan changed",
+      "implementationStatus": "open",
+      "independentDisposition": "pending",
+      "note": "Builder mutates the intent used by later comparisons; no immutable pre-build baseline established.",
+      "source": "Supplied audit of db041a0",
+      "reviewTargets": [
+        "docs/AUDIT-REMEDIATION.md",
+        "tests/backend-orchestration.test.ts",
+        "tests/execution-regressions.test.ts"
+      ]
+    },
+    {
+      "id": "L-13",
+      "inheritedSummary": "CODE (Codex F09/F12/F13/F14/F15, B)  engine.ts:149 reconcile ignores in-flight token payouts/burns' SOL cost ->",
+      "implementationStatus": "partial",
+      "independentDisposition": "pending",
+      "note": "Bounded native reconciliation and CSV protection corrected; test-chain replay, role/TRUNCATE, policy revisions and Windows shutdown remain open.",
+      "source": "Supplied audit of db041a0",
+      "reviewTargets": [
+        "docs/AUDIT-REMEDIATION.md",
+        "tests/backend-orchestration.test.ts",
+        "tests/execution-regressions.test.ts"
+      ]
+    },
+    {
+      "id": "D-01",
+      "inheritedSummary": "docs/VERIFICATION.md:8-9 is stale (claims 43 tests/3 files and 7 hosted tests; actual 79/6 and 5); its demo",
+      "implementationStatus": "implemented-awaiting-independent-review",
+      "independentDisposition": "pending",
+      "note": "Implementation claim only. Independently reproduce the original mechanism and challenge the regression coverage.",
+      "source": "Supplied audit of db041a0",
+      "reviewTargets": [
+        "docs/AUDIT-REMEDIATION.md",
+        "tests/backend-orchestration.test.ts",
+        "tests/execution-regressions.test.ts"
+      ]
+    },
+    {
+      "id": "D-02",
+      "inheritedSummary": "The \"exact revision\" proof is circular: revision() echoes EMBER10_REVISION, verify-public.mjs:26 asserts the",
+      "implementationStatus": "implemented-awaiting-independent-review",
+      "independentDisposition": "pending",
+      "note": "Implementation claim only. Independently reproduce the original mechanism and challenge the regression coverage.",
+      "source": "Supplied audit of db041a0",
+      "reviewTargets": [
+        "docs/AUDIT-REMEDIATION.md",
+        "tests/backend-orchestration.test.ts",
+        "tests/execution-regressions.test.ts"
+      ]
+    },
+    {
+      "id": "D-03",
+      "inheritedSummary": "Test oracles that cannot fail: engine.test.ts:55 \"rejects forged outcome evidence\" contains no forged evidence",
+      "implementationStatus": "partial",
+      "independentDisposition": "pending",
+      "note": "New regression tests added; original test names/oracles are not all repaired.",
+      "source": "Supplied audit of db041a0",
+      "reviewTargets": [
+        "docs/AUDIT-REMEDIATION.md",
+        "tests/backend-orchestration.test.ts",
+        "tests/execution-regressions.test.ts"
+      ]
+    },
+    {
+      "id": "D-04",
+      "inheritedSummary": "docs/demo/sample-epoch.json carries \"created_at\":{} because canonical() (model.ts:13) serializes Date objects",
+      "implementationStatus": "partial",
+      "independentDisposition": "pending",
+      "note": "Canonical Date fixed; archived sample export remains historical and has not been regenerated.",
+      "source": "Supplied audit of db041a0",
+      "reviewTargets": [
+        "docs/AUDIT-REMEDIATION.md",
+        "tests/backend-orchestration.test.ts",
+        "tests/execution-regressions.test.ts"
+      ]
+    },
+    {
+      "id": "D-05",
+      "inheritedSummary": "npm audit: 17 advisories (10 high, 7 moderate), all in the Solana dependency tree (bigint-buffer, node-fetch",
+      "implementationStatus": "partial",
+      "independentDisposition": "pending",
+      "note": "Production audit reduced to five high entries; bigint-buffer chain still unresolved.",
+      "source": "Supplied audit of db041a0",
+      "reviewTargets": [
+        "docs/AUDIT-REMEDIATION.md",
+        "tests/backend-orchestration.test.ts",
+        "tests/execution-regressions.test.ts"
+      ]
+    },
+    {
+      "id": "D-06",
+      "inheritedSummary": "deploy/nginx.conf:7 CSP img-src 'self' data: blocks the embercurve.fun logos the app allows -> initials only in",
+      "implementationStatus": "prior-fix-awaiting-independent-review",
+      "independentDisposition": "pending",
+      "note": "Implementation claim only. Independently reproduce the original mechanism and challenge the regression coverage.",
+      "source": "Supplied audit of db041a0",
+      "reviewTargets": [
+        "docs/AUDIT-REMEDIATION.md",
+        "tests/backend-orchestration.test.ts",
+        "tests/execution-regressions.test.ts"
+      ]
+    },
+    {
+      "id": "D-07",
+      "inheritedSummary": "Cleanup (low priority, from the cleanup angle): 4 base58-pubkey validators (market-data.ts:10, hosted.ts:8,",
+      "implementationStatus": "partial",
+      "independentDisposition": "pending",
+      "note": "Array grouping fixed; remaining low-priority duplication/schema/loop cleanup not closed.",
+      "source": "Supplied audit of db041a0",
+      "reviewTargets": [
+        "docs/AUDIT-REMEDIATION.md",
+        "tests/backend-orchestration.test.ts",
+        "tests/execution-regressions.test.ts"
+      ]
+    }
+  ]
+}

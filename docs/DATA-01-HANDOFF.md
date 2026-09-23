@@ -1,4 +1,6 @@
-﻿# DATA-01 handoff — same repository, one-PC worktree
+> Historical implementation handoff. Its revision, test counts and local paths refer to that stage. For the current audit snapshot, use [EXTERNAL-AUDIT.md](EXTERNAL-AUDIT.md) and [VERIFICATION.md](VERIFICATION.md).
+
+# DATA-01 handoff — same repository, one-PC worktree
 
 Owner: DATA-01. Branch: `data-01`. Baseline: `e67ed95ff9d6783f4583bc832a33270e26c32ac5`. Canonical integration owner is the root agent; no manual file transfer or ZIP is required.
 

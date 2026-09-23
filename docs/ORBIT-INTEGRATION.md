@@ -1,3 +1,5 @@
+> Historical implementation handoff. Its revision, test counts and local paths refer to that stage. For the current audit snapshot, use [EXTERNAL-AUDIT.md](EXTERNAL-AUDIT.md) and [VERIFICATION.md](VERIFICATION.md).
+
 # Orbit frontend integration
 
 The supplied frontend patch was applied with `git apply --check` to the existing repository in a separate one-PC worktree based on backend revision `e4e08ca1abed7f2f2008d1067c11dc340fe28d7e`. The patch's original base was `db041a0cd3f986c36504e07288ab7d2b705841b6`; its SHA-256 matched the supplied manifest: `000175f414387454e2674889e41dff8f3aaa3a91bc26526e1b701ab259659f07`. The initial rebuilt JS and CSS matched the supplied build exactly. Subsequent changes below resolve integration findings.

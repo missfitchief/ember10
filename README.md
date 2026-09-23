@@ -6,6 +6,10 @@ Public pilot URL: **https://ember5-pilot.vercel.app**. The Orbit frontend presen
 
 Backend corrections are documented in [BACKEND-CORRECTIONS.md](docs/BACKEND-CORRECTIONS.md), with [test, source and independent review evidence](docs/evidence/backend/README.md). [Orbit integration](docs/ORBIT-INTEGRATION.md) retains those corrections and reconciles the frontend with their exact accounting units and states. The financial worker remains undeployed and execution is disabled by default; provider evidence gaps and the residual dependency advisory remain explicit.
 
+## External audit
+
+Start with [the external audit brief](docs/EXTERNAL-AUDIT.md), [current verification](docs/VERIFICATION.md) and [the complete findings register](docs/evidence/external-audit/findings.json). All source, migration and test files are included in the repository snapshot. The public runtime is `1f67d0d`; a later documentation-only commit is identified separately. Known open findings are not represented as resolved.
+
 ## Run locally
 
 Requires Node 22.12+ (validated on Node 24.17.0). In PowerShell use `npm.cmd` if execution policy blocks `npm.ps1`.
@@ -23,7 +27,7 @@ For a separate synthetic ledger with five assets and partially delivered rewards
 npm run dev -- --demo
 ```
 
-Open **http://127.0.0.1:5174**. Demo uses its own database, API port 4311, deterministic synthetic receipts, and **cannot broadcast**. Demo wallet: `AEqeDfVNmZW5fowqFF6KAiuoMDBCUTeYDGVioFmhP1jF`. With the demo worker stopped and its lease expired, `npm run demo` replays the same epoch without creating a second purchase or payment. Graceful shutdown releases the lease; forced termination may require up to two minutes for expiry.
+The synthetic API uses its own database and port 4311 and **cannot broadcast**. The browser at port 5174 intentionally refuses test/demo reward records; inspect this fixture through the CLI and JSON exports instead. Demo wallet: `AEqeDfVNmZW5fowqFF6KAiuoMDBCUTeYDGVioFmhP1jF`. With the demo worker stopped and its lease expired, `npm run demo` replays the same epoch without creating a second purchase or payment. Graceful shutdown releases the lease; forced termination may require up to two minutes for expiry.
 
 If using external PostgreSQL instead, copy `.env.example` to `.env`, set `DATABASE_URL`, then run `npm run db:migrate`, `npm run api`, `npm run worker`, and `npm run dev:web` in separate terminals. Use a distinct database per mode.
 

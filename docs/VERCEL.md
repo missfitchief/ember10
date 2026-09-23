@@ -32,6 +32,6 @@ For a separately hosted real ledger, the existing server-only `EMBER5_API_ORIGIN
 
 Secrets, local databases, runtime keys, logs and Vercel account metadata are excluded from Git and deployment uploads. Tests remain in build inputs because existing development scripts import isolated fixtures during type checking; the production function's dependency graph does not import them. Supplied design references and dated snapshots are review inputs outside the application.
 
-Exact deployment IDs, final revision and verification results belong to the adjacent `EMBER10-review` evidence directory and `docs/deployment.json`.
+Current deployment IDs, exact runtime revision and verification results are committed in `docs/deployment.json` and `docs/evidence/external-audit`. Earlier adjacent review directories are historical work products, not required auditor inputs.
 
 The subsequent warm-light correction evidence is kept separately in `EMBER10-light-review` so the prior verified deployment evidence remains intact. `PUBLIC_SITE_URL` is a build-time setting for canonical and static sharing metadata; it does not configure a project mint or financial backend. The committed share image must be reachable with an image MIME type. Verify the initial response without JavaScript, inspect the card visually and keep social-network cache refresh claims separate from these checks.

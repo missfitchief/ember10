@@ -1,0 +1,25 @@
+{
+  "capturedAt": "2026-09-23T18:56:11.511Z",
+  "codeRevision": "1f67d0dff19c9509f586e3a4c9d98852be1b1ecc",
+  "node": "v24.17.0",
+  "npm": "11.13.0",
+  "platform": "win32",
+  "testFiles": 18,
+  "tests": 242,
+  "typecheck": "passed",
+  "viteBuild": "passed",
+  "testDatabase": "isolated schemas in local ember5_test PostgreSQL 18",
+  "chainTransactions": "none",
+  "independentReview": false,
+  "browser": "Chromium desktop and mobile emulation, not physical iPhone",
+  "dependencyAudit": {
+    "info": 0,
+    "low": 0,
+    "moderate": 0,
+    "high": 5,
+    "critical": 0,
+    "total": 5
+  },
+  "productionDatabaseMigration": false,
+  "vitestSuites": 32
+}

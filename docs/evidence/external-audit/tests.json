@@ -1,0 +1,3169 @@
+{
+  "numTotalTestSuites": 32,
+  "numPassedTestSuites": 32,
+  "numFailedTestSuites": 0,
+  "numPendingTestSuites": 0,
+  "numTotalTests": 242,
+  "numPassedTests": 242,
+  "numFailedTests": 0,
+  "numPendingTests": 0,
+  "numTodoTests": 0,
+  "snapshot": {
+    "added": 0,
+    "failure": false,
+    "filesAdded": 0,
+    "filesRemoved": 0,
+    "filesRemovedList": [],
+    "filesUnmatched": 0,
+    "filesUpdated": 0,
+    "matched": 0,
+    "total": 0,
+    "unchecked": 0,
+    "uncheckedKeysByFile": [],
+    "unmatched": 0,
+    "updated": 0,
+    "didUpdate": false
+  },
+  "startTime": 1790189620402,
+  "success": true,
+  "testResults": [
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [],
+          "fullName": "protects spreadsheet formulas after spaces and controls while quoting ordinary text",
+          "status": "passed",
+          "title": "protects spreadsheet formulas after spaces and controls while quoting ordinary text",
+          "duration": 1.9593999999999596,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [],
+          "fullName": "promotes compact market-cap rounding boundaries and rejects a zero holder threshold",
+          "status": "passed",
+          "title": "promotes compact market-cap rounding boundaries and rejects a zero holder threshold",
+          "duration": 5.63130000000001,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [],
+          "fullName": "distinguishes unavailable history from empty history and rejects malformed or demo pages",
+          "status": "passed",
+          "title": "distinguishes unavailable history from empty history and rejects malformed or demo pages",
+          "duration": 1.48599999999999,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [],
+          "fullName": "labels demo records consistently on ordinary public JSON routes",
+          "status": "passed",
+          "title": "labels demo records consistently on ordinary public JSON routes",
+          "duration": 110.54169999999999,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [],
+          "fullName": "keeps CSV download headers and shares one bounded deadline across the proxy requests",
+          "status": "passed",
+          "title": "keeps CSV download headers and shares one bounded deadline across the proxy requests",
+          "duration": 22.68739999999991,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        }
+      ],
+      "startTime": 1790189665615,
+      "endTime": 1790189665756.6875,
+      "status": "passed",
+      "message": "",
+      "name": "<repository>/tests/audit-public.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [],
+          "fullName": "requires configured operator authentication on decoded and absolute-form routes",
+          "status": "passed",
+          "title": "requires configured operator authentication on decoded and absolute-form routes",
+          "duration": 111.72659999999996,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [],
+          "fullName": "an idle pool error is handled and does not expose connection credentials",
+          "status": "passed",
+          "title": "an idle pool error is handled and does not expose connection credentials",
+          "duration": 1.9066000000000258,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [],
+          "fullName": "fullSnapshot emits the real web3 JSON-RPC commitment shape and rejects an older supply slot",
+          "status": "passed",
+          "title": "fullSnapshot emits the real web3 JSON-RPC commitment shape and rejects an older supply slot",
+          "duration": 78.25800000000004,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [],
+          "fullName": "zero transfers cannot pin the treasury cursor and later missing evidence retains per-signature progress",
+          "status": "passed",
+          "title": "zero transfers cannot pin the treasury cursor and later missing evidence retains per-signature progress",
+          "duration": 3.636600000000044,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [],
+          "fullName": "accepts a catalogue beyond the former 12 MB cap and rejects the documented new cap",
+          "status": "passed",
+          "title": "accepts a catalogue beyond the former 12 MB cap and rejects the documented new cap",
+          "duration": 1082.5129,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [],
+          "fullName": "budgets only epoch costs and parses exact exponent-form base units",
+          "status": "passed",
+          "title": "budgets only epoch costs and parses exact exponent-form base units",
+          "duration": 0.7938000000001466,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        }
+      ],
+      "startTime": 1790189658653,
+      "endTime": 1790189659931.7937,
+      "status": "passed",
+      "message": "",
+      "name": "<repository>/tests/audit-s1.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [
+            "automatic current selection and immutable epoch input"
+          ],
+          "fullName": "automatic current selection and immutable epoch input A leaves and B enters on the next observation in the same day, leaving the saved epoch unchanged",
+          "status": "passed",
+          "title": "A leaves and B enters on the next observation in the same day, leaving the saved epoch unchanged",
+          "duration": 23.687999999999988,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "automatic current selection and immutable epoch input"
+          ],
+          "fullName": "automatic current selection and immutable epoch input discovers new mints automatically and keeps duplicate symbols separate",
+          "status": "passed",
+          "title": "discovers new mints automatically and keeps duplicate symbols separate",
+          "duration": 14.709300000000098,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "automatic current selection and immutable epoch input"
+          ],
+          "fullName": "automatic current selection and immutable epoch input never treats partial/warming coverage or fewer than ten as a commit-ready selection",
+          "status": "passed",
+          "title": "never treats partial/warming coverage or fewer than ten as a commit-ready selection",
+          "duration": 12.694899999999961,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "automatic current selection and immutable epoch input"
+          ],
+          "fullName": "automatic current selection and immutable epoch input blocks stale metrics, failed routes and an exact-budget mismatch",
+          "status": "passed",
+          "title": "blocks stale metrics, failed routes and an exact-budget mismatch",
+          "duration": 65.45669999999996,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "automatic current selection and immutable epoch input"
+          ],
+          "fullName": "automatic current selection and immutable epoch input keeps last-success timestamps on outage, backs off and does not trust saved state after restart",
+          "status": "passed",
+          "title": "keeps last-success timestamps on outage, backs off and does not trust saved state after restart",
+          "duration": 18.619000000000028,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "automatic current selection and immutable epoch input"
+          ],
+          "fullName": "automatic current selection and immutable epoch input coalesces simultaneous refreshes and expires a cached ready result",
+          "status": "passed",
+          "title": "coalesces simultaneous refreshes and expires a cached ready result",
+          "duration": 12.504000000000019,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "automatic current selection and immutable epoch input"
+          ],
+          "fullName": "automatic current selection and immutable epoch input revalidates liquidity before freezing, even when historical membership matches",
+          "status": "passed",
+          "title": "revalidates liquidity before freezing, even when historical membership matches",
+          "duration": 10.92509999999993,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "automatic current selection and immutable epoch input"
+          ],
+          "fullName": "automatic current selection and immutable epoch input revalidates volume before freezing, even when historical membership matches",
+          "status": "passed",
+          "title": "revalidates volume before freezing, even when historical membership matches",
+          "duration": 12.211099999999988,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "automatic current selection and immutable epoch input"
+          ],
+          "fullName": "automatic current selection and immutable epoch input revalidates census before freezing, even when historical membership matches",
+          "status": "passed",
+          "title": "revalidates census before freezing, even when historical membership matches",
+          "duration": 9.111299999999801,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "automatic current selection and immutable epoch input"
+          ],
+          "fullName": "automatic current selection and immutable epoch input revalidates holders before freezing, even when historical membership matches",
+          "status": "passed",
+          "title": "revalidates holders before freezing, even when historical membership matches",
+          "duration": 10.221499999999878,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "automatic current selection and immutable epoch input"
+          ],
+          "fullName": "automatic current selection and immutable epoch input revalidates mint authority before freezing, even when historical membership matches",
+          "status": "passed",
+          "title": "revalidates mint authority before freezing, even when historical membership matches",
+          "duration": 16.091900000000123,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "automatic current selection and immutable epoch input"
+          ],
+          "fullName": "automatic current selection and immutable epoch input revalidates freeze authority before freezing, even when historical membership matches",
+          "status": "passed",
+          "title": "revalidates freeze authority before freezing, even when historical membership matches",
+          "duration": 12.979000000000042,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "automatic current selection and immutable epoch input"
+          ],
+          "fullName": "automatic current selection and immutable epoch input revalidates program before freezing, even when historical membership matches",
+          "status": "passed",
+          "title": "revalidates program before freezing, even when historical membership matches",
+          "duration": 10.995699999999943,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "automatic current selection and immutable epoch input"
+          ],
+          "fullName": "automatic current selection and immutable epoch input revalidates extensions before freezing, even when historical membership matches",
+          "status": "passed",
+          "title": "revalidates extensions before freezing, even when historical membership matches",
+          "duration": 13.033099999999877,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "automatic current selection and immutable epoch input"
+          ],
+          "fullName": "automatic current selection and immutable epoch input revalidates category before freezing, even when historical membership matches",
+          "status": "passed",
+          "title": "revalidates category before freezing, even when historical membership matches",
+          "duration": 11.665299999999888,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "automatic current selection and immutable epoch input"
+          ],
+          "fullName": "automatic current selection and immutable epoch input revalidates age before freezing, even when historical membership matches",
+          "status": "passed",
+          "title": "revalidates age before freezing, even when historical membership matches",
+          "duration": 11.207400000000007,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "automatic current selection and immutable epoch input"
+          ],
+          "fullName": "automatic current selection and immutable epoch input revalidates pool before freezing, even when historical membership matches",
+          "status": "passed",
+          "title": "revalidates pool before freezing, even when historical membership matches",
+          "duration": 9.12740000000008,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "automatic current selection and immutable epoch input"
+          ],
+          "fullName": "automatic current selection and immutable epoch input revalidates provenance before freezing, even when historical membership matches",
+          "status": "passed",
+          "title": "revalidates provenance before freezing, even when historical membership matches",
+          "duration": 8.9541999999999,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "automatic current selection and immutable epoch input"
+          ],
+          "fullName": "automatic current selection and immutable epoch input revalidates basis before freezing, even when historical membership matches",
+          "status": "passed",
+          "title": "revalidates basis before freezing, even when historical membership matches",
+          "duration": 10.06919999999991,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "automatic current selection and immutable epoch input"
+          ],
+          "fullName": "automatic current selection and immutable epoch input revalidates route before freezing, even when historical membership matches",
+          "status": "passed",
+          "title": "revalidates route before freezing, even when historical membership matches",
+          "duration": 11.880699999999933,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "automatic current selection and immutable epoch input"
+          ],
+          "fullName": "automatic current selection and immutable epoch input revalidates source before freezing, even when historical membership matches",
+          "status": "passed",
+          "title": "revalidates source before freezing, even when historical membership matches",
+          "duration": 12.790300000000116,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "automatic current selection and immutable epoch input"
+          ],
+          "fullName": "automatic current selection and immutable epoch input rejects a changed top ten instead of silently funding the historical basket",
+          "status": "passed",
+          "title": "rejects a changed top ten instead of silently funding the historical basket",
+          "duration": 14.182900000000018,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "automatic current selection and immutable epoch input"
+          ],
+          "fullName": "automatic current selection and immutable epoch input quarantines all conflicting observations of a mint instead of selecting the convenient copy",
+          "status": "passed",
+          "title": "quarantines all conflicting observations of a mint instead of selecting the convenient copy",
+          "duration": 15.168100000000095,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "automatic current selection and immutable epoch input"
+          ],
+          "fullName": "automatic current selection and immutable epoch input serializes simultaneous forced refreshes even when their budgets differ",
+          "status": "passed",
+          "title": "serializes simultaneous forced refreshes even when their budgets differ",
+          "duration": 109.4858999999999,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "automatic current selection and immutable epoch input"
+          ],
+          "fullName": "automatic current selection and immutable epoch input bounds concurrent provider work without dropping the tail of the catalogue",
+          "status": "passed",
+          "title": "bounds concurrent provider work without dropping the tail of the catalogue",
+          "duration": 119.64380000000006,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "automated evidence producer contract"
+          ],
+          "fullName": "automated evidence producer contract proves age from successful pool initialization, never an old arbitrary mention of its PDA",
+          "status": "passed",
+          "title": "proves age from successful pool initialization, never an old arbitrary mention of its PDA",
+          "duration": 2.896299999999883,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "automated evidence producer contract"
+          ],
+          "fullName": "automated evidence producer contract bypasses a still-valid 45-second display cache immediately before commitment",
+          "status": "passed",
+          "title": "bypasses a still-valid 45-second display cache immediately before commitment",
+          "duration": 8.972299999999905,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "automated evidence producer contract"
+          ],
+          "fullName": "automated evidence producer contract backs off public catalogue failures without replacing the last observation",
+          "status": "passed",
+          "title": "backs off public catalogue failures without replacing the last observation",
+          "duration": 2063.7936,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "automated evidence producer contract"
+          ],
+          "fullName": "automated evidence producer contract fetches the full current catalogue and an approved machine feed, not a metrics file",
+          "status": "passed",
+          "title": "fetches the full current catalogue and an approved machine feed, not a metrics file",
+          "duration": 25.714699999999993,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "automated evidence producer contract"
+          ],
+          "fullName": "automated evidence producer contract keeps missing provider, new omitted mint, warming data and source outage blocked",
+          "status": "passed",
+          "title": "keeps missing provider, new omitted mint, warming data and source outage blocked",
+          "duration": 31.935699999999997,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "automated evidence producer contract"
+          ],
+          "fullName": "automated evidence producer contract validates host, exact universe, price/supply arithmetic, freshness and a complete 24h window",
+          "status": "passed",
+          "title": "validates host, exact universe, price/supply arithmetic, freshness and a complete 24h window",
+          "duration": 13.01299999999992,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "automated evidence producer contract"
+          ],
+          "fullName": "automated evidence producer contract collects built-in Jupiter observations without a custom metrics service while preserving unavailable eligibility evidence",
+          "status": "passed",
+          "title": "collects built-in Jupiter observations without a custom metrics service while preserving unavailable eligibility evidence",
+          "duration": 36.53909999999996,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "automated evidence producer contract"
+          ],
+          "fullName": "automated evidence producer contract excludes verified below-threshold liquidity and volume before costly RPC census and route verification",
+          "status": "passed",
+          "title": "excludes verified below-threshold liquidity and volume before costly RPC census and route verification",
+          "duration": 14.16319999999996,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        }
+      ],
+      "startTime": 1790189651916,
+      "endTime": 1790189654692.163,
+      "status": "passed",
+      "message": "",
+      "name": "<repository>/tests/automatic-selection.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [],
+          "fullName": "bounds operational polling while preserving funded evidence and audits incident resolution without resuming",
+          "status": "passed",
+          "title": "bounds operational polling while preserving funded evidence and audits incident resolution without resuming",
+          "duration": 333.105,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [],
+          "fullName": "captures holder and price evidence after selection and reauthorizes before committing",
+          "status": "passed",
+          "title": "captures holder and price evidence after selection and reauthorizes before committing",
+          "duration": 188.05629999999996,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [],
+          "fullName": "commits a new current top ten each round, admits a newly discovered mint, and preserves the first epoch across restart",
+          "status": "passed",
+          "title": "commits a new current top ten each round, admits a newly discovered mint, and preserves the first epoch across restart",
+          "duration": 236.17650000000003,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [],
+          "fullName": "Engine.plan rechecks liquidityMicroUsd even when the caller reuses a ready historical basket",
+          "status": "passed",
+          "title": "Engine.plan rechecks liquidityMicroUsd even when the caller reuses a ready historical basket",
+          "duration": 135.49919999999997,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [],
+          "fullName": "Engine.plan rechecks volumeMicroUsd even when the caller reuses a ready historical basket",
+          "status": "passed",
+          "title": "Engine.plan rechecks volumeMicroUsd even when the caller reuses a ready historical basket",
+          "duration": 144.28240000000005,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [],
+          "fullName": "Engine.plan rechecks holders even when the caller reuses a ready historical basket",
+          "status": "passed",
+          "title": "Engine.plan rechecks holders even when the caller reuses a ready historical basket",
+          "duration": 162.21929999999975,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [],
+          "fullName": "Engine.plan rechecks censusComplete even when the caller reuses a ready historical basket",
+          "status": "passed",
+          "title": "Engine.plan rechecks censusComplete even when the caller reuses a ready historical basket",
+          "duration": 126.13890000000038,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [],
+          "fullName": "Engine.plan rechecks program even when the caller reuses a ready historical basket",
+          "status": "passed",
+          "title": "Engine.plan rechecks program even when the caller reuses a ready historical basket",
+          "duration": 130.2264,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [],
+          "fullName": "Engine.plan rechecks poolVerified even when the caller reuses a ready historical basket",
+          "status": "passed",
+          "title": "Engine.plan rechecks poolVerified even when the caller reuses a ready historical basket",
+          "duration": 127.16129999999976,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [],
+          "fullName": "Engine.plan rechecks provenanceVerified even when the caller reuses a ready historical basket",
+          "status": "passed",
+          "title": "Engine.plan rechecks provenanceVerified even when the caller reuses a ready historical basket",
+          "duration": 130.45339999999987,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [],
+          "fullName": "Engine.plan rechecks graduated even when the caller reuses a ready historical basket",
+          "status": "passed",
+          "title": "Engine.plan rechecks graduated even when the caller reuses a ready historical basket",
+          "duration": 121.12120000000004,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [],
+          "fullName": "Engine.plan rechecks createdAt even when the caller reuses a ready historical basket",
+          "status": "passed",
+          "title": "Engine.plan rechecks createdAt even when the caller reuses a ready historical basket",
+          "duration": 173.0969,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [],
+          "fullName": "Engine.plan rechecks mintAuthority even when the caller reuses a ready historical basket",
+          "status": "passed",
+          "title": "Engine.plan rechecks mintAuthority even when the caller reuses a ready historical basket",
+          "duration": 133.83370000000014,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [],
+          "fullName": "Engine.plan rechecks freezeAuthority even when the caller reuses a ready historical basket",
+          "status": "passed",
+          "title": "Engine.plan rechecks freezeAuthority even when the caller reuses a ready historical basket",
+          "duration": 133.8081000000002,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [],
+          "fullName": "Engine.plan rechecks extensions even when the caller reuses a ready historical basket",
+          "status": "passed",
+          "title": "Engine.plan rechecks extensions even when the caller reuses a ready historical basket",
+          "duration": 137.41830000000027,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [],
+          "fullName": "Engine.plan rechecks category even when the caller reuses a ready historical basket",
+          "status": "passed",
+          "title": "Engine.plan rechecks category even when the caller reuses a ready historical basket",
+          "duration": 126.7188000000001,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [],
+          "fullName": "Engine.plan rechecks rankBasis even when the caller reuses a ready historical basket",
+          "status": "passed",
+          "title": "Engine.plan rechecks rankBasis even when the caller reuses a ready historical basket",
+          "duration": 122.25400000000036,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [],
+          "fullName": "Engine.plan rechecks at even when the caller reuses a ready historical basket",
+          "status": "passed",
+          "title": "Engine.plan rechecks at even when the caller reuses a ready historical basket",
+          "duration": 123.45810000000029,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [],
+          "fullName": "Engine.plan rechecks routeViable even when the caller reuses a ready historical basket",
+          "status": "passed",
+          "title": "Engine.plan rechecks routeViable even when the caller reuses a ready historical basket",
+          "duration": 127.69440000000031,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [],
+          "fullName": "blocks prospective below-USD50 policies while preserving immutable legacy policy documents",
+          "status": "passed",
+          "title": "blocks prospective below-USD50 policies while preserving immutable legacy policy documents",
+          "duration": 130.46600000000035,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [],
+          "fullName": "worker orchestration recovers original finality under invalid approval and never starts unrelated unsigned work",
+          "status": "passed",
+          "title": "worker orchestration recovers original finality under invalid approval and never starts unrelated unsigned work",
+          "duration": 199.91060000000016,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [],
+          "fullName": "worker checks funding-route changes before signing, and disabled broadcast remains recovery-only",
+          "status": "passed",
+          "title": "worker checks funding-route changes before signing, and disabled broadcast remains recovery-only",
+          "duration": 202.85509999999977,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [],
+          "fullName": "rechecks effective approval after asynchronous execution conditions",
+          "status": "passed",
+          "title": "rechecks effective approval after asynchronous execution conditions",
+          "duration": 137.46659999999974,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [],
+          "fullName": "runIntent alone atomically releases unused developer payout cost after finalized transfer",
+          "status": "passed",
+          "title": "runIntent alone atomically releases unused developer payout cost after finalized transfer",
+          "duration": 180.69850000000042,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [],
+          "fullName": "local overview exposes selection, funded history and actual allocation; stale selection cannot authorize purchases",
+          "status": "passed",
+          "title": "local overview exposes selection, funded history and actual allocation; stale selection cannot authorize purchases",
+          "duration": 760.0944,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [],
+          "fullName": "hosted overview uses authoritative backend with search parameters and rejects demo substitution",
+          "status": "passed",
+          "title": "hosted overview uses authoritative backend with search parameters and rejects demo substitution",
+          "duration": 167.19990000000053,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [],
+          "fullName": "trusted proxy identity is signed, request-bound, time-bound and independent of caller forwarding headers",
+          "status": "passed",
+          "title": "trusted proxy identity is signed, request-bound, time-bound and independent of caller forwarding headers",
+          "duration": 155.07849999999962,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [],
+          "fullName": "operator recovery and expense endpoints require authentication and reject user-supplied terminal outcomes",
+          "status": "passed",
+          "title": "operator recovery and expense endpoints require authentication and reject user-supplied terminal outcomes",
+          "duration": 135.59889999999996,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [],
+          "fullName": "a funding route change during asynchronous evidence validation blocks signing",
+          "status": "passed",
+          "title": "a funding route change during asynchronous evidence validation blocks signing",
+          "duration": 135.58729999999923,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [],
+          "fullName": "public discovery status follows current observed-market records and does not return the full catalogue",
+          "status": "passed",
+          "title": "public discovery status follows current observed-market records and does not return the full catalogue",
+          "duration": 115.64540000000034,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [],
+          "fullName": "partial automatic evidence remains an explicit unknown asset check instead of disappearing",
+          "status": "passed",
+          "title": "partial automatic evidence remains an explicit unknown asset check instead of disappearing",
+          "duration": 505.45859999999993,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [],
+          "fullName": "public epoch export preserves attribution while withholding raw credentials and signed payloads",
+          "status": "passed",
+          "title": "public epoch export preserves attribution while withholding raw credentials and signed payloads",
+          "duration": 296.2678999999998,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [],
+          "fullName": "operator ledger writes require actual mainnet genesis, successful metadata and the requested signature",
+          "status": "passed",
+          "title": "operator ledger writes require actual mainnet genesis, successful metadata and the requested signature",
+          "duration": 133.1971999999996,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [],
+          "fullName": "expense settlement endpoint fetches chain proof and rejects double accounting rather than accepting supplied outcomes",
+          "status": "passed",
+          "title": "expense settlement endpoint fetches chain proof and rejects double accounting rather than accepting supplied outcomes",
+          "duration": 149.32120000000032,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [],
+          "fullName": "a persisted pause blocks new holder reservations inside the ledger transaction while preserving existing credits",
+          "status": "passed",
+          "title": "a persisted pause blocks new holder reservations inside the ledger transaction while preserving existing credits",
+          "duration": 200.5544,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [],
+          "fullName": "recovery configuration needs no signer or effective approval while enabling new signing still requires both",
+          "status": "passed",
+          "title": "recovery configuration needs no signer or effective approval while enabling new signing still requires both",
+          "duration": 122.8757999999998,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [],
+          "fullName": "public accounting never labels an in-flight or stale reconciliation as reconciled",
+          "status": "passed",
+          "title": "public accounting never labels an in-flight or stale reconciliation as reconciled",
+          "duration": 131.3701999999994,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [],
+          "fullName": "self and circular capital transfers cannot create reserve without an actual treasury gain",
+          "status": "passed",
+          "title": "self and circular capital transfers cannot create reserve without an actual treasury gain",
+          "duration": 132.22219999999925,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [],
+          "fullName": "developer expenses approved during external authorization block the final locked signing decision",
+          "status": "passed",
+          "title": "developer expenses approved during external authorization block the final locked signing decision",
+          "duration": 164.16449999999986,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [],
+          "fullName": "the actual local overview route and hosted adapter expose the same recorded selection and funded epoch",
+          "status": "passed",
+          "title": "the actual local overview route and hosted adapter expose the same recorded selection and funded epoch",
+          "duration": 586.8427999999994,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        }
+      ],
+      "startTime": 1790189634330,
+      "endTime": 1790189641985.8428,
+      "status": "passed",
+      "message": "",
+      "name": "<repository>/tests/backend-orchestration.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [
+            "exact accounting and eligibility"
+          ],
+          "fullName": "exact accounting and eligibility conserves tiny quantities with stable ties and extreme balances",
+          "status": "passed",
+          "title": "conserves tiny quantities with stable ties and extreme balances",
+          "duration": 37.34780000000001,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "exact accounting and eligibility"
+          ],
+          "fullName": "exact accounting and eligibility rejects zero eligibility, negative values and duplicate owners",
+          "status": "passed",
+          "title": "rejects zero eligibility, negative values and duplicate owners",
+          "duration": 1.1587999999999283,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "exact accounting and eligibility"
+          ],
+          "fullName": "exact accounting and eligibility splits only net revenue and labels all integer remainder",
+          "status": "passed",
+          "title": "splits only net revenue and labels all integer remainder",
+          "duration": 78.08899999999994,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "exact accounting and eligibility"
+          ],
+          "fullName": "exact accounting and eligibility stale prices and minimum budget block commitments",
+          "status": "passed",
+          "title": "stale prices and minimum budget block commitments",
+          "duration": 14.035200000000032,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "exact accounting and eligibility"
+          ],
+          "fullName": "exact accounting and eligibility sums accounts before threshold and applies public owner exclusions",
+          "status": "passed",
+          "title": "sums accounts before threshold and applies public owner exclusions",
+          "duration": 15.159800000000018,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "exact accounting and eligibility"
+          ],
+          "fullName": "exact accounting and eligibility rejects incomplete census, wrong program and account supply mismatch",
+          "status": "passed",
+          "title": "rejects incomplete census, wrong program and account supply mismatch",
+          "duration": 14.726499999999987,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "exact accounting and eligibility"
+          ],
+          "fullName": "exact accounting and eligibility uses the observed Ember schema without promoting its claims to verification",
+          "status": "passed",
+          "title": "uses the observed Ember schema without promoting its claims to verification",
+          "duration": 4.917600000000107,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "exact accounting and eligibility"
+          ],
+          "fullName": "exact accounting and eligibility selection is reproducible and rejects duplicate, self, impostor, unsupported and wrong basis",
+          "status": "passed",
+          "title": "selection is reproducible and rejects duplicate, self, impostor, unsupported and wrong basis",
+          "duration": 14.641500000000065,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "exact accounting and eligibility"
+          ],
+          "fullName": "exact accounting and eligibility requires exactly five and complete fresh comparable observations",
+          "status": "passed",
+          "title": "requires exactly five and complete fresh comparable observations",
+          "duration": 13.45010000000002,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "exact accounting and eligibility"
+          ],
+          "fullName": "exact accounting and eligibility defers dust, missing prices and unavailable rent estimates",
+          "status": "passed",
+          "title": "defers dust, missing prices and unavailable rent estimates",
+          "duration": 16.59489999999994,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "exact accounting and eligibility"
+          ],
+          "fullName": "exact accounting and eligibility empty config cannot broadcast and mainnet cannot use demo/test file keys",
+          "status": "passed",
+          "title": "empty config cannot broadcast and mainnet cannot use demo/test file keys",
+          "duration": 4.227399999999989,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        }
+      ],
+      "startTime": 1790189664141,
+      "endTime": 1790189664356.2273,
+      "status": "passed",
+      "message": "",
+      "name": "<repository>/tests/core.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [
+            "Production dependency compatibility"
+          ],
+          "fullName": "Production dependency compatibility runs actual web3 Connection requests and errors through the upgraded Jayson transport",
+          "status": "passed",
+          "title": "runs actual web3 Connection requests and errors through the upgraded Jayson transport",
+          "duration": 55.75999999999999,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "Production dependency compatibility"
+          ],
+          "fullName": "Production dependency compatibility loads the existing Jupiter/Meteora APIs and keeps exact fixed-width SPL integer decoding",
+          "status": "passed",
+          "title": "loads the existing Jupiter/Meteora APIs and keeps exact fixed-width SPL integer decoding",
+          "duration": 0.7448000000000548,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "Production dependency compatibility"
+          ],
+          "fullName": "Production dependency compatibility retains Anchor-compatible CommonJS TOML Buffer parsing with the patched parser",
+          "status": "passed",
+          "title": "retains Anchor-compatible CommonJS TOML Buffer parsing with the patched parser",
+          "duration": 3.74899999999991,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        }
+      ],
+      "startTime": 1790189667864,
+      "endTime": 1790189667923.749,
+      "status": "passed",
+      "message": "",
+      "name": "<repository>/tests/dependency-compatibility.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [
+            "ledger-backed developer earnings on PostgreSQL"
+          ],
+          "fullName": "ledger-backed developer earnings on PostgreSQL disabled, prelaunch, paused and before-UTC-hour scheduling never create a commitment",
+          "status": "passed",
+          "title": "disabled, prelaunch, paused and before-UTC-hour scheduling never create a commitment",
+          "duration": 129.7885,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "ledger-backed developer earnings on PostgreSQL"
+          ],
+          "fullName": "ledger-backed developer earnings on PostgreSQL zero and insufficient remainder never create a transfer or imaginary balance",
+          "status": "passed",
+          "title": "zero and insufficient remainder never create a transfer or imaginary balance",
+          "duration": 183.86169999999993,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "ledger-backed developer earnings on PostgreSQL"
+          ],
+          "fullName": "ledger-backed developer earnings on PostgreSQL records obligations before funds arrive and deducts principal plus payout/expense costs once",
+          "status": "passed",
+          "title": "records obligations before funds arrive and deducts principal plus payout/expense costs once",
+          "duration": 237.1101000000001,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "ledger-backed developer earnings on PostgreSQL"
+          ],
+          "fullName": "ledger-backed developer earnings on PostgreSQL concurrent daily scheduling reserves principal and costs exactly once",
+          "status": "passed",
+          "title": "concurrent daily scheduling reserves principal and costs exactly once",
+          "duration": 258.077,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "ledger-backed developer earnings on PostgreSQL"
+          ],
+          "fullName": "ledger-backed developer earnings on PostgreSQL funds reserve incrementally without reusing an earlier empty-day adjustment",
+          "status": "passed",
+          "title": "funds reserve incrementally without reusing an earlier empty-day adjustment",
+          "duration": 201.1452999999999,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "ledger-backed developer earnings on PostgreSQL"
+          ],
+          "fullName": "ledger-backed developer earnings on PostgreSQL native finalized payout, cost release and replay use actual ledger evidence once",
+          "status": "passed",
+          "title": "native finalized payout, cost release and replay use actual ledger evidence once",
+          "duration": 175.83550000000014,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "ledger-backed developer earnings on PostgreSQL"
+          ],
+          "fullName": "ledger-backed developer earnings on PostgreSQL new daily payout may use new allocation but never rewrites the old daily intent",
+          "status": "passed",
+          "title": "new daily payout may use new allocation but never rewrites the old daily intent",
+          "duration": 176.5684000000001,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "ledger-backed developer earnings on PostgreSQL"
+          ],
+          "fullName": "ledger-backed developer earnings on PostgreSQL finalized failed transfer retains principal and charges only actual failed fee before retry",
+          "status": "passed",
+          "title": "finalized failed transfer retains principal and charges only actual failed fee before retry",
+          "duration": 187.4902000000002,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "ledger-backed developer earnings on PostgreSQL"
+          ],
+          "fullName": "ledger-backed developer earnings on PostgreSQL unknown and needs-review retain the same daily reservation across restart and new dates",
+          "status": "passed",
+          "title": "unknown and needs-review retain the same daily reservation across restart and new dates",
+          "duration": 166.97650000000021,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "ledger-backed developer earnings on PostgreSQL"
+          ],
+          "fullName": "ledger-backed developer earnings on PostgreSQL unsigned route failure keeps its reserved intent and cannot become tomorrow’s replacement",
+          "status": "passed",
+          "title": "unsigned route failure keeps its reserved intent and cannot become tomorrow’s replacement",
+          "duration": 178.48700000000008,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "ledger-backed developer earnings on PostgreSQL"
+          ],
+          "fullName": "ledger-backed developer earnings on PostgreSQL later proof of the original needs-review signature settles once without a replacement",
+          "status": "passed",
+          "title": "later proof of the original needs-review signature settles once without a replacement",
+          "duration": 194.7859000000003,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "ledger-backed developer earnings on PostgreSQL"
+          ],
+          "fullName": "ledger-backed developer earnings on PostgreSQL new expenses, disabled flags and changed policy block new signing without deleting a reservation",
+          "status": "passed",
+          "title": "new expenses, disabled flags and changed policy block new signing without deleting a reservation",
+          "duration": 274.43700000000035,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "ledger-backed developer earnings on PostgreSQL"
+          ],
+          "fullName": "ledger-backed developer earnings on PostgreSQL operations-wallet funding is reserved separately and never counted as developer earnings",
+          "status": "passed",
+          "title": "operations-wallet funding is reserved separately and never counted as developer earnings",
+          "duration": 200.77129999999988,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "ledger-backed developer earnings on PostgreSQL"
+          ],
+          "fullName": "ledger-backed developer earnings on PostgreSQL approved expenses and actual payments are immutable, bounded and replay-safe",
+          "status": "passed",
+          "title": "approved expenses and actual payments are immutable, bounded and replay-safe",
+          "duration": 208.7896999999998,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "ledger-backed developer earnings on PostgreSQL"
+          ],
+          "fullName": "ledger-backed developer earnings on PostgreSQL insufficient remaining payout cost blocks another signature while preserving principal",
+          "status": "passed",
+          "title": "insufficient remaining payout cost blocks another signature while preserving principal",
+          "duration": 156.57429999999977,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "ledger-backed developer earnings on PostgreSQL"
+          ],
+          "fullName": "ledger-backed developer earnings on PostgreSQL rejects external expense settlement for a known signed intent before local finality accounting",
+          "status": "passed",
+          "title": "rejects external expense settlement for a known signed intent before local finality accounting",
+          "duration": 143.38799999999992,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "ledger-backed developer earnings on PostgreSQL"
+          ],
+          "fullName": "ledger-backed developer earnings on PostgreSQL charges one network fee per expense transaction while allowing additional verified transfers without another fee",
+          "status": "passed",
+          "title": "charges one network fee per expense transaction while allowing additional verified transfers without another fee",
+          "duration": 149.21669999999995,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "ledger-backed developer earnings on PostgreSQL"
+          ],
+          "fullName": "ledger-backed developer earnings on PostgreSQL a stale worker fence cannot reserve developer funds",
+          "status": "passed",
+          "title": "a stale worker fence cannot reserve developer funds",
+          "duration": 121.3752000000004,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        }
+      ],
+      "startTime": 1790189647577,
+      "endTime": 1790189650922.3752,
+      "status": "passed",
+      "message": "",
+      "name": "<repository>/tests/developer-accounting.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [
+            "durable engine on PostgreSQL"
+          ],
+          "fullName": "durable engine on PostgreSQL deduplicates at instruction identity while accepting two transfers in one signature",
+          "status": "passed",
+          "title": "deduplicates at instruction identity while accepting two transfers in one signature",
+          "duration": 129.0453,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "durable engine on PostgreSQL"
+          ],
+          "fullName": "durable engine on PostgreSQL separates deposits, unsolicited tokens, capital and ambiguous fees",
+          "status": "passed",
+          "title": "separates deposits, unsolicited tokens, capital and ambiguous fees",
+          "duration": 133.8841,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "durable engine on PostgreSQL"
+          ],
+          "fullName": "durable engine on PostgreSQL reclassifies an operator seed deposit by an idempotent linked adjustment",
+          "status": "passed",
+          "title": "reclassifies an operator seed deposit by an idempotent linked adjustment",
+          "duration": 136.33199999999988,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "durable engine on PostgreSQL"
+          ],
+          "fullName": "durable engine on PostgreSQL reserves 80/10/10 once; snapshots and ledger records cannot be rewritten",
+          "status": "passed",
+          "title": "reserves 80/10/10 once; snapshots and ledger records cannot be rewritten",
+          "duration": 346.9815000000001,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "durable engine on PostgreSQL"
+          ],
+          "fullName": "durable engine on PostgreSQL links every funding unit to a fee receipt and returns unused costs without losing attribution",
+          "status": "passed",
+          "title": "links every funding unit to a fee receipt and returns unused costs without losing attribution",
+          "duration": 485.68070000000034,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "durable engine on PostgreSQL"
+          ],
+          "fullName": "durable engine on PostgreSQL pause prevents new signing while allowing a previously submitted signature to finalize",
+          "status": "passed",
+          "title": "pause prevents new signing while allowing a previously submitted signature to finalize",
+          "duration": 182.36310000000003,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "durable engine on PostgreSQL"
+          ],
+          "fullName": "durable engine on PostgreSQL rejects unbalanced entries and overdrawn per-asset reserves transactionally",
+          "status": "passed",
+          "title": "rejects unbalanced entries and overdrawn per-asset reserves transactionally",
+          "duration": 124.89809999999989,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "durable engine on PostgreSQL"
+          ],
+          "fullName": "durable engine on PostgreSQL fences concurrent workers and rejects a worker after lease expiry",
+          "status": "passed",
+          "title": "fences concurrent workers and rejects a worker after lease expiry",
+          "duration": 116.7158000000004,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "durable engine on PostgreSQL"
+          ],
+          "fullName": "durable engine on PostgreSQL recovers crash after_sign without a second payment",
+          "status": "passed",
+          "title": "recovers crash after_sign without a second payment",
+          "duration": 250.9077000000002,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "durable engine on PostgreSQL"
+          ],
+          "fullName": "durable engine on PostgreSQL recovers crash after_send without a second payment",
+          "status": "passed",
+          "title": "recovers crash after_send without a second payment",
+          "duration": 297.4301999999998,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "durable engine on PostgreSQL"
+          ],
+          "fullName": "durable engine on PostgreSQL recovers crash after_success without a second payment",
+          "status": "passed",
+          "title": "recovers crash after_success without a second payment",
+          "duration": 370.8397,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "durable engine on PostgreSQL"
+          ],
+          "fullName": "durable engine on PostgreSQL null RPC and expired blockhash never authorize blind replacement",
+          "status": "passed",
+          "title": "null RPC and expired blockhash never authorize blind replacement",
+          "duration": 230.47450000000026,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "durable engine on PostgreSQL"
+          ],
+          "fullName": "durable engine on PostgreSQL terminates a real child process during swap at after_sign and recovers durable state",
+          "status": "passed",
+          "title": "terminates a real child process during swap at after_sign and recovers durable state",
+          "duration": 1090.554,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "durable engine on PostgreSQL"
+          ],
+          "fullName": "durable engine on PostgreSQL terminates a real child process during swap at after_send and recovers durable state",
+          "status": "passed",
+          "title": "terminates a real child process during swap at after_send and recovers durable state",
+          "duration": 984.5935999999992,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "durable engine on PostgreSQL"
+          ],
+          "fullName": "durable engine on PostgreSQL terminates a real child process during swap at after_success and recovers durable state",
+          "status": "passed",
+          "title": "terminates a real child process during swap at after_success and recovers durable state",
+          "duration": 898.5578999999998,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "durable engine on PostgreSQL"
+          ],
+          "fullName": "durable engine on PostgreSQL terminates a real child process during payout at after_sign and recovers durable state",
+          "status": "passed",
+          "title": "terminates a real child process during payout at after_sign and recovers durable state",
+          "duration": 980.616,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "durable engine on PostgreSQL"
+          ],
+          "fullName": "durable engine on PostgreSQL terminates a real child process during payout at after_send and recovers durable state",
+          "status": "passed",
+          "title": "terminates a real child process during payout at after_send and recovers durable state",
+          "duration": 1043.243699999999,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "durable engine on PostgreSQL"
+          ],
+          "fullName": "durable engine on PostgreSQL terminates a real child process during payout at after_success and recovers durable state",
+          "status": "passed",
+          "title": "terminates a real child process during payout at after_success and recovers durable state",
+          "duration": 999.8724000000002,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "durable engine on PostgreSQL"
+          ],
+          "fullName": "durable engine on PostgreSQL preserves four purchased legs and the fifth budget during route failure",
+          "status": "passed",
+          "title": "preserves four purchased legs and the fifth budget during route failure",
+          "duration": 329.2558000000008,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "durable engine on PostgreSQL"
+          ],
+          "fullName": "durable engine on PostgreSQL credits only actual acquired units and rejects forged outcome evidence",
+          "status": "passed",
+          "title": "credits only actual acquired units and rejects forged outcome evidence",
+          "duration": 203.22189999999864,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "durable engine on PostgreSQL"
+          ],
+          "fullName": "durable engine on PostgreSQL unavailable destination data and atomic payout failure retain correct liabilities",
+          "status": "passed",
+          "title": "unavailable destination data and atomic payout failure retain correct liabilities",
+          "duration": 257.23070000000007,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "durable engine on PostgreSQL"
+          ],
+          "fullName": "durable engine on PostgreSQL carried dust survives database reconnect, holder sale and a later basket rotation",
+          "status": "passed",
+          "title": "carried dust survives database reconnect, holder sale and a later basket rotation",
+          "duration": 466.792300000001,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "durable engine on PostgreSQL"
+          ],
+          "fullName": "durable engine on PostgreSQL buyback followed by failed burn retries only attributed burn units",
+          "status": "passed",
+          "title": "buyback followed by failed burn retries only attributed burn units",
+          "duration": 273.6298999999999,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "durable engine on PostgreSQL"
+          ],
+          "fullName": "durable engine on PostgreSQL reconciliation deficit and funding route changes pause commitments, preserving liabilities",
+          "status": "passed",
+          "title": "reconciliation deficit and funding route changes pause commitments, preserving liabilities",
+          "duration": 234.53109999999833,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "durable engine on PostgreSQL"
+          ],
+          "fullName": "durable engine on PostgreSQL demo/live namespaces cannot mix and public clients cannot reach operator controls",
+          "status": "passed",
+          "title": "demo/live namespaces cannot mix and public clients cannot reach operator controls",
+          "duration": 282.90320000000065,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "durable engine on PostgreSQL"
+          ],
+          "fullName": "durable engine on PostgreSQL funds ten equal v2 legs and keeps a funded epoch immutable after discovery changes",
+          "status": "passed",
+          "title": "funds ten equal v2 legs and keeps a funded epoch immutable after discovery changes",
+          "duration": 398.96670000000086,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        }
+      ],
+      "startTime": 1790189621852,
+      "endTime": 1790189633102.9668,
+      "status": "passed",
+      "message": "",
+      "name": "<repository>/tests/engine.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [],
+          "fullName": "rejects failed unsigned simulation before any signing authorization or signer call",
+          "status": "passed",
+          "title": "rejects failed unsigned simulation before any signing authorization or signer call",
+          "duration": 137.79419999999982,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "Execution orchestration regressions"
+          ],
+          "fullName": "Execution orchestration regressions backoffs a bad unsigned route without starving unrelated work and preserves retries across restart",
+          "status": "passed",
+          "title": "backoffs a bad unsigned route without starving unrelated work and preserves retries across restart",
+          "duration": 139.70799999999986,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "Execution orchestration regressions"
+          ],
+          "fullName": "Execution orchestration regressions reconciles the original needs_review signature exactly once while paused",
+          "status": "passed",
+          "title": "reconciles the original needs_review signature exactly once while paused",
+          "duration": 145.07819999999992,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "Execution orchestration regressions"
+          ],
+          "fullName": "Execution orchestration regressions unknown review outcomes retain reservations and prevent replacement or recovery broadcasts",
+          "status": "passed",
+          "title": "unknown review outcomes retain reservations and prevent replacement or recovery broadcasts",
+          "duration": 148.7387000000001,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "Execution orchestration regressions"
+          ],
+          "fullName": "Execution orchestration regressions recovery-only never prepares new work and signing rechecks authorization after asynchronous preparation",
+          "status": "passed",
+          "title": "recovery-only never prepares new work and signing rechecks authorization after asynchronous preparation",
+          "duration": 113.394,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "Execution orchestration regressions"
+          ],
+          "fullName": "Execution orchestration regressions rechecks the database pause immediately at the signer boundary",
+          "status": "passed",
+          "title": "rechecks the database pause immediately at the signer boundary",
+          "duration": 129.73919999999998,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "Execution orchestration regressions"
+          ],
+          "fullName": "Execution orchestration regressions checks newly approved expenses under lock at authorization boundary 1 before actual signing",
+          "status": "passed",
+          "title": "checks newly approved expenses under lock at authorization boundary 1 before actual signing",
+          "duration": 181.70849999999996,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "Execution orchestration regressions"
+          ],
+          "fullName": "Execution orchestration regressions checks newly approved expenses under lock at authorization boundary 2 before actual signing",
+          "status": "passed",
+          "title": "checks newly approved expenses under lock at authorization boundary 2 before actual signing",
+          "duration": 119.26819999999998,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "Execution orchestration regressions"
+          ],
+          "fullName": "Execution orchestration regressions rechecks locked obligations before rebroadcast but allows paused original-signature finality accounting",
+          "status": "passed",
+          "title": "rechecks locked obligations before rebroadcast but allows paused original-signature finality accounting",
+          "duration": 145.91830000000027,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "Execution orchestration regressions"
+          ],
+          "fullName": "Execution orchestration regressions rejects a prepared signature already attributed to an expense without broadcasting or releasing its reservation",
+          "status": "passed",
+          "title": "rejects a prepared signature already attributed to an expense without broadcasting or releasing its reservation",
+          "duration": 117.70679999999993,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "Execution orchestration regressions"
+          ],
+          "fullName": "Execution orchestration regressions actual broadcast rechecks expense after RPC checks and keeps unknown recovery read-only",
+          "status": "passed",
+          "title": "actual broadcast rechecks expense after RPC checks and keeps unknown recovery read-only",
+          "duration": 122.03640000000041,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "Execution orchestration regressions"
+          ],
+          "fullName": "Execution orchestration regressions actual broadcast rechecks pause after RPC checks and keeps unknown recovery read-only",
+          "status": "passed",
+          "title": "actual broadcast rechecks pause after RPC checks and keeps unknown recovery read-only",
+          "duration": 121.77359999999999,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "Execution orchestration regressions"
+          ],
+          "fullName": "Execution orchestration regressions the actual Solana adapter invokes authorization after building and before the signer",
+          "status": "passed",
+          "title": "the actual Solana adapter invokes authorization after building and before the signer",
+          "duration": 89.61369999999988,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "Execution orchestration regressions"
+          ],
+          "fullName": "Execution orchestration regressions requires authentication and records idempotent original-signature recovery without signed payloads",
+          "status": "passed",
+          "title": "requires authentication and records idempotent original-signature recovery without signed payloads",
+          "duration": 121.7808,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "Execution orchestration regressions"
+          ],
+          "fullName": "Execution orchestration regressions accounts native fees for token intents without a false deficit, then detects real unexplained deficits",
+          "status": "passed",
+          "title": "accounts native fees for token intents without a false deficit, then detects real unexplained deficits",
+          "duration": 143.42009999999982,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "Execution orchestration regressions"
+          ],
+          "fullName": "Execution orchestration regressions does not compare a pre-finality RPC observation against later ledger postings",
+          "status": "passed",
+          "title": "does not compare a pre-finality RPC observation against later ledger postings",
+          "duration": 120.34749999999985,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "Execution orchestration regressions"
+          ],
+          "fullName": "Execution orchestration regressions actual burn preparation cannot treat the shared cost reserve as its transaction debit",
+          "status": "passed",
+          "title": "actual burn preparation cannot treat the shared cost reserve as its transaction debit",
+          "duration": 138.33280000000013,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "Execution orchestration regressions"
+          ],
+          "fullName": "Execution orchestration regressions actual operations preparation cannot treat the shared cost reserve as its transaction debit",
+          "status": "passed",
+          "title": "actual operations preparation cannot treat the shared cost reserve as its transaction debit",
+          "duration": 124.48979999999983,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "Execution orchestration regressions"
+          ],
+          "fullName": "Execution orchestration regressions legacy burn attempts retain a safe fee-only fallback",
+          "status": "passed",
+          "title": "legacy burn attempts retain a safe fee-only fallback",
+          "duration": 106.62959999999975,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "Execution orchestration regressions"
+          ],
+          "fullName": "Execution orchestration regressions legacy operations attempts retain a safe fee-only fallback",
+          "status": "passed",
+          "title": "legacy operations attempts retain a safe fee-only fallback",
+          "duration": 130.8471999999997,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "Execution orchestration regressions"
+          ],
+          "fullName": "Execution orchestration regressions actual SPL preparation includes only missing recipient ATA rent and rechecks cash after authorization",
+          "status": "passed",
+          "title": "actual SPL preparation includes only missing recipient ATA rent and rechecks cash after authorization",
+          "duration": 223.2125000000001,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "Execution orchestration regressions"
+          ],
+          "fullName": "Execution orchestration regressions legacy token attempts without a transaction cost bound remain uncertain and paused",
+          "status": "passed",
+          "title": "legacy token attempts without a transaction cost bound remain uncertain and paused",
+          "duration": 115.29129999999986,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "Execution orchestration regressions"
+          ],
+          "fullName": "Execution orchestration regressions a swap quote that ages during authorization is rejected before signing",
+          "status": "passed",
+          "title": "a swap quote that ages during authorization is rejected before signing",
+          "duration": 95.1214,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "Execution orchestration regressions"
+          ],
+          "fullName": "Execution orchestration regressions Jupiter build separates temporary WSOL funding from output ATA rent (existing=true)",
+          "status": "passed",
+          "title": "Jupiter build separates temporary WSOL funding from output ATA rent (existing=true)",
+          "duration": 144.00130000000036,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "Execution orchestration regressions"
+          ],
+          "fullName": "Execution orchestration regressions Jupiter build separates temporary WSOL funding from output ATA rent (existing=false)",
+          "status": "passed",
+          "title": "Jupiter build separates temporary WSOL funding from output ATA rent (existing=false)",
+          "duration": 184.32499999999982,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "Execution orchestration regressions"
+          ],
+          "fullName": "Execution orchestration regressions recovers the original legacy payout and its ATA rent after the recipient has closed the account",
+          "status": "passed",
+          "title": "recovers the original legacy payout and its ATA rent after the recipient has closed the account",
+          "duration": 137.79899999999998,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        }
+      ],
+      "startTime": 1790189643177,
+      "endTime": 1790189646675.799,
+      "status": "passed",
+      "message": "",
+      "name": "<repository>/tests/execution-regressions.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [],
+          "fullName": "ignores hosting runtime context and defaults to real prelaunch without fixture identity",
+          "status": "passed",
+          "title": "ignores hosting runtime context and defaults to real prelaunch without fixture identity",
+          "duration": 25.19870000000003,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [],
+          "fullName": "reports absent wallet and ledger evidence as unavailable, never synthetic payments or zero balances",
+          "status": "passed",
+          "title": "reports absent wallet and ledger evidence as unavailable, never synthetic payments or zero balances",
+          "duration": 2.276299999999992,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [],
+          "fullName": "rejects writes, privileged routes and malformed pagination",
+          "status": "passed",
+          "title": "rejects writes, privileged routes and malformed pagination",
+          "duration": 1.7451000000000363,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [],
+          "fullName": "configured backend failures and demo backends cannot become a production fallback",
+          "status": "passed",
+          "title": "configured backend failures and demo backends cannot become a production fallback",
+          "duration": 6.0552000000000135,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [],
+          "fullName": "forwards approved reads only after a production mode check, without caller credentials",
+          "status": "passed",
+          "title": "forwards approved reads only after a production mode check, without caller credentials",
+          "duration": 1.3888999999999783,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        }
+      ],
+      "startTime": 1790189668223,
+      "endTime": 1790189668259.389,
+      "status": "passed",
+      "message": "",
+      "name": "<repository>/tests/hosted.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [],
+          "fullName": "does not activate a file signer on mainnet and signs a real test message",
+          "status": "passed",
+          "title": "does not activate a file signer on mainnet and signs a real test message",
+          "duration": 56.10730000000001,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [],
+          "fullName": "converts human-unit receipt values exactly and rejects imprecise input",
+          "status": "passed",
+          "title": "converts human-unit receipt values exactly and rejects imprecise input",
+          "duration": 1.0430000000000064,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [],
+          "fullName": "rejects external swap instructions with arbitrary signer, recipient, debit or minimum",
+          "status": "passed",
+          "title": "rejects external swap instructions with arbitrary signer, recipient, debit or minimum",
+          "duration": 10.749099999999999,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [],
+          "fullName": "authenticated Jupiter adapter cannot silently use an anonymous endpoint",
+          "status": "passed",
+          "title": "authenticated Jupiter adapter cannot silently use an anonymous endpoint",
+          "duration": 3.830799999999954,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [],
+          "fullName": "rejects the actual observed mainnet genesis even when a test RPC URL is mislabeled",
+          "status": "passed",
+          "title": "rejects the actual observed mainnet genesis even when a test RPC URL is mislabeled",
+          "duration": 5.605600000000095,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [],
+          "fullName": "master pause blocks signing before any provider call",
+          "status": "passed",
+          "title": "master pause blocks signing before any provider call",
+          "duration": 2.3314000000000306,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [],
+          "fullName": "rejects failed transaction simulation before producing a broadcastable result",
+          "status": "passed",
+          "title": "rejects failed transaction simulation before producing a broadcastable result",
+          "duration": 8.915300000000002,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        }
+      ],
+      "startTime": 1790189666633,
+      "endTime": 1790189666721.9153,
+      "status": "passed",
+      "message": "",
+      "name": "<repository>/tests/integrations.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [
+            "built-in Jupiter Tokens V2 collector"
+          ],
+          "fullName": "built-in Jupiter Tokens V2 collector looks up every current mint in <=100 batches with bounded concurrency, and never searches by duplicate symbol",
+          "status": "passed",
+          "title": "looks up every current mint in <=100 batches with bounded concurrency, and never searches by duplicate symbol",
+          "duration": 162.28379999999999,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "built-in Jupiter Tokens V2 collector"
+          ],
+          "fullName": "built-in Jupiter Tokens V2 collector coalesces reads, refreshes after 45 seconds, discovers new mints and lets forced reads bypass a successful cache",
+          "status": "passed",
+          "title": "coalesces reads, refreshes after 45 seconds, discovers new mints and lets forced reads bypass a successful cache",
+          "duration": 5.6218000000000075,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "built-in Jupiter Tokens V2 collector"
+          ],
+          "fullName": "built-in Jupiter Tokens V2 collector distinguishes fetch coverage from source freshness and preserves missing fields as null",
+          "status": "passed",
+          "title": "distinguishes fetch coverage from source freshness and preserves missing fields as null",
+          "duration": 2.387399999999957,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "built-in Jupiter Tokens V2 collector"
+          ],
+          "fullName": "built-in Jupiter Tokens V2 collector does not promote verified tags or provider numeric market cap to verified supply/category/volume evidence",
+          "status": "passed",
+          "title": "does not promote verified tags or provider numeric market cap to verified supply/category/volume evidence",
+          "duration": 1.102100000000064,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "built-in Jupiter Tokens V2 collector"
+          ],
+          "fullName": "built-in Jupiter Tokens V2 collector quarantines duplicate mint responses and reports omitted mints without inventing zero data",
+          "status": "passed",
+          "title": "quarantines duplicate mint responses and reports omitted mints without inventing zero data",
+          "duration": 1.9815000000000964,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "built-in Jupiter Tokens V2 collector"
+          ],
+          "fullName": "built-in Jupiter Tokens V2 collector rejects unrequested mints and malformed finite-number fields for the affected batch",
+          "status": "passed",
+          "title": "rejects unrequested mints and malformed finite-number fields for the affected batch",
+          "duration": 5.375599999999963,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "built-in Jupiter Tokens V2 collector"
+          ],
+          "fullName": "built-in Jupiter Tokens V2 collector stops queued work on rate limit and applies bounded retry backoff",
+          "status": "passed",
+          "title": "stops queued work on rate limit and applies bounded retry backoff",
+          "duration": 493.419,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "built-in Jupiter Tokens V2 collector"
+          ],
+          "fullName": "built-in Jupiter Tokens V2 collector rejects oversized responses without copying their body into evidence or errors",
+          "status": "passed",
+          "title": "rejects oversized responses without copying their body into evidence or errors",
+          "duration": 3.691500000000133,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "built-in Jupiter Tokens V2 collector"
+          ],
+          "fullName": "built-in Jupiter Tokens V2 collector requires the exact reviewed HTTPS endpoint and fixed approved origin",
+          "status": "passed",
+          "title": "requires the exact reviewed HTTPS endpoint and fixed approved origin",
+          "duration": 0.5815999999999804,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        }
+      ],
+      "startTime": 1790189661682,
+      "endTime": 1790189662358.5815,
+      "status": "passed",
+      "message": "",
+      "name": "<repository>/tests/jupiter-tokens.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [],
+          "fullName": "validates the complete current response without fixture names deciding rank or eligibility",
+          "status": "passed",
+          "title": "validates the complete current response without fixture names deciding rank or eligibility",
+          "duration": 256.25750000000005,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [],
+          "fullName": "sorts numerically with mint ties; missing and invalid values are never coerced to zero",
+          "status": "passed",
+          "title": "sorts numerically with mint ties; missing and invalid values are never coerced to zero",
+          "duration": 56.4203,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [],
+          "fullName": "keeps duplicate symbols distinct, deduplicates mint pools, and never double-converts quote USD",
+          "status": "passed",
+          "title": "keeps duplicate symbols distinct, deduplicates mint pools, and never double-converts quote USD",
+          "duration": 4.218400000000088,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [],
+          "fullName": "retains explicit own-token, unsupported, missing registry and invalid row exclusions",
+          "status": "passed",
+          "title": "retains explicit own-token, unsupported, missing registry and invalid row exclusions",
+          "duration": 3.7951000000000477,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [],
+          "fullName": "considers the whole eligible universe before selecting ten and preserves legacy five policy",
+          "status": "passed",
+          "title": "considers the whole eligible universe before selecting ten and preserves legacy five policy",
+          "duration": 26.950099999999907,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [],
+          "fullName": "bounds public pages and searches the full normalized universe without losing global rank",
+          "status": "passed",
+          "title": "bounds public pages and searches the full normalized universe without losing global rank",
+          "duration": 395.23440000000005,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [],
+          "fullName": "coalesces requests; cache and stale responses retain original fetch timestamp",
+          "status": "passed",
+          "title": "coalesces requests; cache and stale responses retain original fetch timestamp",
+          "duration": 1019.1605000000002,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [],
+          "fullName": "initial failures are unavailable and warming data cannot authorize commitments",
+          "status": "passed",
+          "title": "initial failures are unavailable and warming data cannot authorize commitments",
+          "duration": 1020.3584999999998,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        }
+      ],
+      "startTime": 1790189655199,
+      "endTime": 1790189657982.3584,
+      "status": "passed",
+      "message": "",
+      "name": "<repository>/tests/market-data.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [
+            "Orbit integration with authoritative backend records"
+          ],
+          "fullName": "Orbit integration with authoritative backend records renders ledger lamports as exact SOL and preserves unknown amounts and units",
+          "status": "passed",
+          "title": "renders ledger lamports as exact SOL and preserves unknown amounts and units",
+          "duration": 39.547500000000014,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "Orbit integration with authoritative backend records"
+          ],
+          "fullName": "Orbit integration with authoritative backend records reads configured, paused and payout states without inventing a destination or delivered payment",
+          "status": "passed",
+          "title": "reads configured, paused and payout states without inventing a destination or delivered payment",
+          "duration": 113.99750000000006,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "Orbit integration with authoritative backend records"
+          ],
+          "fullName": "Orbit integration with authoritative backend records renders current selection and overlapping funded membership independently",
+          "status": "passed",
+          "title": "renders current selection and overlapping funded membership independently",
+          "duration": 18.22939999999994,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "Orbit integration with authoritative backend records"
+          ],
+          "fullName": "Orbit integration with authoritative backend records distinguishes an accepted empty observation from a source outage",
+          "status": "passed",
+          "title": "distinguishes an accepted empty observation from a source outage",
+          "duration": 58.77170000000001,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        }
+      ],
+      "startTime": 1790189663274,
+      "endTime": 1790189663504.7717,
+      "status": "passed",
+      "message": "",
+      "name": "<repository>/tests/orbit-integration.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [
+            "Homepage market observations"
+          ],
+          "fullName": "Homepage market observations keeps ten unique mint identities in source-rank order without changing the source",
+          "status": "passed",
+          "title": "keeps ten unique mint identities in source-rank order without changing the source",
+          "duration": 10.601799999999997,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "Homepage market observations"
+          ],
+          "fullName": "Homepage market observations never turns a market observation into an eligible or selected asset",
+          "status": "passed",
+          "title": "never turns a market observation into an eligible or selected asset",
+          "duration": 0.953000000000003,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "Homepage market observations"
+          ],
+          "fullName": "Homepage market observations replaces the displayed leaders when the next observation changes rank",
+          "status": "passed",
+          "title": "replaces the displayed leaders when the next observation changes rank",
+          "duration": 0.5383999999999958,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        }
+      ],
+      "startTime": 1790189668412,
+      "endTime": 1790189668424.5383,
+      "status": "passed",
+      "message": "",
+      "name": "<repository>/tests/orbit-model.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [
+            "reconciliation finalized movement watermark"
+          ],
+          "fullName": "reconciliation finalized movement watermark does not report an older sampled balance as a deficit after finalized inbound ingestion",
+          "status": "passed",
+          "title": "does not report an older sampled balance as a deficit after finalized inbound ingestion",
+          "duration": 106.98130000000003,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "reconciliation finalized movement watermark"
+          ],
+          "fullName": "reconciliation finalized movement watermark includes finalized expense payments in the same watermark before comparing cash",
+          "status": "passed",
+          "title": "includes finalized expense payments in the same watermark before comparing cash",
+          "duration": 116.92840000000001,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "reconciliation finalized movement watermark"
+          ],
+          "fullName": "reconciliation finalized movement watermark still pauses on an unexplained deficit observed at or after the newest receipt",
+          "status": "passed",
+          "title": "still pauses on an unexplained deficit observed at or after the newest receipt",
+          "duration": 103.05050000000006,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        }
+      ],
+      "startTime": 1790189660795,
+      "endTime": 1790189661122.0505,
+      "status": "passed",
+      "message": "",
+      "name": "<repository>/tests/reconciliation-watermark.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [],
+          "fullName": "uses a same-origin URL for approved content-addressed images",
+          "status": "passed",
+          "title": "uses a same-origin URL for approved content-addressed images",
+          "duration": 2.279699999999991,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [],
+          "fullName": "rejects arbitrary hosts, private addresses, credentials, ports and non-image paths before fetching",
+          "status": "passed",
+          "title": "rejects arbitrary hosts, private addresses, credentials, ports and non-image paths before fetching",
+          "duration": 28.259299999999996,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [],
+          "fullName": "decodes and resizes real raster bytes, strips upstream headers and caches successful thumbnails",
+          "status": "passed",
+          "title": "decodes and resizes real raster bytes, strips upstream headers and caches successful thumbnails",
+          "duration": 26.823399999999992,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [],
+          "fullName": "coalesces concurrent copies of the same logo",
+          "status": "passed",
+          "title": "coalesces concurrent copies of the same logo",
+          "duration": 17.33789999999999,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [],
+          "fullName": "uses alternate gateways only for the same CID, never a different token",
+          "status": "passed",
+          "title": "uses alternate gateways only for the same CID, never a different token",
+          "duration": 11.960199999999986,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [],
+          "fullName": "rejects html without caching errors",
+          "status": "passed",
+          "title": "rejects html without caching errors",
+          "duration": 15.160499999999956,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [],
+          "fullName": "rejects svg without caching errors",
+          "status": "passed",
+          "title": "rejects svg without caching errors",
+          "duration": 11.997700000000009,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [],
+          "fullName": "rejects fake-png without caching errors",
+          "status": "passed",
+          "title": "rejects fake-png without caching errors",
+          "duration": 13.603200000000015,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [],
+          "fullName": "rejects redirect without caching errors",
+          "status": "passed",
+          "title": "rejects redirect without caching errors",
+          "duration": 12.163999999999987,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [],
+          "fullName": "rejects oversized-header without caching errors",
+          "status": "passed",
+          "title": "rejects oversized-header without caching errors",
+          "duration": 11.22810000000004,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [],
+          "fullName": "rejects oversized-stream without caching errors",
+          "status": "passed",
+          "title": "rejects oversized-stream without caching errors",
+          "duration": 23.28060000000005,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [],
+          "fullName": "rejects writes and malformed query parameters",
+          "status": "passed",
+          "title": "rejects writes and malformed query parameters",
+          "duration": 1.1146999999999707,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [],
+          "fullName": "routes images through the hosted Vercel rewrite independently of the ledger origin",
+          "status": "passed",
+          "title": "routes images through the hosted Vercel rewrite independently of the ledger origin",
+          "duration": 12.36259999999993,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        }
+      ],
+      "startTime": 1790189664738,
+      "endTime": 1790189664926.3625,
+      "status": "passed",
+      "message": "",
+      "name": "<repository>/tests/token-image.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [
+            "Public UI adapters"
+          ],
+          "fullName": "Public UI adapters keeps exact raw-unit balances above Number precision and unknown values distinct from zero",
+          "status": "passed",
+          "title": "keeps exact raw-unit balances above Number precision and unknown values distinct from zero",
+          "duration": 3.6162999999999954,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "Public UI adapters"
+          ],
+          "fullName": "Public UI adapters validates Solana public-key bytes rather than address length alone",
+          "status": "passed",
+          "title": "validates Solana public-key bytes rather than address length alone",
+          "duration": 0.35009999999999764,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "Public UI adapters"
+          ],
+          "fullName": "Public UI adapters rejects unsafe metadata destinations and untrusted image hosts",
+          "status": "passed",
+          "title": "rejects unsafe metadata destinations and untrusted image hosts",
+          "duration": 0.39230000000000587,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "Public UI adapters"
+          ],
+          "fullName": "Public UI adapters does not accept the former hosted synthetic contract as normal public data",
+          "status": "passed",
+          "title": "does not accept the former hosted synthetic contract as normal public data",
+          "duration": 1.2863999999999862,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "Public UI adapters"
+          ],
+          "fullName": "Public UI adapters filters a server page for presentation without changing ranks or canonical selection",
+          "status": "passed",
+          "title": "filters a server page for presentation without changing ranks or canonical selection",
+          "duration": 0.8473000000000184,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "Public UI adapters"
+          ],
+          "fullName": "Public UI adapters labels stale observations and ranked-mint coverage independently from selection",
+          "status": "passed",
+          "title": "labels stale observations and ranked-mint coverage independently from selection",
+          "duration": 21.12220000000002,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "Public UI adapters"
+          ],
+          "fullName": "Public UI adapters preserves unavailable wallet evidence instead of interpreting failure as zero",
+          "status": "passed",
+          "title": "preserves unavailable wallet evidence instead of interpreting failure as zero",
+          "duration": 0.41849999999999454,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "Public UI adapters"
+          ],
+          "fullName": "Public UI adapters keeps finalized payout counts separate from fee receipts and acquisition intents",
+          "status": "passed",
+          "title": "keeps finalized payout counts separate from fee receipts and acquisition intents",
+          "duration": 0.25839999999999463,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "Public UI adapters"
+          ],
+          "fullName": "Public UI adapters distinguishes credited, pending, partial, and fully paid rewards",
+          "status": "passed",
+          "title": "distinguishes credited, pending, partial, and fully paid rewards",
+          "duration": 9.707600000000014,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "Public UI adapters"
+          ],
+          "fullName": "Public UI adapters deduplicates intents and transfers using terminal evidence and requires a verified explorer network",
+          "status": "passed",
+          "title": "deduplicates intents and transfers using terminal evidence and requires a verified explorer network",
+          "duration": 0.6795999999999935,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "Market snapshot pagination"
+          ],
+          "fullName": "Market snapshot pagination combines contiguous pages of one observation and retains the matching response provenance",
+          "status": "passed",
+          "title": "combines contiguous pages of one observation and retains the matching response provenance",
+          "duration": 0.9891000000000076,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "Market snapshot pagination"
+          ],
+          "fullName": "Market snapshot pagination refuses to mix changed fetch epochs, hashes, search queries or eligibility views",
+          "status": "passed",
+          "title": "refuses to mix changed fetch epochs, hashes, search queries or eligibility views",
+          "duration": 0.21290000000001896,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "Market snapshot pagination"
+          ],
+          "fullName": "Market snapshot pagination refuses missing provenance, duplicate mints and gaps rather than masking rank movement",
+          "status": "passed",
+          "title": "refuses missing provenance, duplicate mints and gaps rather than masking rank movement",
+          "duration": 0.1828999999999894,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "Frontend audit regressions"
+          ],
+          "fullName": "Frontend audit regressions renders an existing observation immediately on route entry without a false unavailable or empty flash",
+          "status": "passed",
+          "title": "renders an existing observation immediately on route entry without a false unavailable or empty flash",
+          "duration": 9.196999999999974,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "Frontend audit regressions"
+          ],
+          "fullName": "Frontend audit regressions cold loads with a skeleton and shows a failure only after the request fails",
+          "status": "passed",
+          "title": "cold loads with a skeleton and shows a failure only after the request fails",
+          "duration": 8.279600000000016,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "Frontend audit regressions"
+          ],
+          "fullName": "Frontend audit regressions keeps duplicate symbols independently visible by short mint and offers mobile eligibility and explicit details",
+          "status": "passed",
+          "title": "keeps duplicate symbols independently visible by short mint and offers mobile eligibility and explicit details",
+          "duration": 6.627599999999973,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "Frontend audit regressions"
+          ],
+          "fullName": "Frontend audit regressions puts desktop metrics in one detail interaction and keeps missing metrics distinct from zero",
+          "status": "passed",
+          "title": "puts desktop metrics in one detail interaction and keeps missing metrics distinct from zero",
+          "duration": 19.428999999999974,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "Frontend audit regressions"
+          ],
+          "fullName": "Frontend audit regressions distinguishes cold load, query refresh, valid empty, stale, warming and explicit unavailable responses",
+          "status": "passed",
+          "title": "distinguishes cold load, query refresh, valid empty, stale, warming and explicit unavailable responses",
+          "duration": 9.94119999999998,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "Frontend audit regressions"
+          ],
+          "fullName": "Frontend audit regressions keeps catalogue, rankable and search-result counts distinct even for a no-match query",
+          "status": "passed",
+          "title": "keeps catalogue, rankable and search-result counts distinct even for a no-match query",
+          "duration": 0.3649000000000342,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "Frontend audit regressions"
+          ],
+          "fullName": "Frontend audit regressions requires an explicit reward-service response to establish a known unavailable connection",
+          "status": "passed",
+          "title": "requires an explicit reward-service response to establish a known unavailable connection",
+          "duration": 0.5865000000000009,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "Frontend audit regressions"
+          ],
+          "fullName": "Frontend audit regressions does not turn malformed or mismatched wallet responses into a valid empty balance",
+          "status": "passed",
+          "title": "does not turn malformed or mismatched wallet responses into a valid empty balance",
+          "duration": 1.4076000000000022,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        },
+        {
+          "ancestorTitles": [
+            "Frontend audit regressions"
+          ],
+          "fullName": "Frontend audit regressions exposes the known wallet limitation before submission and gives temporary failures distinct retry copy",
+          "status": "passed",
+          "title": "exposes the known wallet limitation before submission and gives temporary failures distinct retry copy",
+          "duration": 2.046699999999987,
+          "failureMessages": [],
+          "meta": {},
+          "tags": [],
+          "benchmarks": []
+        }
+      ],
+      "startTime": 1790189666959,
+      "endTime": 1790189667058.0466,
+      "status": "passed",
+      "message": "",
+      "name": "<repository>/tests/ui-view-model.test.ts"
+    }
+  ]
+}

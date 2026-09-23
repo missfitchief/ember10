@@ -1,3 +1,5 @@
+> Historical implementation handoff. Its revision, test counts and local paths refer to that stage. For the current audit snapshot, use [EXTERNAL-AUDIT.md](EXTERNAL-AUDIT.md) and [VERIFICATION.md](VERIFICATION.md).
+
 # UI-01 handoff
 
 Status: implemented in the existing `ui-01` Git worktree; ready for the sole integrator to cherry-pick. The one-PC workflow supersedes the old transfer/ZIP instructions. Shared contract changes remain integrator-owned.

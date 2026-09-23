@@ -1,10 +1,10 @@
-> Current audit corrections and verification: [AUDIT-REMEDIATION.md](AUDIT-REMEDIATION.md). The original figures and walkthrough below are historical; funded operations remain disabled.
+> Current application revision: `1f67d0d`. See [external audit](EXTERNAL-AUDIT.md) and [verification](VERIFICATION.md). Funded operations remain disabled; independent audit is pending.
 
 # Readiness as of 23 September 2026
 
 | Area | Status |
 |---|---|
-| Public UI | Implemented; desktop and mobile inspected, real prelaunch discovery, empty/error/demo states verified |
+| Public UI | Implemented; desktop and mobile inspected, real prelaunch discovery, empty/error/unavailable states checked; ordinary UI refuses demo financial records |
 | Vercel deployment | EMBER10 real-source prelaunch correction prepared for existing URL; exact publication result is recorded in deployment evidence; no financial worker or signing |
 | API and operator boundary | Implemented; address/limit validation, rate limiting, bearer authentication and public write rejection tested |
 | Core accounting | Implemented and tested against PostgreSQL: integer allocation, budgets, source attribution, liabilities, immutable records and recovery |
@@ -17,8 +17,8 @@
 | Funded mainnet payouts | **Not configured, not tested, disabled** |
 | Container deployment | Configuration provided; **not run** in this environment |
 | Backup restoration | Guarded helper and procedure included; **not run**; standard PostgreSQL client tools required |
-| Security audit | **Not audited** |
-| Dependency audit | npm reported 17 advisories (10 high, 7 moderate) in the dependency tree; review/remediation required before funded use; report saved under `docs/evidence/dependency-audit.json` |
+| Security audit | Supplied historical audit mapped to current source; independent review of current changes pending. Open findings are listed in the external audit register |
+| Dependency audit | Fresh production scan: 5 high entries in the bigint-buffer chain, no moderate/critical entries; not clean. See `docs/evidence/external-audit/dependency-audit.json` |
 
 ## External configuration required
 

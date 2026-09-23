@@ -21,7 +21,7 @@ flowchart LR
 
 ## Persisted records
 
-`documents` is an append-only, content-addressed store for versioned policy, basket candidate universe, snapshots, raw source observations, provenance, approvals and reconciliation. `assets` records decimals and token program. `epochs` pins immutable policy/basket/snapshot references. `incoming_transfers` has instruction-level identities. `funding_receipt_uses` maps each reserved lamport to its original fee receipt and links later direct-cost refunds.
+`documents` is an append-only, content-addressed store for versioned policy, basket candidate universe, snapshots, raw source observations, provenance, approvals and reconciliation. Migration 008 moves repeated catalogue, selection and readiness polling into `operational_observations`, one replaceable row per type; `current_observation_records` provides a legacy fallback. Funded documents remain immutable. `assets` records decimals and token program. `epochs` pins immutable policy/basket/snapshot references. `incoming_transfers` has instruction-level identities. `funding_receipt_uses` maps each reserved lamport to its original fee receipt and links later direct-cost refunds.
 
 `ledger_events` and `postings` form the accounting journal. Database triggers enforce per-asset balance, immutable historical entries, same-transaction posting insertion and protected epoch identities. `intents`, `attempts`, `chain_receipts`, `entitlements`, `payout_batches` and `batch_items` hold the settlement state. A unique partial index prevents one entitlement appearing in two active batches. Another prevents multiple active signed attempts for one intent.
 
