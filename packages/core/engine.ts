@@ -157,7 +157,13 @@ export class Engine {
    // Every accounting mutation uses the control lock. Read ledger and pending work coherently.
    await this.db.lock(t);const balances=await this.db.balances(t);const reports=[];
    const intents=(await t.query("SELECT id,asset,amount::text,expected FROM intents WHERE status IN ('signed','submitted','unknown','confirmed','needs_review')")).rows as Intent[];
-   const latest=(await t.query("SELECT coalesce(max((evidence->>'slot')::bigint),0)::text AS slot FROM attempts WHERE status IN ('finalized','failed')")).rows[0];
+   // RPC balances may have been sampled before this lock was acquired. Include
+   // every finalized cash movement, not only worker-owned transaction attempts.
+   const latest=(await t.query(`SELECT coalesce(max(slot),0)::text AS slot FROM (
+    SELECT (evidence->>'slot')::bigint AS slot FROM attempts WHERE status IN ('finalized','failed')
+    UNION ALL SELECT (evidence->>'slot')::bigint FROM incoming_transfers
+    UNION ALL SELECT slot FROM operating_expense_payments
+   ) AS finalized_movements`)).rows[0];
    for(const a of actual){
     ensure(Number.isSafeInteger(a.slot)&&a.slot>0&&/^\d+$/.test(a.amount),'invalid reconciliation observation');
     const expected=balances.filter(b=>b.asset===a.asset&&!b.account.startsWith('external:')).reduce((n,b)=>n+BigInt(b.amount),0n);
