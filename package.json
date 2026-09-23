@@ -1,6 +1,6 @@
 {
-  "name": "ember5-pilot",
-  "version": "0.1.0",
+  "name": "ember10-pilot",
+  "version": "0.2.0",
   "private": true,
   "type": "module",
   "engines": {
@@ -20,7 +20,8 @@
     "operator": "tsx scripts/operator.ts",
     "check:integrations": "node scripts/evidence.mjs",
     "test:chain": "tsx scripts/test-chain.ts",
-    "backup": "tsx scripts/backup.ts"
+    "backup": "tsx scripts/backup.ts",
+    "preview:hosted": "tsx scripts/preview-hosted.ts"
   },
   "dependencies": {
     "@jup-ag/instruction-parser": "6.0.28",

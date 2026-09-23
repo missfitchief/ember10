@@ -10,3 +10,7 @@ coverage
 *.key.json
 docs/evidence
 dist
+
+.vercel
+tests
+docs
