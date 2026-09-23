@@ -1,10 +1,10 @@
-import { Connection, Keypair, PublicKey, Transaction, TransactionInstruction, VersionedTransaction, SystemProgram } from '@solana/web3.js';
+import { Connection, Keypair, PublicKey, Transaction, TransactionInstruction, VersionedTransaction, SystemProgram, type ParsedTransactionWithMeta } from '@solana/web3.js';
 import { TOKEN_PROGRAM_ID, ASSOCIATED_TOKEN_PROGRAM_ID, AccountLayout, getAssociatedTokenAddressSync, getMint, getAccount, createAssociatedTokenAccountIdempotentInstruction, createTransferCheckedInstruction, createBurnCheckedInstruction, ACCOUNT_SIZE } from '@solana/spl-token';
 import bs58 from 'bs58';
 import { readFile } from 'node:fs/promises';
 import { Config } from '../core/config.js';
-import { Chain, Intent, Outcome, Signed, TransferEvidence } from '../core/engine.js';
-import { ensure, hash, Policy, SOL, SPL, MAINNET_GENESIS } from '../core/model.js';
+import { Chain, Intent, Outcome, Signed, TransferEvidence, NativeCostEvidence } from '../core/engine.js';
+import { ensure, hash, Policy, SOL, SPL, WSOL, MAINNET_GENESIS } from '../core/model.js';
 import { snapshot, TokenAccount } from '../core/selection.js';
 import { boundedFetch } from './http.js';
 import { bindNativeCost } from '../core/execution-cost.js';
@@ -41,6 +41,36 @@ export async function parsedTransfers(connection:Connection,signature:string){
  };
  tx.transaction.message.instructions.forEach((ix,k)=>visit(ix,String(k)));for(const inner of tx.meta?.innerInstructions??[])inner.instructions.forEach((ix,k)=>visit(ix,`${inner.index}.${k}`));
  return {tx,transfers};
+}
+/** Recover rent from the immutable transaction, even if a recipient later closes its ATA. */
+function originalNativeCost(i:Intent,s:Signed,tx:ParsedTransactionWithMeta,payer:PublicKey){
+ const original=VersionedTransaction.deserialize(s.bytes),meta=tx.meta!;
+ ensure(hash(Buffer.from(original.message.serialize()).toString('base64'))===s.messageHash&&bs58.encode(original.signatures[0])===s.signature,'original signed message mismatch');
+ const keys=tx.transaction.message.accountKeys.map(k=>k.pubkey);
+ ensure(original.message.staticAccountKeys.every((k,n)=>k.equals(keys[n]))&&keys.length===meta.preBalances.length&&keys.length===meta.postBalances.length,'finalized transaction account keys mismatch');
+ const creations=new Map<string,{index:number;mint:string;owner:string}>();
+ for(const ix of original.message.compiledInstructions){
+  if(!keys[ix.programIdIndex]?.equals(ASSOCIATED_TOKEN_PROGRAM_ID))continue;
+  const accounts=Array.from(ix.accountKeyIndexes).map(n=>keys[n]);
+  ensure(ix.data.length===1&&ix.data[0]===1&&accounts.length===6&&accounts.every(Boolean)&&accounts[0].equals(payer)&&accounts[4].equals(SystemProgram.programId)&&accounts[5].equals(TOKEN_PROGRAM_ID),'unrecognized original ATA creation');
+  const [,_ata,owner,mint]=accounts,ata=getAssociatedTokenAddressSync(mint,owner,true);ensure(accounts[1].equals(ata),'noncanonical original ATA creation');
+  const swap=i.kind==='swap'||i.kind==='buyback';
+  ensure(swap?owner.equals(payer)&&(mint.toBase58()===i.expected.outputAsset||mint.toBase58()===WSOL):mint.toBase58()===i.asset&&!!i.expected.transfers?.some(p=>p.owner===owner.toBase58()&&p.destination===ata.toBase58()),'unexpected original ATA recipient');
+  if(mint.toBase58()===WSOL&&swap){
+   const closed=original.message.compiledInstructions.some(c=>keys[c.programIdIndex]?.equals(TOKEN_PROGRAM_ID)&&c.data.length===1&&c.data[0]===9&&keys[c.accountKeyIndexes[0]]?.equals(ata)&&keys[c.accountKeyIndexes[1]]?.equals(payer)&&keys[c.accountKeyIndexes[2]]?.equals(payer));
+   ensure(closed&&meta.postBalances[ix.accountKeyIndexes[1]]===0,'wrapped SOL rent was not returned to the payer');continue;
+  }
+  creations.set(ata.toBase58(),{index:ix.accountKeyIndexes[1],mint:mint.toBase58(),owner:owner.toBase58()});
+ }
+ const rentAccounts:NativeCostEvidence['rentAccounts']=[];
+ for(const [address,a]of creations){
+  const before=meta.preTokenBalances?.find(b=>b.accountIndex===a.index),after=meta.postTokenBalances?.find(b=>b.accountIndex===a.index);
+  ensure(after&&after.mint===a.mint&&after.owner===a.owner,'missing finalized ATA identity');
+  if(before)continue;
+  const lamports=BigInt(meta.postBalances[a.index])-BigInt(meta.preBalances[a.index]);ensure(lamports>=0n,'invalid finalized ATA rent');
+  if(lamports>0n)rentAccounts.push({address,mint:a.mint,owner:a.owner,lamports:lamports.toString()});
+ }
+ return {rent:rentAccounts.reduce((n,a)=>n+BigInt(a.lamports),0n),evidence:{source:'original_signed_message' as const,messageHash:s.messageHash,rentAccounts}};
 }
 export class SolanaChain implements Chain {
  mode:'test'|'live';connection:Connection;secondary?:Connection;
@@ -109,21 +139,21 @@ export class SolanaChain implements Chain {
    if(meta.err)return {...base,status:'failed'};
    const accountKeys=tx.transaction.message.accountKeys;
    ensure(accountKeys[0].pubkey.equals(this.signer.publicKey)&&accountKeys[0].signer,'unexpected payer');
-   let rent=0n;for(let k=0;k<meta.preBalances.length;k++)if(meta.preBalances[k]===0&&meta.postBalances[k]>0&&accountKeys[k].pubkey.toBase58()!==this.simulatedMarket?.signer.publicKey.toBase58()){
-    const account=await this.connection.getAccountInfo(accountKeys[k].pubkey,'finalized');if(account?.owner.equals(TOKEN_PROGRAM_ID))rent+=BigInt(meta.postBalances[k]);
-   }
+   const costs=originalNativeCost(i,s,tx,this.signer.publicKey),rent=costs.rent,nativeCostEvidence=costs.evidence;
    if(i.kind==='swap'||i.kind==='buyback'){
     const target=this.destination(this.signer.publicKey.toBase58(),i.expected.outputAsset!);const k=accountKeys.findIndex(x=>x.pubkey.toBase58()===target);ensure(k>=0,'output account missing');
     const pre=meta.preTokenBalances?.find(b=>b.accountIndex===k),post=meta.postTokenBalances?.find(b=>b.accountIndex===k);ensure(post&&post.mint===i.expected.outputAsset&&post.owner===this.signer.publicKey.toBase58(),'output identity mismatch');
     const output=BigInt(post.uiTokenAmount.amount)-BigInt(pre?.uiTokenAmount.amount??'0');const input=BigInt(meta.preBalances[0])-BigInt(meta.postBalances[0])-BigInt(meta.fee)-rent;
-    return {...base,status:'finalized',rent:rent.toString(),input:input.toString(),output:output.toString()};
+    return {...base,status:'finalized',rent:rent.toString(),input:input.toString(),output:output.toString(),nativeCostEvidence};
    }
    if(i.kind==='burn'){
     const burns=tx.transaction.message.instructions.filter((ix:any)=>ix.program==='spl-token'&&ix.parsed?.type==='burnChecked') as any[];
     ensure(burns.length===1&&burns[0].parsed.info.mint===i.asset&&burns[0].parsed.info.authority===this.signer.publicKey.toBase58()&&burns[0].parsed.info.account===this.destination(this.signer.publicKey.toBase58(),i.asset),'burn evidence mismatch');
-    return {...base,status:'finalized',rent:rent.toString(),burned:burns[0].parsed.info.tokenAmount.amount};
+    ensure(BigInt(meta.preBalances[0])-BigInt(meta.postBalances[0])===BigInt(meta.fee)+rent,'unexpected native burn debit');
+    return {...base,status:'finalized',rent:rent.toString(),burned:burns[0].parsed.info.tokenAmount.amount,nativeCostEvidence};
    }
-   return {...base,status:'finalized',rent:rent.toString(),transfers:transfers.filter(tr=>tr.asset===i.asset)};
+   ensure(BigInt(meta.preBalances[0])-BigInt(meta.postBalances[0])===BigInt(meta.fee)+rent+(i.asset===SOL?BigInt(i.amount):0n),'unexpected native transfer debit');
+   return {...base,status:'finalized',rent:rent.toString(),transfers:transfers.filter(tr=>tr.asset===i.asset),nativeCostEvidence};
   }
   if(status)return {status:'pending',signature:s.signature};
   const height=await this.connection.getBlockHeight('finalized');if(height>s.lastValidHeight){

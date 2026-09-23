@@ -28,9 +28,9 @@ async function intent(id:string,asset=SOL,kind:Intent['kind']='operations'){
 }
 async function status(id:string){return (await db.pool.query('SELECT status,retry_count,next_attempt_at,last_attempt_at FROM intents WHERE id=$1',[id])).rows[0];}
 async function signature(id:string){return (await db.pool.query('SELECT signature FROM attempts WHERE intent_id=$1',[id])).rows[0].signature as string;}
-async function legacyAttempt(i:Intent){
- await db.pool.query('UPDATE intents SET expected=$2 WHERE id=$1',[i.id,JSON.stringify({...i.expected,maxTotalCost:'100000'})]);
- await db.pool.query('INSERT INTO attempts(intent_id,attempt_no,signature,signed_payload,blockhash,last_valid_height,approved_message_hash) VALUES($1,1,$2,$3,$4,1000,$5)',[i.id,'legacy:'+i.id,Buffer.from('original legacy signed bytes'),'legacy-block','legacy-message']);
+async function legacyAttempt(i:Intent,signed?:Signed){
+ await db.pool.query('UPDATE intents SET expected=$2 WHERE id=$1',[i.id,JSON.stringify({...i.expected,maxTotalCost:i.expected.maxTotalCost??'100000'})]);
+ await db.pool.query('INSERT INTO attempts(intent_id,attempt_no,signature,signed_payload,blockhash,last_valid_height,approved_message_hash) VALUES($1,1,$2,$3,$4,1000,$5)',[i.id,signed?.signature??'legacy:'+i.id,signed?.bytes??Buffer.from('original legacy signed bytes'),signed?.blockhash??'legacy-block',signed?.messageHash??'legacy-message']);
  await db.pool.query("UPDATE intents SET status='unknown' WHERE id=$1",[i.id]);
 }
 function actualAdapter(){
@@ -166,12 +166,43 @@ describe('Execution orchestration regressions',()=>{
   vi.mocked(adapter.connection.getAccountInfo).mockImplementation(async key=>key.equals(mint)?info(mintData):null);
   vi.spyOn(adapter.connection,'getMultipleAccountsInfo').mockResolvedValue(swap.keys.map((_,k)=>existing&&k===3?info(accountData):null));
   adapter.swapBuilder=i=>safeJupiterBuild(adapter.connection,jupiter,payer,i,[],[mint.toBase58()]);
-  const i:Intent={id:'jupiter-rent',epoch_id:null,kind:'swap',asset:SOL,amount:'100',status:'planned',expected:{inputAsset:SOL,outputAsset:mint.toBase58(),from:'budget',costAccount:'reserve',maxFee:'5000',maxTotalCost:'10000000'}};
+  await db.tx(t=>db.move(t,'jupiter-capital',SOL,'external:test','reserve',10000000n));
+  const i=await intent('jupiter-rent',SOL,'buyback');i.expected={...i.expected,outputAsset:mint.toBase58(),to:payer.toBase58(),maxTotalCost:'10000000'};
   const signed=await adapter.prepare(i,async()=>{}),tx=VersionedTransaction.deserialize(signed.bytes);
   expect(signed.approvedPlan).toMatchObject({maxRent:existing?'0':'2039280',requiredRent:existing?'2039280':'4078560',maxNativeCost:existing?'5000':'2044280'});
   expect(tx.message.compiledInstructions.filter(ix=>tx.message.staticAccountKeys[ix.programIdIndex].equals(ASSOCIATED_TOKEN_PROGRAM_ID))).toHaveLength(existing?1:2);
   // Cover final authorization reducing cash to the net cost: upfront WSOL rent still must fit.
   const sign=vi.spyOn(signer,'sign'),retry:Intent={...i,expected:{...i.expected,maxTotalCost:'10000000'}};
   await expect(adapter.prepare(retry,async()=>{retry.expected.maxTotalCost=String(retry.expected.maxNativeCost);})).rejects.toThrow('rent/fee allowance insufficient');expect(sign).not.toHaveBeenCalled();
+  // A pre-upgrade signed buyback can still recover from finalized message evidence.
+  const {maxNativeCost:_,maxRent:__,requiredRent:___,...legacyPlan}=i.expected;i.expected=legacyPlan;await legacyAttempt(i,signed);
+  const keys=tx.message.staticAccountKeys,destinationIndex=keys.findIndex(k=>k.equals(destination)),sourceIndex=keys.findIndex(k=>k.equals(source)),preBalances=keys.map(()=>1),postBalances=keys.map(()=>1),rent=existing?0:2039280;
+  preBalances[0]=10000000;postBalances[0]=10000000-100-5000-rent;preBalances[sourceIndex]=0;postBalances[sourceIndex]=0;preBalances[destinationIndex]=existing?2039280:0;postBalances[destinationIndex]=2039280;
+  const token=(amount:string)=>({accountIndex:destinationIndex,mint:mint.toBase58(),owner:payer.toBase58(),uiTokenAmount:{amount,decimals:6,uiAmount:Number(amount)/1000000,uiAmountString:String(Number(amount)/1000000)}});
+  vi.mocked(adapter.inspect).mockRestore();vi.mocked(adapter.connection.getAccountInfo).mockReset().mockResolvedValue(null);
+  vi.spyOn(adapter.connection,'getSignatureStatuses').mockResolvedValue({context:{slot:700},value:[{slot:600,confirmations:null,err:null,confirmationStatus:'finalized'}]});
+  vi.spyOn(adapter.connection,'getParsedTransaction').mockResolvedValue({slot:600,blockTime:1,version:0,transaction:{signatures:[signed.signature],message:{recentBlockhash:signed.blockhash,accountKeys:keys.map((pubkey,k)=>({pubkey,signer:k===0,writable:true,source:'transaction'})),instructions:[]}},meta:{err:null,fee:5000,preBalances,postBalances,innerInstructions:[],preTokenBalances:existing?[token('0')]:[],postTokenBalances:[token('200')],logMessages:[]}} as never);
+  engine=new Engine(db,'test');await db.pool.query('UPDATE control SET paused=true');await runIntent(engine,adapter,i.id,lease,undefined,{recoveryOnly:true});await runIntent(engine,adapter,i.id,lease,undefined,{recoveryOnly:true});
+  expect((await status(i.id)).status).toBe('finalized');expect(await db.balance(SOL,'reserve')).toBe(10100000n-5000n-BigInt(rent));expect(await db.balance(mint.toBase58(),'burn-units:'+i.id)).toBe(200n);expect((await status('burn:'+i.id)).status).toBe('planned');expect((await db.pool.query('SELECT * FROM attempts')).rowCount).toBe(1);expect(adapter.connection.getAccountInfo).not.toHaveBeenCalled();expect(adapter.broadcast).not.toHaveBeenCalled();
+ });
+ it('recovers the original legacy payout and its ATA rent after the recipient has closed the account',async()=>{
+  const {adapter,signer,recipient}=actualAdapter(),mint=testAddress('legacy-payout-mint');
+  await db.tx(t=>db.move(t,'legacy-extra-capital',SOL,'external:test','reserve',10000000n));
+  const i=await intent('legacy-payout',mint,'payout'),source=getAssociatedTokenAddressSync(new PublicKey(mint),signer.publicKey).toBase58(),destination=adapter.destination(recipient,mint);
+  i.expected={...i.expected,maxTotalCost:'10100000',decimals:6,sourceTokenAccount:source,transfers:[{owner:recipient,destination,amount:'100',entitlements:[]}]};
+  vi.spyOn(adapter,'destinationStatus').mockResolvedValue({exists:false,valid:true,rent:2039280n});const signed=await adapter.prepare(i,async()=>{});
+  const {maxNativeCost:_,maxRent:__,requiredRent:___,...legacyPlan}=i.expected;i.expected=legacyPlan;await legacyAttempt(i,signed);
+  const original=VersionedTransaction.deserialize(signed.bytes),keys=original.message.staticAccountKeys,payerIndex=0,destinationIndex=keys.findIndex(k=>k.toBase58()===destination),sourceIndex=keys.findIndex(k=>k.toBase58()===source);
+  const preBalances=keys.map(()=>1),postBalances=keys.map(()=>1);preBalances[payerIndex]=10100000;postBalances[payerIndex]=8055720;preBalances[destinationIndex]=0;postBalances[destinationIndex]=2039280;
+  const token=(accountIndex:number,owner:string,amount:string)=>({accountIndex,mint,owner,programId:TOKEN_PROGRAM_ID.toBase58(),uiTokenAmount:{amount,decimals:6,uiAmount:Number(amount)/1000000,uiAmountString:String(Number(amount)/1000000)}});
+  vi.mocked(adapter.inspect).mockRestore();vi.mocked(adapter.connection.getAccountInfo).mockReset().mockResolvedValue(null);
+  vi.spyOn(adapter.connection,'getSignatureStatuses').mockResolvedValue({context:{slot:700},value:[{slot:600,confirmations:null,err:null,confirmationStatus:'finalized'}]});
+  vi.spyOn(adapter.connection,'getParsedTransaction').mockResolvedValue({slot:600,blockTime:1,version:'legacy',transaction:{signatures:[signed.signature],message:{recentBlockhash:signed.blockhash,accountKeys:keys.map((pubkey,k)=>({pubkey,signer:k===0,writable:true,source:'transaction'})),instructions:[{program:'spl-token',programId:TOKEN_PROGRAM_ID,parsed:{type:'transferChecked',info:{source,destination,mint,tokenAmount:{amount:'100',decimals:6}}}}]}},meta:{err:null,fee:5000,preBalances,postBalances,innerInstructions:[],preTokenBalances:[token(sourceIndex,signer.publicKey.toBase58(),'100')],postTokenBalances:[token(sourceIndex,signer.publicKey.toBase58(),'0'),token(destinationIndex,recipient,'100')],logMessages:[]}} as never);
+  engine=new Engine(db,'test');const observed=await adapter.inspect(i,signed);expect(observed.rent).toBe('2039280');expect(observed.nativeCostEvidence?.rentAccounts).toEqual([{address:destination,mint,owner:recipient,lamports:'2039280'}]);
+  await expect(engine.apply(i,{...observed,nativeCostEvidence:{...observed.nativeCostEvidence!,messageHash:'different-message'}},lease)).rejects.toThrow('original signed message');expect(await db.balance(mint,i.expected.from)).toBe(100n);
+  await db.pool.query("UPDATE control SET paused=true; UPDATE intents SET status='needs_review' WHERE id='legacy-payout'; UPDATE attempts SET status='needs_review' WHERE intent_id='legacy-payout'");
+  const request={requestId:'legacy-rent-recovery',intentId:i.id,signature:signed.signature,actor:'approved-operator',reason:'Original finalized payout located after recipient account closure',evidenceReference:'archive:original-signature'};
+  expect((await recoverIntent(engine,adapter,request,async()=>{},lease)).status).toBe('finalized');expect((await recoverIntent(engine,adapter,request,async()=>{},lease)).status).toBe('finalized');
+  expect(await db.balance(SOL,'reserve')).toBe(8055720n);expect(await db.balance(mint,i.expected.from)).toBe(0n);expect((await db.pool.query('SELECT * FROM chain_receipts')).rowCount).toBe(1);expect((await db.pool.query('SELECT * FROM attempts')).rowCount).toBe(1);expect(adapter.connection.getAccountInfo).not.toHaveBeenCalled();expect(adapter.broadcast).not.toHaveBeenCalled();
  });
 });

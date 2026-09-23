@@ -10,7 +10,8 @@ export interface Receipt {signature:string;instruction:string;asset:string;amoun
 export interface Plan {inputAsset:string;outputAsset?:string;from:string;to?:string;owner?:string;minOutput?:string;maxFee:string;costAccount:string;transfers?:{owner:string;destination:string;amount:string;entitlements:string[]}[];decimals?:number;[key:string]:unknown}
 export interface Intent {id:string;epoch_id:string|null;kind:'swap'|'buyback'|'payout'|'burn'|'operations';asset:string;amount:string;status:string;expected:Plan;result?:Outcome}
 export interface Signed {signature:string;bytes:Buffer;blockhash:string;lastValidHeight:number;messageHash:string;approvedPlan?:Plan}
-export interface Outcome {status:'finalized'|'failed'|'pending'|'unknown'|'expired';slot?:number;signature:string;fee?:string;rent?:string;input?:string;output?:string;transfers?:TransferEvidence[];burned?:string;error?:unknown;raw?:unknown;testOnly?:boolean;settlementPrice?:Price}
+export interface NativeCostEvidence {source:'original_signed_message';messageHash:string;rentAccounts:{address:string;mint:string;owner:string;lamports:string}[]}
+export interface Outcome {status:'finalized'|'failed'|'pending'|'unknown'|'expired';slot?:number;signature:string;fee?:string;rent?:string;input?:string;output?:string;transfers?:TransferEvidence[];burned?:string;error?:unknown;raw?:unknown;testOnly?:boolean;settlementPrice?:Price;nativeCostEvidence?:NativeCostEvidence}
 export interface Chain {
  mode:'demo'|'test'|'live'; prepare(intent:Intent,authorizeSigning?:()=>Promise<void>):Promise<Signed>;
  inspect(intent:Intent,signed:Signed):Promise<Outcome>;
@@ -80,7 +81,15 @@ export class Engine {
   ensure(out.status==='finalized'&&out.error==null&&out.slot&&out.signature,'not finalized success');
   ensure((this.mode==='demo')===!!out.testOnly||this.mode==='test','synthetic/live evidence mismatch');
   const fee=BigInt(out.fee??'0'),rent=BigInt(out.rent??'0');ensure(fee<=BigInt(i.expected.maxFee),'fee exceeds approved cap');ensure(fee>=0n&&rent>=0n,'negative execution costs');if(i.expected.maxTotalCost)ensure(fee+rent<=BigInt(String(i.expected.maxTotalCost)),'execution cost exceeds reserved allowance');
-  const nativeCap=maximumNativeCost(i);ensure(nativeCap!==null,'transaction native cost bound unavailable; review original signed transaction');ensure(fee+rent<=nativeCap,'execution cost exceeds transaction native cap');ensure(rent<=nativeCap-BigInt(i.expected.maxFee),'rent exceeds transaction rent cap');
+  let nativeCap=maximumNativeCost(i);const legacyNativeCost=nativeCap===null;
+  if(legacyNativeCost){
+   const evidence=out.nativeCostEvidence;ensure(evidence?.source==='original_signed_message','transaction native cost bound unavailable; review original signed transaction');
+   ensure(evidence.rentAccounts.every(a=>/^\d+$/.test(a.lamports))&&new Set(evidence.rentAccounts.map(a=>a.address)).size===evidence.rentAccounts.length,'invalid original transaction rent evidence');
+   ensure(evidence.rentAccounts.reduce((n,a)=>n+BigInt(a.lamports),0n)===rent,'original transaction rent evidence mismatch');
+   ensure(evidence.rentAccounts.every(a=>i.kind==='swap'||i.kind==='buyback'?a.mint===i.expected.outputAsset&&a.owner===i.expected.to:a.mint===i.asset&&i.expected.transfers?.some(p=>p.destination===a.address&&p.owner===a.owner)),'original transaction rent recipient mismatch');
+   nativeCap=BigInt(i.expected.maxFee)+rent;
+  }
+  ensure(nativeCap!==null&&fee+rent<=nativeCap,'execution cost exceeds transaction native cap');ensure(rent<=nativeCap-BigInt(i.expected.maxFee),'rent exceeds transaction rent cap');
   if(i.kind==='swap'||i.kind==='buyback')ensure(BigInt(out.input??'0')===BigInt(i.amount)&&BigInt(out.output??'0')>=BigInt(i.expected.minOutput??'1'),'swap debit/output mismatch');
   if(i.kind==='burn')ensure(out.burned===i.amount,'burn amount mismatch');
   if(i.kind==='payout'||i.kind==='operations'){
@@ -90,7 +99,8 @@ export class Engine {
   }
   await this.db.tx(async t=>{await this.db.fence(t,lease);await this.db.lock(t);
    const current=(await t.query('SELECT status FROM intents WHERE id=$1 FOR UPDATE',[i.id])).rows[0];if(current.status==='finalized')return;
-   ensure((await t.query('SELECT id FROM attempts WHERE intent_id=$1 AND signature=$2',[i.id,out.signature])).rowCount,'unrecognized transaction signature');
+   const original=(await t.query('SELECT approved_message_hash FROM attempts WHERE intent_id=$1 AND signature=$2',[i.id,out.signature])).rows[0];ensure(original,'unrecognized transaction signature');
+   if(legacyNativeCost)ensure(out.nativeCostEvidence?.messageHash===original.approved_message_hash,'rent evidence does not match original signed message');
    await this.db.move(t,'network:'+out.signature,SOL,i.expected.costAccount,'external:network',fee+rent,{fee:fee.toString(),rent:rent.toString(),signature:out.signature},i.epoch_id);
    if(i.kind==='swap'||i.kind==='buyback'){
     await this.db.move(t,'debit:'+i.id,i.asset,i.expected.from,'external:swap',BigInt(out.input!),out,i.epoch_id);
