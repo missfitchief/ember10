@@ -197,6 +197,33 @@ describe('ledger-backed developer earnings on PostgreSQL', () => {
   expect((await db.pool.query('SELECT * FROM attempts')).rowCount).toBe(1);
   expect(await db.balance(SOL, 'dev:principal:2026-09-23')).toBe(895_000n);
  });
+ it('rejects external expense settlement for a known signed intent before local finality accounting', async () => {
+  const from = await allocate(1_000_000n); await developer.recordExpense(approval());
+  const p = payment();
+  await db.tx(async t => {
+   await db.lock(t); await db.move(t, 'pending-intent-fee', SOL, 'external:capital', 'reserve', 10_000n);
+   await engine.addIntent(t, { id: 'expense-like-operation', epoch_id: null, kind: 'operations', asset: SOL, amount: p.amountLamports.toString(), status: 'planned',
+    expected: { inputAsset: SOL, from, costAccount: 'reserve', maxFee: '5000', sourceTokenAccount: policy.treasury,
+     transfers: [{ owner: p.destination, destination: p.destination, amount: p.amountLamports.toString(), entitlements: [] }] } });
+  });
+  await runIntent(engine, chain, 'expense-like-operation', lease);
+  const attempt = (await db.pool.query('SELECT signature FROM attempts')).rows[0];
+  expect((await db.pool.query('SELECT signature FROM chain_receipts')).rowCount).toBe(0);
+  await expect(developer.recordExpensePayment({ ...p, signature: attempt.signature }, policy.treasury)).rejects.toThrow('belongs to an execution intent');
+  expect((await db.pool.query('SELECT id FROM operating_expense_payments')).rowCount).toBe(0);
+  expect(await db.balance(SOL, from)).toBe(1_000_000n);
+ });
+ it('charges one network fee per expense transaction while allowing additional verified transfers without another fee', async () => {
+  await allocate(1_000_000n); await developer.recordExpense(approval());
+  const first = payment({ amountLamports: 100_000n });
+  await developer.recordExpensePayment(first, policy.treasury);
+  await expect(developer.recordExpensePayment({ ...first, instruction: '1' }, policy.treasury)).rejects.toThrow('network fee already accounted');
+  await expect(developer.recordExpensePayment({ ...first, instruction: '1', feeLamports: 0n, slot: first.slot + 1 }, policy.treasury)).rejects.toThrow('transaction slot changed');
+  const second = { ...first, instruction: '1', feeLamports: 0n };
+  await developer.recordExpensePayment(second, policy.treasury); await developer.recordExpensePayment(second, policy.treasury);
+  expect((await developer.summary(policy))).toMatchObject({ paidExpenses: '200000', operatingExpenseCosts: '1000', availableOperations: '799000' });
+  expect((await db.pool.query('SELECT id FROM operating_expense_payments')).rowCount).toBe(2);
+ });
  it('a stale worker fence cannot reserve developer funds', async () => {
   await allocate(1_000_000n); await db.pool.query("UPDATE leases SET expires_at=now()-interval '1 second'");
   await expect(developer.schedule({ policy, lease, now })).rejects.toThrow('stale worker fence');

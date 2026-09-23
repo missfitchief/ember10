@@ -49,6 +49,8 @@ Outstanding payables include remaining principal and unused approved cost allowa
 
 `recordExpensePayment(payment, treasury)` is a bookkeeping hook for an independently verified finalized outgoing payment. It verifies treasury source, approved payee, amount, cost bounds, slot, success, and unique signature/instruction. It posts actual principal and cost out of OPS cash (including retained OPS reserve if needed), then records the immutable settlement. It cannot consume pending developer principal, holder funds or already-accounted execution transactions. A depleted required reserve blocks future developer signing/scheduling until covered.
 
+Any signature already stored in execution attempts is rejected even before local settlement: its existing intent owns reconciliation. For an independently verified transaction containing multiple expense transfers, charge its entire network fee on one recorded transfer only; subsequent transfers must carry zero additional fee and the same finalized slot. The bookkeeping hook prevents charging a positive network fee twice for a signature. A caller that supports only one outgoing transfer can continue rejecting batched transactions entirely.
+
 **Do not expose a client-supplied `finalized: true` field as authority.** An authenticated operator endpoint must independently inspect finalized chain evidence and pass verified fields to this hook. Until that verifier is wired, expose expense approval/read-only accounting only. The hook never signs or sends an expense payment.
 
 ## Read/export contract

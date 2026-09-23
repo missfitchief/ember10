@@ -246,7 +246,10 @@ export class DeveloperAccounting {
    await this.db.lock(t);
    const existing = (await t.query('SELECT evidence FROM ledger_events WHERE id=$1', [event])).rows[0];
    if (existing) { ensure(hash(existing.evidence) === hash(evidence), 'expense payment evidence replay mismatch'); return id; }
-   ensure(!(await t.query('SELECT signature FROM chain_receipts WHERE signature=$1', [input.signature])).rowCount, 'transaction already accounted by an execution intent');
+   ensure(!(await t.query('SELECT signature FROM attempts WHERE signature=$1 UNION ALL SELECT signature FROM chain_receipts WHERE signature=$1', [input.signature])).rowCount, 'transaction belongs to an execution intent; reconcile its original attempt');
+   const sameTransaction = (await t.query('SELECT fee::text,slot::text FROM operating_expense_payments WHERE signature=$1', [input.signature])).rows;
+   ensure(sameTransaction.every(p => p.slot === String(input.slot)), 'expense payment transaction slot changed');
+   ensure(input.feeLamports === 0n || sameTransaction.every(p => amount(p.fee) === 0n), 'expense transaction network fee already accounted');
    const expense = (await t.query('SELECT amount::text,cost_allowance::text,payee FROM operating_expenses WHERE id=$1', [input.expenseId])).rows[0];
    ensure(expense && expense.payee === input.destination, 'expense payment destination/approval mismatch');
    const paid = (await t.query('SELECT coalesce(sum(amount),0)::text AS amount,coalesce(sum(fee),0)::text AS fee FROM operating_expense_payments WHERE expense_id=$1', [input.expenseId])).rows[0];
