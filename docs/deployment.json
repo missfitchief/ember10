@@ -1,72 +1,8 @@
-{
-  "verifiedAt": "2026-09-23T14:13:24.672475+00:00",
+﻿{
+  "project": "plavi/ember5-pilot",
   "url": "https://ember5-pilot.vercel.app",
-  "deploymentId": "dpl_27mGxRR97Ck7rFWWP6YMAGU9jrHu",
-  "readyState": "READY",
-  "mode": "recorded synthetic demo",
-  "workerActive": false,
-  "broadcastEnabled": false,
-  "checks": [
-    {
-      "path": "/",
-      "method": "GET",
-      "status": 200,
-      "passed": true
-    },
-    {
-      "path": "/api/status",
-      "method": "GET",
-      "status": 200,
-      "passed": true
-    },
-    {
-      "path": "/api/basket",
-      "method": "GET",
-      "status": 200,
-      "passed": true
-    },
-    {
-      "path": "/api/transparency",
-      "method": "GET",
-      "status": 200,
-      "passed": true
-    },
-    {
-      "path": "/api/wallets/AEqeDfVNmZW5fowqFF6KAiuoMDBCUTeYDGVioFmhP1jF/rewards",
-      "method": "GET",
-      "status": 200,
-      "passed": true
-    },
-    {
-      "path": "/api/epochs/demo-epoch-001/export?format=csv",
-      "method": "GET",
-      "status": 200,
-      "passed": true
-    },
-    {
-      "path": "/api/status",
-      "method": "POST",
-      "status": 405,
-      "passed": true
-    },
-    {
-      "path": "/api/operator/resume",
-      "method": "GET",
-      "status": 404,
-      "passed": true
-    },
-    {
-      "path": "/api/wallets/invalid/rewards",
-      "method": "GET",
-      "status": 400,
-      "passed": true
-    }
-  ],
-  "observations": {
-    "basketAssets": 5,
-    "syntheticPayoutTransactions": 5,
-    "sampleWalletCredits": 5,
-    "sampleWalletDeliveries": 5,
-    "desktopBasketRendered": true
-  }
+  "previousDeploymentEvidence": "history/ember5-demo-deployment.json",
+  "currentVerificationDirectory": "../../EMBER10-review",
+  "publishedRevisionEndpoints": ["/api/status", "/api/overview"],
+  "verificationRule": "The independent review and public smoke evidence identify the tested source commit and actual published revision. A source build alone does not establish deployment success."
 }
