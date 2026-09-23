@@ -63,8 +63,9 @@ export function createTokenImageHandler(fetchImage: typeof fetch = (...args) => 
     if (!['GET', 'HEAD'].includes(request.method)) return error(405);
     const params = new URL(request.url).searchParams;
     const source = tokenImageSource(params.get('source'));
+    // Hosting rewrites may append their own routing parameters. Only source and
+    // retry are inputs; all other transport metadata is ignored, never forwarded.
     if (!source || params.getAll('source').length !== 1 ||
-      [...params.keys()].some(key => !['source', 'retry', '__route'].includes(key)) ||
       (params.has('retry') && !/^[0-2]$/.test(params.get('retry')!))) return error(400);
     let image = cache.get(source.url);
     if (image && image.expires <= Date.now()) { forget(source.url); image = undefined; }

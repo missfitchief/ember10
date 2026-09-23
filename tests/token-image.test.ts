@@ -81,7 +81,7 @@ it.each(['html', 'svg', 'fake-png', 'redirect', 'oversized-header', 'oversized-s
 it('rejects writes and malformed query parameters', async () => {
   const fetcher = vi.fn(), handler = createTokenImageHandler(fetcher);
   expect((await handler(request(source, { method: 'POST' }))).status).toBe(405);
-  for (const query of ['&source='+encodeURIComponent(source), '&retry=999', '&url=https://evil.test', '&retry=-1']) {
+  for (const query of ['&source='+encodeURIComponent(source), '&retry=999', '&retry=-1']) {
     expect((await handler(new Request(request().url+query))).status).toBe(400);
   }
   expect(fetcher).not.toHaveBeenCalled();
@@ -90,7 +90,9 @@ it('rejects writes and malformed query parameters', async () => {
 it('routes images through the hosted Vercel rewrite independently of the ledger origin', async () => {
   const fetcher = vi.fn(async (_url: RequestInfo | URL) => response()); vi.stubGlobal('fetch', fetcher);
   const url = new URL(request().url); url.pathname = '/api/index'; url.searchParams.set('__route','token-image');
+  url.searchParams.set('route','token-image'); url.searchParams.set('url','https://evil.test');
   const result = await hostedRead(new Request(url), 'https://ledger.example');
   expect(result.status).toBe(200); expect(result.headers.get('content-type')).toBe('image/webp');
   expect(fetcher.mock.calls[0][0]).toBe(source);
+  expect(fetcher).toHaveBeenCalledTimes(1);
 });
