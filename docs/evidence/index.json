@@ -1,0 +1,79 @@
+[
+  {
+    "url": "https://embercurve.fun/developers",
+    "observedAt": "2026-09-23T11:58:35.849Z",
+    "status": 200,
+    "contentType": "text/html; charset=utf-8",
+    "bytes": 3015,
+    "file": "ember-developers.txt"
+  },
+  {
+    "url": "https://embercurve.fun/how",
+    "observedAt": "2026-09-23T11:58:36.222Z",
+    "status": 200,
+    "contentType": "text/html; charset=utf-8",
+    "bytes": 3001,
+    "file": "ember-how.txt"
+  },
+  {
+    "url": "https://embercurve.fun/api/solana/markets",
+    "observedAt": "2026-09-23T11:58:36.319Z",
+    "error": "response too large"
+  },
+  {
+    "url": "https://embercurve.fun/api/solana/quotes",
+    "observedAt": "2026-09-23T11:58:37.069Z",
+    "status": 200,
+    "contentType": "application/json; charset=utf-8",
+    "bytes": 628534,
+    "file": "ember-quotes.json"
+  },
+  {
+    "url": "https://embercurve.fun/api/solana/configs",
+    "observedAt": "2026-09-23T11:58:37.236Z",
+    "status": 200,
+    "contentType": "application/json; charset=utf-8",
+    "bytes": 524662,
+    "file": "ember-configs.json"
+  },
+  {
+    "url": "https://embercurve.fun/api/solana/payouts",
+    "observedAt": "2026-09-23T11:58:37.506Z",
+    "status": 200,
+    "contentType": "application/json; charset=utf-8",
+    "bytes": 40019,
+    "file": "ember-payouts.json"
+  },
+  {
+    "url": "https://embercurve.fun/api/solana/pools.csv",
+    "observedAt": "2026-09-23T11:58:37.597Z",
+    "status": 200,
+    "contentType": "text/csv; charset=utf-8",
+    "bytes": 1018615,
+    "file": "ember-pools.txt"
+  },
+  {
+    "url": "https://developers.jup.ag/docs/swap/build.md",
+    "observedAt": "2026-09-23T11:58:38.012Z",
+    "status": 200,
+    "contentType": "text/markdown; charset=utf-8",
+    "bytes": 28232,
+    "file": "jupiter-build-docs.txt"
+  },
+  {
+    "url": "https://developers.jup.ag/docs/api-rate-limit.md",
+    "observedAt": "2026-09-23T11:58:38.263Z",
+    "status": 404,
+    "contentType": "text/markdown; charset=utf-8",
+    "bytes": 607,
+    "file": "jupiter-rates.txt"
+  },
+  {
+    "url": "https://api.jup.ag/swap/v2/order?inputMint=So11111111111111111111111111111111111111112&outputMint=EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v&amount=1000000",
+    "observedAt": "2026-09-23T11:58:38.421Z",
+    "status": 200,
+    "contentType": "application/json",
+    "bytes": 1557,
+    "file": "jupiter-unauthenticated.json"
+  }
+]

@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#F7F6F3" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#17191C" media="(prefers-color-scheme: dark)" />
+    <meta name="color-scheme" content="light dark" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <!-- EMBER_META_START -->
+<meta name="description" content="Meteora bonding-curve launchpad. Pair with 1,200+ Meteora-approved tokens and tokenized stocks. 32% of every trade's tax goes to holders, burns, a SuperLotto or your team, automatically and on-chain." /><link rel="canonical" href="https://embercurve.fun/how" /><meta property="og:type" content="website" /><meta property="og:site_name" content="Ember" /><meta property="og:title" content="Ember · Launch a coin on Solana, paired with any stock" /><meta property="og:description" content="Meteora bonding-curve launchpad. Pair with 1,200+ Meteora-approved tokens and tokenized stocks. 32% of every trade's tax goes to holders, burns, a SuperLotto or your team, automatically and on-chain." /><meta property="og:url" content="https://embercurve.fun/how" /><meta property="og:image" content="https://embercurve.fun/og-banner.png" /><meta name="twitter:card" content="summary_large_image" /><meta name="twitter:title" content="Ember · Launch a coin on Solana, paired with any stock" /><meta name="twitter:description" content="Meteora bonding-curve launchpad. Pair with 1,200+ Meteora-approved tokens and tokenized stocks. 32% of every trade's tax goes to holders, burns, a SuperLotto or your team, automatically and on-chain." /><meta name="twitter:image" content="https://embercurve.fun/og-banner.png" />
+<!-- EMBER_META_END -->
+    <link rel="icon" href="/favicon-32.png" sizes="32x32" type="image/png" />
+    <link rel="icon" href="/favicon-64.png" sizes="64x64" type="image/png" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <script>
+      (() => { let t = ''; try { t = localStorage.getItem('ember-theme') || ''; } catch {} if (t !== 'light' && t !== 'dark') t = 'dark'; document.documentElement.dataset.theme = t; document.documentElement.style.colorScheme = t; })();
+      window.__EMBER_RUNTIME__ = {"siteName":"Ember","demo":false,"configured":true,"release":"ember-1.37.0-ui.75"};
+    </script>
+    <title>Ember · Launch on Solana, paired with any stock</title>
+    <script type="module" crossorigin src="/assets/index-BnVC4qJ7.js"></script>
+    <link rel="modulepreload" crossorigin href="/assets/solana-BefGevBl.js">
+    <link rel="stylesheet" crossorigin href="/assets/index-fGjw7pKW.css">
+  </head>
+  <body>
+    <div id="root"></div>
+  </body>
+</html>

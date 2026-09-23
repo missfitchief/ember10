@@ -1,0 +1,49 @@
+{
+  "name": "ember5-pilot",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22.12"
+  },
+  "scripts": {
+    "db:start": "tsx scripts/database.ts",
+    "db:migrate": "tsx packages/db/migrate.ts",
+    "dev": "tsx scripts/dev.ts",
+    "dev:web": "vite --config apps/web/vite.config.ts",
+    "api": "tsx apps/api/main.ts",
+    "worker": "tsx apps/worker/main.ts",
+    "typecheck": "tsc --noEmit",
+    "build": "npm run typecheck && vite build --config apps/web/vite.config.ts",
+    "test": "vitest run",
+    "demo": "tsx scripts/demo.ts",
+    "operator": "tsx scripts/operator.ts",
+    "check:integrations": "node scripts/evidence.mjs",
+    "test:chain": "tsx scripts/test-chain.ts",
+    "backup": "tsx scripts/backup.ts"
+  },
+  "dependencies": {
+    "@jup-ag/instruction-parser": "6.0.28",
+    "@meteora-ag/dynamic-bonding-curve-sdk": "1.5.12",
+    "@solana/spl-token": "0.4.15",
+    "@solana/web3.js": "1.99.0",
+    "bs58": "6.0.0",
+    "decimal.js": "10.6.0",
+    "fastify": "5.12.5",
+    "pg": "8.23.0",
+    "react": "19.3.0",
+    "react-dom": "19.3.0",
+    "zod": "4.6.5"
+  },
+  "devDependencies": {
+    "@types/node": "24.5.2",
+    "@types/pg": "8.15.5",
+    "@types/react": "19.1.16",
+    "@types/react-dom": "19.1.9",
+    "embedded-postgres": "18.4.0-beta.17",
+    "tsx": "4.23.15",
+    "typescript": "5.9.3",
+    "vite": "8.3.0",
+    "vitest": "5.0.1"
+  }
+}

@@ -1,0 +1,7 @@
+Purchase 1/5: actual simulated acquisition allocated with exact integer conservation.
+Purchase 2/5: actual simulated acquisition allocated with exact integer conservation.
+Purchase 3/5: actual simulated acquisition allocated with exact integer conservation.
+Purchase 4/5: actual simulated acquisition allocated with exact integer conservation.
+Purchase 5/5: actual simulated acquisition allocated with exact integer conservation.
+Two eligible owners delivered; one owner carries accrued units forward. Below-threshold owner received no credit.
+Buyback and burn use separate intents. All jobs can be replayed without a second economic action.

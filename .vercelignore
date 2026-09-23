@@ -1,0 +1,12 @@
+node_modules
+.runtime
+.git
+.env
+.env.*
+!.env.example
+coverage
+*.log
+*.dump
+*.key.json
+docs/evidence
+dist

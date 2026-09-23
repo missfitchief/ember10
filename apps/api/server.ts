@@ -1,0 +1,42 @@
+import Fastify from 'fastify';
+import { timingSafeEqual, createHash } from 'node:crypto';
+import { Connection,PublicKey } from '@solana/web3.js';
+import { z } from 'zod';
+import { Store } from '../../packages/db/store.js';
+import { Config } from '../../packages/core/config.js';
+import { canonical } from '../../packages/core/model.js';
+import * as q from './queries.js';
+import {parsedTransfers} from '../../packages/integrations/solana.js';
+import {Engine} from '../../packages/core/engine.js';
+import {ensure} from '../../packages/core/model.js';
+export function createServer(db:Store,c:Config){
+ const app=Fastify({logger:false,bodyLimit:8192,trustProxy:false});const hits=new Map<string,{n:number;until:number}>();
+ app.addHook('onRequest',async(req,reply)=>{reply.header('x-content-type-options','nosniff').header('referrer-policy','no-referrer');
+  const now=Date.now();if(hits.size>10000)for(const [key,v]of hits)if(v.until<now)hits.delete(key);
+  const v=hits.get(req.ip);if(v&&v.until>now){v.n++;if(v.n>120)return reply.code(429).send({error:'rate_limited'});}else hits.set(req.ip,{n:1,until:now+60000});
+  if(req.url.startsWith('/operator/')){const supplied=req.headers.authorization??'';const expected=c.OPERATOR_TOKEN?'Bearer '+c.OPERATOR_TOKEN:'';
+   if(!expected||!timingSafeEqual(createHash('sha256').update(supplied).digest(),createHash('sha256').update(expected).digest()))return reply.code(401).send({error:'operator_auth_required'});
+  }
+ });
+ app.setErrorHandler((error,req,reply)=>{const e=error as Error;const bad=e instanceof z.ZodError||e.message==='invalid address';return reply.code(bad?400:e.message==='epoch not found'?404:503).send({error:bad?'invalid_request':e.message==='epoch not found'?'not_found':'service_unavailable',message:bad?'Check the address and request parameters.':'This data is currently unavailable. No estimated values have been substituted.'});});
+ const page=z.object({limit:z.coerce.number().int().min(1).max(100).default(20),cursor:z.string().max(200).optional()});
+ app.get('/api/status',()=>q.status(db,c));app.get('/api/project',()=>q.project(db,c));app.get('/api/basket',()=>q.basket(db));
+ app.get('/api/epochs',req=>{const p=page.parse(req.query);return q.epochs(db,p.limit,p.cursor);});
+ app.get<{Params:{id:string}}>('/api/epochs/:id',req=>q.exportEpoch(db,z.string().max(200).parse(req.params.id)));
+ app.get<{Params:{id:string};Querystring:{format?:string}}>('/api/epochs/:id/export',async(req,reply)=>{const value=await q.exportEpoch(db,req.params.id);if(req.query.format==='csv')return reply.header('content-type','text/csv').header('content-disposition','attachment; filename="epoch-allocations.csv"').send(q.csv(value.entitlements));return value;});
+ app.get<{Params:{address:string}}>('/api/wallets/:address/rewards',req=>{try{new PublicKey(req.params.address);}catch{throw Error('invalid address');}return q.wallet(db,req.params.address);});
+ app.get('/api/transparency',()=>q.transparency(db));
+ app.post('/operator/pause',async req=>{const body=z.object({reason:z.string().min(1).max(200)}).parse(req.body);await db.tx(async t=>{await db.lock(t);await t.query('UPDATE control SET paused=true,reason=$1',[body.reason]);await t.query('INSERT INTO operator_audit(actor,action,body) VALUES($1,$2,$3)',['authenticated-operator','pause',canonical(body)]);});return {paused:true};});
+ app.post('/operator/resume',async()=>{if(c.MASTER_PAUSE||c.MODE==='prelaunch'||c.MODE==='live'&&!c.APPROVAL_FILE)throw Error('master pause/configuration blocks resume');await db.tx(async t=>{await db.lock(t);if((await t.query('SELECT id FROM incidents WHERE resolved_at IS NULL')).rowCount)throw Error('unresolved incidents');await t.query("UPDATE control SET paused=false,reason='Waiting for fresh verified funding and selection'");await t.query("INSERT INTO operator_audit(actor,action,body) VALUES('authenticated-operator','resume','{}')");});return {paused:false};});
+ app.get('/operator/funding',async()=>({balances:await db.balances(),receipts:(await db.pool.query('SELECT id,classification,asset,amount::text FROM incoming_transfers ORDER BY id')).rows}));
+ app.post('/operator/capital',async req=>{const {signature}=z.object({signature:z.string().regex(/^[1-9A-HJ-NP-Za-km-z]{80,90}$/)}).parse(req.body);ensure(c.TREASURY&&c.MODE!=='demo','configured real test/live treasury required');const connection=new Connection(c.RPC_URL,'finalized');const evidence=await parsedTransfers(connection,signature);ensure(evidence&&!evidence.tx.meta?.err,'finalized successful capital transfer required');
+  const incoming=evidence.transfers.filter(t=>t.asset==='SOL'&&t.destination===c.TREASURY);ensure(incoming.length,'no native SOL transfers to configured treasury');
+  for(const tr of incoming)await new Engine(db,c.MODE).recognizeCapital({...tr,signature,slot:evidence.tx.slot,finalized:true,error:null,kind:'seed',attributionVerified:true,rawEvidence:{operatorApprovedCapital:true,transfer:tr}},c.TREASURY);
+  await db.pool.query("INSERT INTO operator_audit(actor,action,body) VALUES('authenticated-operator','recognize-capital',$1)",[canonical({signature})]);return {classified:'capital',transfers:incoming.length};
+ });
+ app.get('/operator/selection',()=>q.basket(db));
+ app.get('/operator/snapshots',async()=>({snapshots:(await db.pool.query("SELECT id,body FROM documents WHERE kind='snapshot' ORDER BY created_at DESC LIMIT 10")).rows}));
+ app.get('/operator/plan',async()=>({spending:false,status:await q.status(db,c),basket:await q.basket(db),availableCreatorLamports:(await db.balance('SOL','revenue')).toString(),requirements:['five verified members','complete holder snapshot','fresh prices and real-amount routes','unchanged funding route','reserve and daily caps']}));
+ app.post('/operator/reconcile',async()=>{await db.pool.query("INSERT INTO jobs(id,kind,body) VALUES('operator-reconcile','reconcile','{}') ON CONFLICT(id) DO UPDATE SET state='ready',available_at=now()");await db.pool.query("INSERT INTO operator_audit(actor,action,body) VALUES('authenticated-operator','reconcile','{}')");return {queued:true};});
+ return app;
+}

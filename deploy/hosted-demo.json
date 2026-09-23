@@ -1,0 +1,2905 @@
+{
+  "schema": "ember5.hosted-demo.v1",
+  "capturedAt": "2026-09-23T14:03:46.144Z",
+  "status": {
+    "mode": "demo",
+    "cluster": "localnet",
+    "phase": "configured",
+    "broadcastEnabled": false,
+    "paused": true,
+    "waitingReason": "Recorded synthetic demo. Settlement worker is not running on this host.",
+    "configured": true,
+    "discovery": null,
+    "discoveryStale": true,
+    "workerActive": false,
+    "asOf": "2026-09-23T14:03:46.074Z",
+    "nextEvaluation": null,
+    "hostedSnapshot": true
+  },
+  "project": {
+    "name": "EMBER5",
+    "workingName": true,
+    "nameCollision": true,
+    "mint": "8tdtPAVkkkB4LxYCbipX3c1LgMZzf3td1RESXGdMTKdA",
+    "pool": "FxuwsCSdJUug1C7t36ac4SaURQnVGT6NMyuBkYqeW4kM",
+    "treasury": "G7xoyETXZBr1knKexbiLrWzry88UgHhaVR299eqpmS5o",
+    "operations": null,
+    "policy": {
+      "version": 1,
+      "basketBps": 8000,
+      "impactBps": 200,
+      "minOwners": 50,
+      "buybackBps": 1000,
+      "exclusions": [
+        {
+          "owner": "G7xoyETXZBr1knKexbiLrWzry88UgHhaVR299eqpmS5o",
+          "reason": "project treasury"
+        }
+      ],
+      "maxCostBps": 1000,
+      "holderUnits": "100000",
+      "slippageBps": 100,
+      "rankingBasis": "circulating_market_cap",
+      "minAgeSeconds": 86400,
+      "operationsBps": 1000,
+      "newAtaMicroUsd": "5000000",
+      "snapshotMethod": "finalized_full_census",
+      "evaluationSeconds": 3600,
+      "maxDataAgeSeconds": 180,
+      "minBasketMicroUsd": "25000000",
+      "minVolumeMicroUsd": "5000000000",
+      "maxPriceAgeSeconds": 120,
+      "existingAtaMicroUsd": "1000000",
+      "minLiquidityMicroUsd": "10000000000"
+    },
+    "policyVersion": "policy:0acf7325ed3a2448d14167ad5d3c95df1a8d80a01646d76a5f288570c9b373d0",
+    "buyUrl": null,
+    "disclosure": "Rewards depend on received creator fees. The service controls the reward treasury. Independent project; no official Ember affiliation."
+  },
+  "basket": {
+    "id": "basket:e96e09cdaa3b52965f3080f1d7eaeec5f4a81187d85af9b3a50a17c29fefea5b",
+    "day": "2026-09-23",
+    "ready": true,
+    "selected": [
+      {
+        "at": 1790166526155,
+        "mint": "DiPGf2NHmRZP7pSye9Ns3FtC4gFhoEEjiBjJxQyZMXVH",
+        "pool": "4pgCL4BwB4virevigPxVxDb4nnLDDjghxLo6zdgff9sK",
+        "config": "AUvBp1zooSM3gfazBLUQAto7YWf4tt2jPG6jM1QVjCW7",
+        "source": "DEMO synthetic fixture",
+        "symbol": "CINDER",
+        "holders": 65,
+        "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+        "reasons": [],
+        "category": "token",
+        "decimals": 6,
+        "createdAt": 1789993726155,
+        "graduated": true,
+        "rankBasis": "circulating_market_cap",
+        "rankValue": "500000000000",
+        "weightBps": 2000,
+        "extensions": [],
+        "routeBudget": "1000000000",
+        "routeViable": true,
+        "supplyBasis": "synthetic circulating supply",
+        "poolVerified": true,
+        "mintAuthority": null,
+        "censusComplete": true,
+        "volumeMicroUsd": "8000000000",
+        "freezeAuthority": null,
+        "liquidityMicroUsd": "15000000000",
+        "provenanceVerified": true
+      },
+      {
+        "at": 1790166526155,
+        "mint": "5mw5LZYS5332DAdgoVkk4LTDZohEt9pE9xJk6ur4RC8e",
+        "pool": "7RxcvKSfv1Qo58uqiEnDjrc9DeJPk2rRZqnjoYd4ym34",
+        "config": "AUvBp1zooSM3gfazBLUQAto7YWf4tt2jPG6jM1QVjCW7",
+        "source": "DEMO synthetic fixture",
+        "symbol": "FLARE",
+        "holders": 65,
+        "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+        "reasons": [],
+        "category": "token",
+        "decimals": 6,
+        "createdAt": 1789993726155,
+        "graduated": true,
+        "rankBasis": "circulating_market_cap",
+        "rankValue": "430000000000",
+        "weightBps": 2000,
+        "extensions": [],
+        "routeBudget": "1000000000",
+        "routeViable": true,
+        "supplyBasis": "synthetic circulating supply",
+        "poolVerified": true,
+        "mintAuthority": null,
+        "censusComplete": true,
+        "volumeMicroUsd": "8000000000",
+        "freezeAuthority": null,
+        "liquidityMicroUsd": "15000000000",
+        "provenanceVerified": true
+      },
+      {
+        "at": 1790166526155,
+        "mint": "Fc5fFibivjLFhXx5EijUnmEto1FoukBuz5zkysBGgebn",
+        "pool": "FD7FVrqfx8kvZmazTcfT1QwFNCAiSpiGE4qTqUq7Jqn7",
+        "config": "AUvBp1zooSM3gfazBLUQAto7YWf4tt2jPG6jM1QVjCW7",
+        "source": "DEMO synthetic fixture",
+        "symbol": "COAL",
+        "holders": 65,
+        "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+        "reasons": [],
+        "category": "token",
+        "decimals": 6,
+        "createdAt": 1789993726155,
+        "graduated": true,
+        "rankBasis": "circulating_market_cap",
+        "rankValue": "360000000000",
+        "weightBps": 2000,
+        "extensions": [],
+        "routeBudget": "1000000000",
+        "routeViable": true,
+        "supplyBasis": "synthetic circulating supply",
+        "poolVerified": true,
+        "mintAuthority": null,
+        "censusComplete": true,
+        "volumeMicroUsd": "8000000000",
+        "freezeAuthority": null,
+        "liquidityMicroUsd": "15000000000",
+        "provenanceVerified": true
+      },
+      {
+        "at": 1790166526155,
+        "mint": "EcG98b9MJ1DAQaK9s2scBdbAEZnrQ4cwmncwXbUaNr46",
+        "pool": "6dY9SQm7EmRg3N2Bkehjnpctrvse7QJXfrwzhqXRsLtk",
+        "config": "AUvBp1zooSM3gfazBLUQAto7YWf4tt2jPG6jM1QVjCW7",
+        "source": "DEMO synthetic fixture",
+        "symbol": "SPARK",
+        "holders": 65,
+        "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+        "reasons": [],
+        "category": "token",
+        "decimals": 6,
+        "createdAt": 1789993726155,
+        "graduated": true,
+        "rankBasis": "circulating_market_cap",
+        "rankValue": "290000000000",
+        "weightBps": 2000,
+        "extensions": [],
+        "routeBudget": "1000000000",
+        "routeViable": true,
+        "supplyBasis": "synthetic circulating supply",
+        "poolVerified": true,
+        "mintAuthority": null,
+        "censusComplete": true,
+        "volumeMicroUsd": "8000000000",
+        "freezeAuthority": null,
+        "liquidityMicroUsd": "15000000000",
+        "provenanceVerified": true
+      },
+      {
+        "at": 1790166526155,
+        "mint": "oah8LwCAKzszwh4yE7sW7SWTRBnN6Cgugx3aKGhRHmo",
+        "pool": "8K6gXPSX4bW8N8kxTUbFXQbUVujjLNvToc8JdyPMeL7y",
+        "config": "AUvBp1zooSM3gfazBLUQAto7YWf4tt2jPG6jM1QVjCW7",
+        "source": "DEMO synthetic fixture",
+        "symbol": "GLOW",
+        "holders": 65,
+        "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+        "reasons": [],
+        "category": "token",
+        "decimals": 6,
+        "createdAt": 1789993726155,
+        "graduated": true,
+        "rankBasis": "circulating_market_cap",
+        "rankValue": "220000000000",
+        "weightBps": 2000,
+        "extensions": [],
+        "routeBudget": "1000000000",
+        "routeViable": true,
+        "supplyBasis": "synthetic circulating supply",
+        "poolVerified": true,
+        "mintAuthority": null,
+        "censusComplete": true,
+        "volumeMicroUsd": "8000000000",
+        "freezeAuthority": null,
+        "liquidityMicroUsd": "15000000000",
+        "provenanceVerified": true
+      }
+    ],
+    "universe": [
+      {
+        "at": 1790166526155,
+        "mint": "5mw5LZYS5332DAdgoVkk4LTDZohEt9pE9xJk6ur4RC8e",
+        "pool": "7RxcvKSfv1Qo58uqiEnDjrc9DeJPk2rRZqnjoYd4ym34",
+        "config": "AUvBp1zooSM3gfazBLUQAto7YWf4tt2jPG6jM1QVjCW7",
+        "source": "DEMO synthetic fixture",
+        "symbol": "FLARE",
+        "holders": 65,
+        "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+        "reasons": [],
+        "category": "token",
+        "decimals": 6,
+        "createdAt": 1789993726155,
+        "graduated": true,
+        "rankBasis": "circulating_market_cap",
+        "rankValue": "430000000000",
+        "extensions": [],
+        "routeBudget": "1000000000",
+        "routeViable": true,
+        "supplyBasis": "synthetic circulating supply",
+        "poolVerified": true,
+        "mintAuthority": null,
+        "censusComplete": true,
+        "volumeMicroUsd": "8000000000",
+        "freezeAuthority": null,
+        "liquidityMicroUsd": "15000000000",
+        "provenanceVerified": true
+      },
+      {
+        "at": 1790166526155,
+        "mint": "DiPGf2NHmRZP7pSye9Ns3FtC4gFhoEEjiBjJxQyZMXVH",
+        "pool": "4pgCL4BwB4virevigPxVxDb4nnLDDjghxLo6zdgff9sK",
+        "config": "AUvBp1zooSM3gfazBLUQAto7YWf4tt2jPG6jM1QVjCW7",
+        "source": "DEMO synthetic fixture",
+        "symbol": "CINDER",
+        "holders": 65,
+        "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+        "reasons": [],
+        "category": "token",
+        "decimals": 6,
+        "createdAt": 1789993726155,
+        "graduated": true,
+        "rankBasis": "circulating_market_cap",
+        "rankValue": "500000000000",
+        "extensions": [],
+        "routeBudget": "1000000000",
+        "routeViable": true,
+        "supplyBasis": "synthetic circulating supply",
+        "poolVerified": true,
+        "mintAuthority": null,
+        "censusComplete": true,
+        "volumeMicroUsd": "8000000000",
+        "freezeAuthority": null,
+        "liquidityMicroUsd": "15000000000",
+        "provenanceVerified": true
+      },
+      {
+        "at": 1790166526155,
+        "mint": "EcG98b9MJ1DAQaK9s2scBdbAEZnrQ4cwmncwXbUaNr46",
+        "pool": "6dY9SQm7EmRg3N2Bkehjnpctrvse7QJXfrwzhqXRsLtk",
+        "config": "AUvBp1zooSM3gfazBLUQAto7YWf4tt2jPG6jM1QVjCW7",
+        "source": "DEMO synthetic fixture",
+        "symbol": "SPARK",
+        "holders": 65,
+        "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+        "reasons": [],
+        "category": "token",
+        "decimals": 6,
+        "createdAt": 1789993726155,
+        "graduated": true,
+        "rankBasis": "circulating_market_cap",
+        "rankValue": "290000000000",
+        "extensions": [],
+        "routeBudget": "1000000000",
+        "routeViable": true,
+        "supplyBasis": "synthetic circulating supply",
+        "poolVerified": true,
+        "mintAuthority": null,
+        "censusComplete": true,
+        "volumeMicroUsd": "8000000000",
+        "freezeAuthority": null,
+        "liquidityMicroUsd": "15000000000",
+        "provenanceVerified": true
+      },
+      {
+        "at": 1790166526155,
+        "mint": "Fc5fFibivjLFhXx5EijUnmEto1FoukBuz5zkysBGgebn",
+        "pool": "FD7FVrqfx8kvZmazTcfT1QwFNCAiSpiGE4qTqUq7Jqn7",
+        "config": "AUvBp1zooSM3gfazBLUQAto7YWf4tt2jPG6jM1QVjCW7",
+        "source": "DEMO synthetic fixture",
+        "symbol": "COAL",
+        "holders": 65,
+        "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+        "reasons": [],
+        "category": "token",
+        "decimals": 6,
+        "createdAt": 1789993726155,
+        "graduated": true,
+        "rankBasis": "circulating_market_cap",
+        "rankValue": "360000000000",
+        "extensions": [],
+        "routeBudget": "1000000000",
+        "routeViable": true,
+        "supplyBasis": "synthetic circulating supply",
+        "poolVerified": true,
+        "mintAuthority": null,
+        "censusComplete": true,
+        "volumeMicroUsd": "8000000000",
+        "freezeAuthority": null,
+        "liquidityMicroUsd": "15000000000",
+        "provenanceVerified": true
+      },
+      {
+        "at": 1790166526155,
+        "mint": "oah8LwCAKzszwh4yE7sW7SWTRBnN6Cgugx3aKGhRHmo",
+        "pool": "8K6gXPSX4bW8N8kxTUbFXQbUVujjLNvToc8JdyPMeL7y",
+        "config": "AUvBp1zooSM3gfazBLUQAto7YWf4tt2jPG6jM1QVjCW7",
+        "source": "DEMO synthetic fixture",
+        "symbol": "GLOW",
+        "holders": 65,
+        "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+        "reasons": [],
+        "category": "token",
+        "decimals": 6,
+        "createdAt": 1789993726155,
+        "graduated": true,
+        "rankBasis": "circulating_market_cap",
+        "rankValue": "220000000000",
+        "extensions": [],
+        "routeBudget": "1000000000",
+        "routeViable": true,
+        "supplyBasis": "synthetic circulating supply",
+        "poolVerified": true,
+        "mintAuthority": null,
+        "censusComplete": true,
+        "volumeMicroUsd": "8000000000",
+        "freezeAuthority": null,
+        "liquidityMicroUsd": "15000000000",
+        "provenanceVerified": true
+      }
+    ],
+    "createdAt": 1790166526155,
+    "policyHash": "0acf7325ed3a2448d14167ad5d3c95df1a8d80a01646d76a5f288570c9b373d0",
+    "rankingBasis": "circulating_market_cap",
+    "eligibleCount": 5,
+    "stale": false
+  },
+  "transparency": {
+    "receivedLamports": "1000000000",
+    "assets": [
+      {
+        "mint": "DiPGf2NHmRZP7pSye9Ns3FtC4gFhoEEjiBjJxQyZMXVH",
+        "symbol": "CINDER",
+        "decimals": 6,
+        "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+      },
+      {
+        "mint": "Fc5fFibivjLFhXx5EijUnmEto1FoukBuz5zkysBGgebn",
+        "symbol": "COAL",
+        "decimals": 6,
+        "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+      },
+      {
+        "mint": "5mw5LZYS5332DAdgoVkk4LTDZohEt9pE9xJk6ur4RC8e",
+        "symbol": "FLARE",
+        "decimals": 6,
+        "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+      },
+      {
+        "mint": "oah8LwCAKzszwh4yE7sW7SWTRBnN6Cgugx3aKGhRHmo",
+        "symbol": "GLOW",
+        "decimals": 6,
+        "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+      },
+      {
+        "mint": "EcG98b9MJ1DAQaK9s2scBdbAEZnrQ4cwmncwXbUaNr46",
+        "symbol": "SPARK",
+        "decimals": 6,
+        "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+      }
+    ],
+    "accrued": [
+      {
+        "asset": "5mw5LZYS5332DAdgoVkk4LTDZohEt9pE9xJk6ur4RC8e",
+        "credited": "784000000",
+        "paid": "641454546",
+        "pending": "142545454"
+      },
+      {
+        "asset": "DiPGf2NHmRZP7pSye9Ns3FtC4gFhoEEjiBjJxQyZMXVH",
+        "credited": "784000000",
+        "paid": "641454546",
+        "pending": "142545454"
+      },
+      {
+        "asset": "EcG98b9MJ1DAQaK9s2scBdbAEZnrQ4cwmncwXbUaNr46",
+        "credited": "784000000",
+        "paid": "641454546",
+        "pending": "142545454"
+      },
+      {
+        "asset": "Fc5fFibivjLFhXx5EijUnmEto1FoukBuz5zkysBGgebn",
+        "credited": "784000000",
+        "paid": "641454546",
+        "pending": "142545454"
+      },
+      {
+        "asset": "oah8LwCAKzszwh4yE7sW7SWTRBnN6Cgugx3aKGhRHmo",
+        "credited": "784000000",
+        "paid": "641454546",
+        "pending": "142545454"
+      }
+    ],
+    "finalizedPayoutTransactions": "5",
+    "burns": [
+      {
+        "asset": "8tdtPAVkkkB4LxYCbipX3c1LgMZzf3td1RESXGdMTKdA",
+        "amount": "490000000"
+      }
+    ],
+    "balances": [
+      {
+        "asset": "5mw5LZYS5332DAdgoVkk4LTDZohEt9pE9xJk6ur4RC8e",
+        "account": "external:delivered",
+        "amount": "641454546"
+      },
+      {
+        "asset": "5mw5LZYS5332DAdgoVkk4LTDZohEt9pE9xJk6ur4RC8e",
+        "account": "external:swap",
+        "amount": "-784000000"
+      },
+      {
+        "asset": "5mw5LZYS5332DAdgoVkk4LTDZohEt9pE9xJk6ur4RC8e",
+        "account": "liabilities",
+        "amount": "142545454"
+      },
+      {
+        "asset": "8tdtPAVkkkB4LxYCbipX3c1LgMZzf3td1RESXGdMTKdA",
+        "account": "external:burn",
+        "amount": "490000000"
+      },
+      {
+        "asset": "8tdtPAVkkkB4LxYCbipX3c1LgMZzf3td1RESXGdMTKdA",
+        "account": "external:swap",
+        "amount": "-490000000"
+      },
+      {
+        "asset": "DiPGf2NHmRZP7pSye9Ns3FtC4gFhoEEjiBjJxQyZMXVH",
+        "account": "external:delivered",
+        "amount": "641454546"
+      },
+      {
+        "asset": "DiPGf2NHmRZP7pSye9Ns3FtC4gFhoEEjiBjJxQyZMXVH",
+        "account": "external:swap",
+        "amount": "-784000000"
+      },
+      {
+        "asset": "DiPGf2NHmRZP7pSye9Ns3FtC4gFhoEEjiBjJxQyZMXVH",
+        "account": "liabilities",
+        "amount": "142545454"
+      },
+      {
+        "asset": "EcG98b9MJ1DAQaK9s2scBdbAEZnrQ4cwmncwXbUaNr46",
+        "account": "external:delivered",
+        "amount": "641454546"
+      },
+      {
+        "asset": "EcG98b9MJ1DAQaK9s2scBdbAEZnrQ4cwmncwXbUaNr46",
+        "account": "external:swap",
+        "amount": "-784000000"
+      },
+      {
+        "asset": "EcG98b9MJ1DAQaK9s2scBdbAEZnrQ4cwmncwXbUaNr46",
+        "account": "liabilities",
+        "amount": "142545454"
+      },
+      {
+        "asset": "Fc5fFibivjLFhXx5EijUnmEto1FoukBuz5zkysBGgebn",
+        "account": "external:delivered",
+        "amount": "641454546"
+      },
+      {
+        "asset": "Fc5fFibivjLFhXx5EijUnmEto1FoukBuz5zkysBGgebn",
+        "account": "external:swap",
+        "amount": "-784000000"
+      },
+      {
+        "asset": "Fc5fFibivjLFhXx5EijUnmEto1FoukBuz5zkysBGgebn",
+        "account": "liabilities",
+        "amount": "142545454"
+      },
+      {
+        "asset": "SOL",
+        "account": "cost:demo-epoch-001",
+        "amount": "19965000"
+      },
+      {
+        "asset": "SOL",
+        "account": "external:capital",
+        "amount": "-200000000"
+      },
+      {
+        "asset": "SOL",
+        "account": "external:creator_fee",
+        "amount": "-1000000000"
+      },
+      {
+        "asset": "SOL",
+        "account": "external:network",
+        "amount": "60000"
+      },
+      {
+        "asset": "SOL",
+        "account": "external:swap",
+        "amount": "882000000"
+      },
+      {
+        "asset": "SOL",
+        "account": "operations:demo-epoch-001",
+        "amount": "98000000"
+      },
+      {
+        "asset": "SOL",
+        "account": "reserve",
+        "amount": "199975000"
+      },
+      {
+        "asset": "oah8LwCAKzszwh4yE7sW7SWTRBnN6Cgugx3aKGhRHmo",
+        "account": "external:delivered",
+        "amount": "641454546"
+      },
+      {
+        "asset": "oah8LwCAKzszwh4yE7sW7SWTRBnN6Cgugx3aKGhRHmo",
+        "account": "external:swap",
+        "amount": "-784000000"
+      },
+      {
+        "asset": "oah8LwCAKzszwh4yE7sW7SWTRBnN6Cgugx3aKGhRHmo",
+        "account": "liabilities",
+        "amount": "142545454"
+      }
+    ],
+    "reconciliation": null,
+    "incidents": [],
+    "accountingHealth": "not_yet_verified"
+  },
+  "epochs": {
+    "items": [
+      {
+        "id": "demo-epoch-001",
+        "status": "settled",
+        "reason": "Accounting complete; unpaid entitlements remain payable",
+        "funding": {
+          "leg": "156800000",
+          "net": "980000000",
+          "cost": "20000000",
+          "price": {
+            "at": 1790166526155,
+            "source": "DEMO fixed SOL valuation",
+            "microUsd": "100000000"
+          },
+          "total": "1000000000",
+          "basket": "784000000",
+          "source": "recognized creator receipts",
+          "buyback": "98000000",
+          "remainder": "0",
+          "operations": "98000000",
+          "receiptIds": [
+            "0e3ad3ac4ac2ecfdc0f930a6f29e4bc11c922d078ba4c5a3b4a9f52ab3ab48fb"
+          ]
+        },
+        "created_at": "2026-09-23T12:28:46.281Z"
+      }
+    ],
+    "nextCursor": null
+  },
+  "epoch": {
+    "schema": "ember5.epoch.v1",
+    "mode": "demo",
+    "testOnly": true,
+    "epoch": {
+      "id": "demo-epoch-001",
+      "policy_id": "policy:0acf7325ed3a2448d14167ad5d3c95df1a8d80a01646d76a5f288570c9b373d0",
+      "basket_id": "basket:e96e09cdaa3b52965f3080f1d7eaeec5f4a81187d85af9b3a50a17c29fefea5b",
+      "snapshot_id": "snapshot:ce9f9f8a0c356b6f381c7b47a2abbd6dae4e8358c876c5cebd8bed3f7b014087",
+      "status": "settled",
+      "reason": "Accounting complete; unpaid entitlements remain payable",
+      "funding": {
+        "leg": "156800000",
+        "net": "980000000",
+        "cost": "20000000",
+        "price": {
+          "at": 1790166526155,
+          "source": "DEMO fixed SOL valuation",
+          "microUsd": "100000000"
+        },
+        "total": "1000000000",
+        "basket": "784000000",
+        "source": "recognized creator receipts",
+        "buyback": "98000000",
+        "remainder": "0",
+        "operations": "98000000",
+        "receiptIds": [
+          "0e3ad3ac4ac2ecfdc0f930a6f29e4bc11c922d078ba4c5a3b4a9f52ab3ab48fb"
+        ]
+      },
+      "created_at": "2026-09-23T12:28:46.281Z"
+    },
+    "policy": {
+      "version": 1,
+      "basketBps": 8000,
+      "impactBps": 200,
+      "minOwners": 50,
+      "buybackBps": 1000,
+      "exclusions": [
+        {
+          "owner": "G7xoyETXZBr1knKexbiLrWzry88UgHhaVR299eqpmS5o",
+          "reason": "project treasury"
+        }
+      ],
+      "maxCostBps": 1000,
+      "holderUnits": "100000",
+      "slippageBps": 100,
+      "rankingBasis": "circulating_market_cap",
+      "minAgeSeconds": 86400,
+      "operationsBps": 1000,
+      "newAtaMicroUsd": "5000000",
+      "snapshotMethod": "finalized_full_census",
+      "evaluationSeconds": 3600,
+      "maxDataAgeSeconds": 180,
+      "minBasketMicroUsd": "25000000",
+      "minVolumeMicroUsd": "5000000000",
+      "maxPriceAgeSeconds": 120,
+      "existingAtaMicroUsd": "1000000",
+      "minLiquidityMicroUsd": "10000000000"
+    },
+    "basket": {
+      "day": "2026-09-23",
+      "ready": true,
+      "selected": [
+        {
+          "at": 1790166526155,
+          "mint": "DiPGf2NHmRZP7pSye9Ns3FtC4gFhoEEjiBjJxQyZMXVH",
+          "pool": "4pgCL4BwB4virevigPxVxDb4nnLDDjghxLo6zdgff9sK",
+          "config": "AUvBp1zooSM3gfazBLUQAto7YWf4tt2jPG6jM1QVjCW7",
+          "source": "DEMO synthetic fixture",
+          "symbol": "CINDER",
+          "holders": 65,
+          "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+          "reasons": [],
+          "category": "token",
+          "decimals": 6,
+          "createdAt": 1789993726155,
+          "graduated": true,
+          "rankBasis": "circulating_market_cap",
+          "rankValue": "500000000000",
+          "weightBps": 2000,
+          "extensions": [],
+          "routeBudget": "1000000000",
+          "routeViable": true,
+          "supplyBasis": "synthetic circulating supply",
+          "poolVerified": true,
+          "mintAuthority": null,
+          "censusComplete": true,
+          "volumeMicroUsd": "8000000000",
+          "freezeAuthority": null,
+          "liquidityMicroUsd": "15000000000",
+          "provenanceVerified": true
+        },
+        {
+          "at": 1790166526155,
+          "mint": "5mw5LZYS5332DAdgoVkk4LTDZohEt9pE9xJk6ur4RC8e",
+          "pool": "7RxcvKSfv1Qo58uqiEnDjrc9DeJPk2rRZqnjoYd4ym34",
+          "config": "AUvBp1zooSM3gfazBLUQAto7YWf4tt2jPG6jM1QVjCW7",
+          "source": "DEMO synthetic fixture",
+          "symbol": "FLARE",
+          "holders": 65,
+          "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+          "reasons": [],
+          "category": "token",
+          "decimals": 6,
+          "createdAt": 1789993726155,
+          "graduated": true,
+          "rankBasis": "circulating_market_cap",
+          "rankValue": "430000000000",
+          "weightBps": 2000,
+          "extensions": [],
+          "routeBudget": "1000000000",
+          "routeViable": true,
+          "supplyBasis": "synthetic circulating supply",
+          "poolVerified": true,
+          "mintAuthority": null,
+          "censusComplete": true,
+          "volumeMicroUsd": "8000000000",
+          "freezeAuthority": null,
+          "liquidityMicroUsd": "15000000000",
+          "provenanceVerified": true
+        },
+        {
+          "at": 1790166526155,
+          "mint": "Fc5fFibivjLFhXx5EijUnmEto1FoukBuz5zkysBGgebn",
+          "pool": "FD7FVrqfx8kvZmazTcfT1QwFNCAiSpiGE4qTqUq7Jqn7",
+          "config": "AUvBp1zooSM3gfazBLUQAto7YWf4tt2jPG6jM1QVjCW7",
+          "source": "DEMO synthetic fixture",
+          "symbol": "COAL",
+          "holders": 65,
+          "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+          "reasons": [],
+          "category": "token",
+          "decimals": 6,
+          "createdAt": 1789993726155,
+          "graduated": true,
+          "rankBasis": "circulating_market_cap",
+          "rankValue": "360000000000",
+          "weightBps": 2000,
+          "extensions": [],
+          "routeBudget": "1000000000",
+          "routeViable": true,
+          "supplyBasis": "synthetic circulating supply",
+          "poolVerified": true,
+          "mintAuthority": null,
+          "censusComplete": true,
+          "volumeMicroUsd": "8000000000",
+          "freezeAuthority": null,
+          "liquidityMicroUsd": "15000000000",
+          "provenanceVerified": true
+        },
+        {
+          "at": 1790166526155,
+          "mint": "EcG98b9MJ1DAQaK9s2scBdbAEZnrQ4cwmncwXbUaNr46",
+          "pool": "6dY9SQm7EmRg3N2Bkehjnpctrvse7QJXfrwzhqXRsLtk",
+          "config": "AUvBp1zooSM3gfazBLUQAto7YWf4tt2jPG6jM1QVjCW7",
+          "source": "DEMO synthetic fixture",
+          "symbol": "SPARK",
+          "holders": 65,
+          "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+          "reasons": [],
+          "category": "token",
+          "decimals": 6,
+          "createdAt": 1789993726155,
+          "graduated": true,
+          "rankBasis": "circulating_market_cap",
+          "rankValue": "290000000000",
+          "weightBps": 2000,
+          "extensions": [],
+          "routeBudget": "1000000000",
+          "routeViable": true,
+          "supplyBasis": "synthetic circulating supply",
+          "poolVerified": true,
+          "mintAuthority": null,
+          "censusComplete": true,
+          "volumeMicroUsd": "8000000000",
+          "freezeAuthority": null,
+          "liquidityMicroUsd": "15000000000",
+          "provenanceVerified": true
+        },
+        {
+          "at": 1790166526155,
+          "mint": "oah8LwCAKzszwh4yE7sW7SWTRBnN6Cgugx3aKGhRHmo",
+          "pool": "8K6gXPSX4bW8N8kxTUbFXQbUVujjLNvToc8JdyPMeL7y",
+          "config": "AUvBp1zooSM3gfazBLUQAto7YWf4tt2jPG6jM1QVjCW7",
+          "source": "DEMO synthetic fixture",
+          "symbol": "GLOW",
+          "holders": 65,
+          "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+          "reasons": [],
+          "category": "token",
+          "decimals": 6,
+          "createdAt": 1789993726155,
+          "graduated": true,
+          "rankBasis": "circulating_market_cap",
+          "rankValue": "220000000000",
+          "weightBps": 2000,
+          "extensions": [],
+          "routeBudget": "1000000000",
+          "routeViable": true,
+          "supplyBasis": "synthetic circulating supply",
+          "poolVerified": true,
+          "mintAuthority": null,
+          "censusComplete": true,
+          "volumeMicroUsd": "8000000000",
+          "freezeAuthority": null,
+          "liquidityMicroUsd": "15000000000",
+          "provenanceVerified": true
+        }
+      ],
+      "universe": [
+        {
+          "at": 1790166526155,
+          "mint": "5mw5LZYS5332DAdgoVkk4LTDZohEt9pE9xJk6ur4RC8e",
+          "pool": "7RxcvKSfv1Qo58uqiEnDjrc9DeJPk2rRZqnjoYd4ym34",
+          "config": "AUvBp1zooSM3gfazBLUQAto7YWf4tt2jPG6jM1QVjCW7",
+          "source": "DEMO synthetic fixture",
+          "symbol": "FLARE",
+          "holders": 65,
+          "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+          "reasons": [],
+          "category": "token",
+          "decimals": 6,
+          "createdAt": 1789993726155,
+          "graduated": true,
+          "rankBasis": "circulating_market_cap",
+          "rankValue": "430000000000",
+          "extensions": [],
+          "routeBudget": "1000000000",
+          "routeViable": true,
+          "supplyBasis": "synthetic circulating supply",
+          "poolVerified": true,
+          "mintAuthority": null,
+          "censusComplete": true,
+          "volumeMicroUsd": "8000000000",
+          "freezeAuthority": null,
+          "liquidityMicroUsd": "15000000000",
+          "provenanceVerified": true
+        },
+        {
+          "at": 1790166526155,
+          "mint": "DiPGf2NHmRZP7pSye9Ns3FtC4gFhoEEjiBjJxQyZMXVH",
+          "pool": "4pgCL4BwB4virevigPxVxDb4nnLDDjghxLo6zdgff9sK",
+          "config": "AUvBp1zooSM3gfazBLUQAto7YWf4tt2jPG6jM1QVjCW7",
+          "source": "DEMO synthetic fixture",
+          "symbol": "CINDER",
+          "holders": 65,
+          "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+          "reasons": [],
+          "category": "token",
+          "decimals": 6,
+          "createdAt": 1789993726155,
+          "graduated": true,
+          "rankBasis": "circulating_market_cap",
+          "rankValue": "500000000000",
+          "extensions": [],
+          "routeBudget": "1000000000",
+          "routeViable": true,
+          "supplyBasis": "synthetic circulating supply",
+          "poolVerified": true,
+          "mintAuthority": null,
+          "censusComplete": true,
+          "volumeMicroUsd": "8000000000",
+          "freezeAuthority": null,
+          "liquidityMicroUsd": "15000000000",
+          "provenanceVerified": true
+        },
+        {
+          "at": 1790166526155,
+          "mint": "EcG98b9MJ1DAQaK9s2scBdbAEZnrQ4cwmncwXbUaNr46",
+          "pool": "6dY9SQm7EmRg3N2Bkehjnpctrvse7QJXfrwzhqXRsLtk",
+          "config": "AUvBp1zooSM3gfazBLUQAto7YWf4tt2jPG6jM1QVjCW7",
+          "source": "DEMO synthetic fixture",
+          "symbol": "SPARK",
+          "holders": 65,
+          "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+          "reasons": [],
+          "category": "token",
+          "decimals": 6,
+          "createdAt": 1789993726155,
+          "graduated": true,
+          "rankBasis": "circulating_market_cap",
+          "rankValue": "290000000000",
+          "extensions": [],
+          "routeBudget": "1000000000",
+          "routeViable": true,
+          "supplyBasis": "synthetic circulating supply",
+          "poolVerified": true,
+          "mintAuthority": null,
+          "censusComplete": true,
+          "volumeMicroUsd": "8000000000",
+          "freezeAuthority": null,
+          "liquidityMicroUsd": "15000000000",
+          "provenanceVerified": true
+        },
+        {
+          "at": 1790166526155,
+          "mint": "Fc5fFibivjLFhXx5EijUnmEto1FoukBuz5zkysBGgebn",
+          "pool": "FD7FVrqfx8kvZmazTcfT1QwFNCAiSpiGE4qTqUq7Jqn7",
+          "config": "AUvBp1zooSM3gfazBLUQAto7YWf4tt2jPG6jM1QVjCW7",
+          "source": "DEMO synthetic fixture",
+          "symbol": "COAL",
+          "holders": 65,
+          "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+          "reasons": [],
+          "category": "token",
+          "decimals": 6,
+          "createdAt": 1789993726155,
+          "graduated": true,
+          "rankBasis": "circulating_market_cap",
+          "rankValue": "360000000000",
+          "extensions": [],
+          "routeBudget": "1000000000",
+          "routeViable": true,
+          "supplyBasis": "synthetic circulating supply",
+          "poolVerified": true,
+          "mintAuthority": null,
+          "censusComplete": true,
+          "volumeMicroUsd": "8000000000",
+          "freezeAuthority": null,
+          "liquidityMicroUsd": "15000000000",
+          "provenanceVerified": true
+        },
+        {
+          "at": 1790166526155,
+          "mint": "oah8LwCAKzszwh4yE7sW7SWTRBnN6Cgugx3aKGhRHmo",
+          "pool": "8K6gXPSX4bW8N8kxTUbFXQbUVujjLNvToc8JdyPMeL7y",
+          "config": "AUvBp1zooSM3gfazBLUQAto7YWf4tt2jPG6jM1QVjCW7",
+          "source": "DEMO synthetic fixture",
+          "symbol": "GLOW",
+          "holders": 65,
+          "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+          "reasons": [],
+          "category": "token",
+          "decimals": 6,
+          "createdAt": 1789993726155,
+          "graduated": true,
+          "rankBasis": "circulating_market_cap",
+          "rankValue": "220000000000",
+          "extensions": [],
+          "routeBudget": "1000000000",
+          "routeViable": true,
+          "supplyBasis": "synthetic circulating supply",
+          "poolVerified": true,
+          "mintAuthority": null,
+          "censusComplete": true,
+          "volumeMicroUsd": "8000000000",
+          "freezeAuthority": null,
+          "liquidityMicroUsd": "15000000000",
+          "provenanceVerified": true
+        }
+      ],
+      "createdAt": 1790166526155,
+      "policyHash": "0acf7325ed3a2448d14167ad5d3c95df1a8d80a01646d76a5f288570c9b373d0",
+      "rankingBasis": "circulating_market_cap",
+      "eligibleCount": 5
+    },
+    "snapshot": {
+      "hash": "91b6d69a5ecf1258f3e3f2ac0cd7e2fbc0684d016f584319e1c46718fd5bd3bb",
+      "mint": "8tdtPAVkkkB4LxYCbipX3c1LgMZzf3td1RESXGdMTKdA",
+      "slot": 500000,
+      "owners": [
+        {
+          "owner": "2Ud8NvNy9pynh7jVrUNYRg6PvcnEhQjbqcnqSNXfexNw",
+          "reason": null,
+          "balance": "300000000000",
+          "eligible": true
+        },
+        {
+          "owner": "5SAkPvwVM6zuqT4egeA3mxHvumgvKG9uNJRGgtZys1aE",
+          "reason": null,
+          "balance": "100000000000",
+          "eligible": true
+        },
+        {
+          "owner": "AEqeDfVNmZW5fowqFF6KAiuoMDBCUTeYDGVioFmhP1jF",
+          "reason": null,
+          "balance": "150000000000",
+          "eligible": true
+        },
+        {
+          "owner": "E831hpezmt3juzpMmYmUbzHrid3cbWHfdKimXHnfBfL9",
+          "reason": "below threshold",
+          "balance": "99000000000",
+          "eligible": false
+        },
+        {
+          "owner": "G7xoyETXZBr1knKexbiLrWzry88UgHhaVR299eqpmS5o",
+          "reason": "project treasury",
+          "balance": "1000000000000",
+          "eligible": false
+        }
+      ],
+      "policy": {
+        "version": 1,
+        "basketBps": 8000,
+        "impactBps": 200,
+        "minOwners": 50,
+        "buybackBps": 1000,
+        "exclusions": [
+          {
+            "owner": "G7xoyETXZBr1knKexbiLrWzry88UgHhaVR299eqpmS5o",
+            "reason": "project treasury"
+          }
+        ],
+        "maxCostBps": 1000,
+        "holderUnits": "100000",
+        "slippageBps": 100,
+        "rankingBasis": "circulating_market_cap",
+        "minAgeSeconds": 86400,
+        "operationsBps": 1000,
+        "newAtaMicroUsd": "5000000",
+        "snapshotMethod": "finalized_full_census",
+        "evaluationSeconds": 3600,
+        "maxDataAgeSeconds": 180,
+        "minBasketMicroUsd": "25000000",
+        "minVolumeMicroUsd": "5000000000",
+        "maxPriceAgeSeconds": 120,
+        "existingAtaMicroUsd": "1000000",
+        "minLiquidityMicroUsd": "10000000000"
+      },
+      "supply": "1649000000000",
+      "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+      "accounts": [
+        {
+          "mint": "8tdtPAVkkkB4LxYCbipX3c1LgMZzf3td1RESXGdMTKdA",
+          "owner": "AEqeDfVNmZW5fowqFF6KAiuoMDBCUTeYDGVioFmhP1jF",
+          "state": "initialized",
+          "amount": "90000000000",
+          "address": "6Xg5SQd7uYcoCPxtir73a9EDXBGgGFN7TwNuEEEASKGB",
+          "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        },
+        {
+          "mint": "8tdtPAVkkkB4LxYCbipX3c1LgMZzf3td1RESXGdMTKdA",
+          "owner": "E831hpezmt3juzpMmYmUbzHrid3cbWHfdKimXHnfBfL9",
+          "state": "initialized",
+          "amount": "99000000000",
+          "address": "9KQQpXjhHhWiFv6zYzw57gx8WtVxRKVYBbX9SU6qbE52",
+          "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        },
+        {
+          "mint": "8tdtPAVkkkB4LxYCbipX3c1LgMZzf3td1RESXGdMTKdA",
+          "owner": "G7xoyETXZBr1knKexbiLrWzry88UgHhaVR299eqpmS5o",
+          "state": "initialized",
+          "amount": "1000000000000",
+          "address": "9W8qMsU6LnZ6sWCQGfS5xUmS9qTWK4FBUyj83pS5QDY8",
+          "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        },
+        {
+          "mint": "8tdtPAVkkkB4LxYCbipX3c1LgMZzf3td1RESXGdMTKdA",
+          "owner": "AEqeDfVNmZW5fowqFF6KAiuoMDBCUTeYDGVioFmhP1jF",
+          "state": "initialized",
+          "amount": "60000000000",
+          "address": "AWbptSoY2Awxkaw2NFaVeD56MzSV7Fj6xgWsGHm1As32",
+          "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        },
+        {
+          "mint": "8tdtPAVkkkB4LxYCbipX3c1LgMZzf3td1RESXGdMTKdA",
+          "owner": "5SAkPvwVM6zuqT4egeA3mxHvumgvKG9uNJRGgtZys1aE",
+          "state": "initialized",
+          "amount": "100000000000",
+          "address": "EmhEYV3UDkED7yNTFjNqJqXTUr6DSPKyecoa2NeEnJ1L",
+          "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        },
+        {
+          "mint": "8tdtPAVkkkB4LxYCbipX3c1LgMZzf3td1RESXGdMTKdA",
+          "owner": "2Ud8NvNy9pynh7jVrUNYRg6PvcnEhQjbqcnqSNXfexNw",
+          "state": "initialized",
+          "amount": "300000000000",
+          "address": "HGDzrSLsnkG7uLKo3TknBuEcomAL3tSCRemMcGbYrYAQ",
+          "program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        }
+      ],
+      "complete": true,
+      "decimals": 6,
+      "threshold": "100000000000",
+      "accountSum": "1649000000000",
+      "policyHash": "0acf7325ed3a2448d14167ad5d3c95df1a8d80a01646d76a5f288570c9b373d0",
+      "supplySlot": 500000
+    },
+    "fundingReceipts": [
+      {
+        "id": "0e3ad3ac4ac2ecfdc0f930a6f29e4bc11c922d078ba4c5a3b4a9f52ab3ab48fb",
+        "signature": "demo-receipt-creator_fee",
+        "instruction": "0",
+        "asset": "SOL",
+        "amount": "1000000000",
+        "destination": "G7xoyETXZBr1knKexbiLrWzry88UgHhaVR299eqpmS5o",
+        "classification": "creator_fee"
+      }
+    ],
+    "fundingUses": [
+      {
+        "receipt_id": "0e3ad3ac4ac2ecfdc0f930a6f29e4bc11c922d078ba4c5a3b4a9f52ab3ab48fb",
+        "amount": "1000000000",
+        "kind": "commitment"
+      }
+    ],
+    "intents": [
+      {
+        "id": "burn:buyback:demo-epoch-001",
+        "kind": "burn",
+        "asset": "8tdtPAVkkkB4LxYCbipX3c1LgMZzf3td1RESXGdMTKdA",
+        "amount": "490000000",
+        "status": "finalized",
+        "result": {
+          "fee": "5000",
+          "raw": {
+            "source": "deterministic database-backed simulation"
+          },
+          "rent": "0",
+          "slot": 500001,
+          "error": null,
+          "input": "490000000",
+          "burned": "490000000",
+          "output": "2450000000",
+          "status": "finalized",
+          "testOnly": true,
+          "signature": "demo:c1427ddf55d6b43b52fe7e263cf120077c6f7f2d50628e9c730a70045dec0965"
+        },
+        "reason": null
+      },
+      {
+        "id": "buyback:demo-epoch-001",
+        "kind": "buyback",
+        "asset": "SOL",
+        "amount": "98000000",
+        "status": "finalized",
+        "result": {
+          "fee": "5000",
+          "raw": {
+            "source": "deterministic database-backed simulation"
+          },
+          "rent": "0",
+          "slot": 500001,
+          "error": null,
+          "input": "98000000",
+          "output": "490000000",
+          "status": "finalized",
+          "testOnly": true,
+          "signature": "demo:99d88730d0efc23517550c1151400134f64af54c78ee050a8378fcdee9064d92"
+        },
+        "reason": null
+      },
+      {
+        "id": "purchase:demo-epoch-001:5mw5LZYS5332DAdgoVkk4LTDZohEt9pE9xJk6ur4RC8e",
+        "kind": "swap",
+        "asset": "SOL",
+        "amount": "156800000",
+        "status": "finalized",
+        "result": {
+          "fee": "5000",
+          "raw": {
+            "source": "deterministic database-backed simulation"
+          },
+          "rent": "0",
+          "slot": 500001,
+          "error": null,
+          "input": "156800000",
+          "output": "784000000",
+          "status": "finalized",
+          "testOnly": true,
+          "signature": "demo:d8f7dd6f5a8c2f5856d5d5d496b6634716cc1d544c5c534bf16d6064ca79156e"
+        },
+        "reason": null
+      },
+      {
+        "id": "purchase:demo-epoch-001:DiPGf2NHmRZP7pSye9Ns3FtC4gFhoEEjiBjJxQyZMXVH",
+        "kind": "swap",
+        "asset": "SOL",
+        "amount": "156800000",
+        "status": "finalized",
+        "result": {
+          "fee": "5000",
+          "raw": {
+            "source": "deterministic database-backed simulation"
+          },
+          "rent": "0",
+          "slot": 500001,
+          "error": null,
+          "input": "156800000",
+          "output": "784000000",
+          "status": "finalized",
+          "testOnly": true,
+          "signature": "demo:00c184127eccb3e3395fa254e6da8b46271f531cae8a2328967f6bebb1d40c42"
+        },
+        "reason": null
+      },
+      {
+        "id": "purchase:demo-epoch-001:EcG98b9MJ1DAQaK9s2scBdbAEZnrQ4cwmncwXbUaNr46",
+        "kind": "swap",
+        "asset": "SOL",
+        "amount": "156800000",
+        "status": "finalized",
+        "result": {
+          "fee": "5000",
+          "raw": {
+            "source": "deterministic database-backed simulation"
+          },
+          "rent": "0",
+          "slot": 500001,
+          "error": null,
+          "input": "156800000",
+          "output": "784000000",
+          "status": "finalized",
+          "testOnly": true,
+          "signature": "demo:0f4b1648fc0985d0fced7a3aaf42a9648cba8b03ac8e0dd870e66fab3978a00e"
+        },
+        "reason": null
+      },
+      {
+        "id": "purchase:demo-epoch-001:Fc5fFibivjLFhXx5EijUnmEto1FoukBuz5zkysBGgebn",
+        "kind": "swap",
+        "asset": "SOL",
+        "amount": "156800000",
+        "status": "finalized",
+        "result": {
+          "fee": "5000",
+          "raw": {
+            "source": "deterministic database-backed simulation"
+          },
+          "rent": "0",
+          "slot": 500001,
+          "error": null,
+          "input": "156800000",
+          "output": "784000000",
+          "status": "finalized",
+          "testOnly": true,
+          "signature": "demo:4a3d06c77b793187390fe2ff22e7a848a654e2e2a5d929f0311dea67a79f0ec8"
+        },
+        "reason": null
+      },
+      {
+        "id": "purchase:demo-epoch-001:oah8LwCAKzszwh4yE7sW7SWTRBnN6Cgugx3aKGhRHmo",
+        "kind": "swap",
+        "asset": "SOL",
+        "amount": "156800000",
+        "status": "finalized",
+        "result": {
+          "fee": "5000",
+          "raw": {
+            "source": "deterministic database-backed simulation"
+          },
+          "rent": "0",
+          "slot": 500001,
+          "error": null,
+          "input": "156800000",
+          "output": "784000000",
+          "status": "finalized",
+          "testOnly": true,
+          "signature": "demo:54f475a9d3a69214b0fddffd6c9d6fd564ce72070c94b7be89ced70d2e6cd440"
+        },
+        "reason": null
+      }
+    ],
+    "entitlements": [
+      {
+        "id": "09692557faa692e42d1fee333212a2ff3f06b148f62f4d8081c4c4239fd3be3d",
+        "asset": "5mw5LZYS5332DAdgoVkk4LTDZohEt9pE9xJk6ur4RC8e",
+        "owner": "2Ud8NvNy9pynh7jVrUNYRg6PvcnEhQjbqcnqSNXfexNw",
+        "amount": "427636364",
+        "paid": "427636364",
+        "unpaid": "0"
+      },
+      {
+        "id": "8877c8446468126a72b05dc3034368c4582aeee00455dcfe63251c6b4287c95f",
+        "asset": "5mw5LZYS5332DAdgoVkk4LTDZohEt9pE9xJk6ur4RC8e",
+        "owner": "5SAkPvwVM6zuqT4egeA3mxHvumgvKG9uNJRGgtZys1aE",
+        "amount": "142545454",
+        "paid": "0",
+        "unpaid": "142545454"
+      },
+      {
+        "id": "a02f7142afef2f2bf62d0b125ccbc0fdf860bf9ab0ba9d3b5563819b7824056e",
+        "asset": "5mw5LZYS5332DAdgoVkk4LTDZohEt9pE9xJk6ur4RC8e",
+        "owner": "AEqeDfVNmZW5fowqFF6KAiuoMDBCUTeYDGVioFmhP1jF",
+        "amount": "213818182",
+        "paid": "213818182",
+        "unpaid": "0"
+      },
+      {
+        "id": "0964bf3ea3a07f60c37f5c6786b001a5d615dfe1a629d8d6ea44a6318042e233",
+        "asset": "DiPGf2NHmRZP7pSye9Ns3FtC4gFhoEEjiBjJxQyZMXVH",
+        "owner": "2Ud8NvNy9pynh7jVrUNYRg6PvcnEhQjbqcnqSNXfexNw",
+        "amount": "427636364",
+        "paid": "427636364",
+        "unpaid": "0"
+      },
+      {
+        "id": "5a8e9364c556825cbcf5171940213a026eccf596aa344d37aa6aefb1ebebe421",
+        "asset": "DiPGf2NHmRZP7pSye9Ns3FtC4gFhoEEjiBjJxQyZMXVH",
+        "owner": "5SAkPvwVM6zuqT4egeA3mxHvumgvKG9uNJRGgtZys1aE",
+        "amount": "142545454",
+        "paid": "0",
+        "unpaid": "142545454"
+      },
+      {
+        "id": "a721b057522a546fd6f653914bf0b32c1cb884847e21e5f6799fbe1dea0527f0",
+        "asset": "DiPGf2NHmRZP7pSye9Ns3FtC4gFhoEEjiBjJxQyZMXVH",
+        "owner": "AEqeDfVNmZW5fowqFF6KAiuoMDBCUTeYDGVioFmhP1jF",
+        "amount": "213818182",
+        "paid": "213818182",
+        "unpaid": "0"
+      },
+      {
+        "id": "1ceecd30ab9d4b3bdfdd831fc9fb950b19522a8c1813967e523976eddebd5787",
+        "asset": "EcG98b9MJ1DAQaK9s2scBdbAEZnrQ4cwmncwXbUaNr46",
+        "owner": "2Ud8NvNy9pynh7jVrUNYRg6PvcnEhQjbqcnqSNXfexNw",
+        "amount": "427636364",
+        "paid": "427636364",
+        "unpaid": "0"
+      },
+      {
+        "id": "58d65b4439a04c89349fb763abfc269fbe303ffd82262859ee4f827a4712b1d3",
+        "asset": "EcG98b9MJ1DAQaK9s2scBdbAEZnrQ4cwmncwXbUaNr46",
+        "owner": "5SAkPvwVM6zuqT4egeA3mxHvumgvKG9uNJRGgtZys1aE",
+        "amount": "142545454",
+        "paid": "0",
+        "unpaid": "142545454"
+      },
+      {
+        "id": "7be26deda737641f8f70b48716d65e1a79d6c2c706a5b45fa6d29136d28ffd3a",
+        "asset": "EcG98b9MJ1DAQaK9s2scBdbAEZnrQ4cwmncwXbUaNr46",
+        "owner": "AEqeDfVNmZW5fowqFF6KAiuoMDBCUTeYDGVioFmhP1jF",
+        "amount": "213818182",
+        "paid": "213818182",
+        "unpaid": "0"
+      },
+      {
+        "id": "005a579e87641c7fe8091939f33cabc6bcf2473bca681c0bd86f23edd27c63d4",
+        "asset": "Fc5fFibivjLFhXx5EijUnmEto1FoukBuz5zkysBGgebn",
+        "owner": "2Ud8NvNy9pynh7jVrUNYRg6PvcnEhQjbqcnqSNXfexNw",
+        "amount": "427636364",
+        "paid": "427636364",
+        "unpaid": "0"
+      },
+      {
+        "id": "0f4dd3404a3ae3dde0316e724cd6d42b1c994e680b37245cc8c1366b8518c1ab",
+        "asset": "Fc5fFibivjLFhXx5EijUnmEto1FoukBuz5zkysBGgebn",
+        "owner": "5SAkPvwVM6zuqT4egeA3mxHvumgvKG9uNJRGgtZys1aE",
+        "amount": "142545454",
+        "paid": "0",
+        "unpaid": "142545454"
+      },
+      {
+        "id": "33e7daacd7f7ee5062a60346505439cf6a5294e45fe1cf406c74b4a8f3bd7030",
+        "asset": "Fc5fFibivjLFhXx5EijUnmEto1FoukBuz5zkysBGgebn",
+        "owner": "AEqeDfVNmZW5fowqFF6KAiuoMDBCUTeYDGVioFmhP1jF",
+        "amount": "213818182",
+        "paid": "213818182",
+        "unpaid": "0"
+      },
+      {
+        "id": "8c1c561de939a24b66c43820a71f01a3ce12a2768227c355af6e1ae1a4843d4c",
+        "asset": "oah8LwCAKzszwh4yE7sW7SWTRBnN6Cgugx3aKGhRHmo",
+        "owner": "2Ud8NvNy9pynh7jVrUNYRg6PvcnEhQjbqcnqSNXfexNw",
+        "amount": "427636364",
+        "paid": "427636364",
+        "unpaid": "0"
+      },
+      {
+        "id": "b49eba1f80ef6977bd137a75c209937deb628f974172781e75d04330da7b97ad",
+        "asset": "oah8LwCAKzszwh4yE7sW7SWTRBnN6Cgugx3aKGhRHmo",
+        "owner": "5SAkPvwVM6zuqT4egeA3mxHvumgvKG9uNJRGgtZys1aE",
+        "amount": "142545454",
+        "paid": "0",
+        "unpaid": "142545454"
+      },
+      {
+        "id": "d89424ff582c861a4cdb27197aff87c4c18104f3f349f4b1105b36dc729f744b",
+        "asset": "oah8LwCAKzszwh4yE7sW7SWTRBnN6Cgugx3aKGhRHmo",
+        "owner": "AEqeDfVNmZW5fowqFF6KAiuoMDBCUTeYDGVioFmhP1jF",
+        "amount": "213818182",
+        "paid": "213818182",
+        "unpaid": "0"
+      }
+    ],
+    "transfers": [
+      {
+        "id": "payout:0a54bb14b8af0e878fae933ca114a65568ab038fb6bbc3170a1f267a2e3cdbf6",
+        "asset": "oah8LwCAKzszwh4yE7sW7SWTRBnN6Cgugx3aKGhRHmo",
+        "status": "finalized",
+        "result": {
+          "fee": "5000",
+          "raw": {
+            "source": "deterministic database-backed simulation"
+          },
+          "rent": "0",
+          "slot": 500001,
+          "error": null,
+          "input": "641454546",
+          "output": "3207272730",
+          "status": "finalized",
+          "testOnly": true,
+          "signature": "demo:8e7a6ff8003d71b62ddf808fb293ea9992c84651fe5db1b536e230fd91465d70",
+          "transfers": [
+            {
+              "asset": "oah8LwCAKzszwh4yE7sW7SWTRBnN6Cgugx3aKGhRHmo",
+              "amount": "427636364",
+              "source": "2efUspEYR8WU2NSfvpL8ToTgE1qYm3D5AY7EMyvecUHx",
+              "destination": "FQ7zrNitoBZiRjYj9tm1LH7t4L2w7jUPijYyscexq3pE",
+              "instruction": "0"
+            },
+            {
+              "asset": "oah8LwCAKzszwh4yE7sW7SWTRBnN6Cgugx3aKGhRHmo",
+              "amount": "213818182",
+              "source": "2efUspEYR8WU2NSfvpL8ToTgE1qYm3D5AY7EMyvecUHx",
+              "destination": "3U66qsc79kVEuByoV82E4gU5gqfuKeffPq4yVRSaziFm",
+              "instruction": "1"
+            }
+          ]
+        }
+      },
+      {
+        "id": "payout:7ff1b65981e84d4c20178020b46a86d75699542ce9e1014f657a6c399d2dd353",
+        "asset": "5mw5LZYS5332DAdgoVkk4LTDZohEt9pE9xJk6ur4RC8e",
+        "status": "finalized",
+        "result": {
+          "fee": "5000",
+          "raw": {
+            "source": "deterministic database-backed simulation"
+          },
+          "rent": "0",
+          "slot": 500001,
+          "error": null,
+          "input": "641454546",
+          "output": "3207272730",
+          "status": "finalized",
+          "testOnly": true,
+          "signature": "demo:092e3db8c423d91f32f0acd875479a467567fa380f8d992756224a19ee93d9e8",
+          "transfers": [
+            {
+              "asset": "5mw5LZYS5332DAdgoVkk4LTDZohEt9pE9xJk6ur4RC8e",
+              "amount": "427636364",
+              "source": "FR9vFND7861E6v25a3JXLJQyEPvMEQoYUVy313bwVoxR",
+              "destination": "Absb2uitcmSi1NNivpb1hKx3n64jbmW2BtXpjc378bmg",
+              "instruction": "0"
+            },
+            {
+              "asset": "5mw5LZYS5332DAdgoVkk4LTDZohEt9pE9xJk6ur4RC8e",
+              "amount": "213818182",
+              "source": "FR9vFND7861E6v25a3JXLJQyEPvMEQoYUVy313bwVoxR",
+              "destination": "9zBNNHUvZcAK1MhUn2cPjJxz135e4ekPWJLSjZKemvf7",
+              "instruction": "1"
+            }
+          ]
+        }
+      },
+      {
+        "id": "payout:c32d2917761c1cbc9539f7d34160e419973577c7280e95853ea156e2122fda32",
+        "asset": "DiPGf2NHmRZP7pSye9Ns3FtC4gFhoEEjiBjJxQyZMXVH",
+        "status": "finalized",
+        "result": {
+          "fee": "5000",
+          "raw": {
+            "source": "deterministic database-backed simulation"
+          },
+          "rent": "0",
+          "slot": 500001,
+          "error": null,
+          "input": "641454546",
+          "output": "3207272730",
+          "status": "finalized",
+          "testOnly": true,
+          "signature": "demo:a26bdb115bfee1d2a52cd52141cadea594c2a59df34ffd252750beddd23eba8b",
+          "transfers": [
+            {
+              "asset": "DiPGf2NHmRZP7pSye9Ns3FtC4gFhoEEjiBjJxQyZMXVH",
+              "amount": "427636364",
+              "source": "8geVdAzT8CNvUZfgKgXuTVKj2xtgCb8ERMnHsNZzi2aY",
+              "destination": "EzUZ65E64GH6JVcqWcaVPJCMaEsgD2gcqdBrWgfcET3",
+              "instruction": "0"
+            },
+            {
+              "asset": "DiPGf2NHmRZP7pSye9Ns3FtC4gFhoEEjiBjJxQyZMXVH",
+              "amount": "213818182",
+              "source": "8geVdAzT8CNvUZfgKgXuTVKj2xtgCb8ERMnHsNZzi2aY",
+              "destination": "3zmhTeVHcF5UoptERK9m5tfLooD2nzfEpWuCyLxF2aUu",
+              "instruction": "1"
+            }
+          ]
+        }
+      },
+      {
+        "id": "payout:e06219a197df07a494b6639412620d707b04f7dd20c7be386e5df308979e17f4",
+        "asset": "EcG98b9MJ1DAQaK9s2scBdbAEZnrQ4cwmncwXbUaNr46",
+        "status": "finalized",
+        "result": {
+          "fee": "5000",
+          "raw": {
+            "source": "deterministic database-backed simulation"
+          },
+          "rent": "0",
+          "slot": 500001,
+          "error": null,
+          "input": "641454546",
+          "output": "3207272730",
+          "status": "finalized",
+          "testOnly": true,
+          "signature": "demo:f9cf76dd97a6a47a6ab8311d914dd30b73fd11b4c3c7900d7eef060bf03df45a",
+          "transfers": [
+            {
+              "asset": "EcG98b9MJ1DAQaK9s2scBdbAEZnrQ4cwmncwXbUaNr46",
+              "amount": "427636364",
+              "source": "31twNbfSh8Woxz7i6eGEiLZXhgy1wxXNrTdHirXWXENo",
+              "destination": "9DYToiBK9LzhpzWLgrh4aw2L4euxp3QAs2RS3QCcFs8L",
+              "instruction": "0"
+            },
+            {
+              "asset": "EcG98b9MJ1DAQaK9s2scBdbAEZnrQ4cwmncwXbUaNr46",
+              "amount": "213818182",
+              "source": "31twNbfSh8Woxz7i6eGEiLZXhgy1wxXNrTdHirXWXENo",
+              "destination": "5ov2BxMMqUHUjP48PBR9Z5u6vYsPbJmdAFf5p8xSoHLL",
+              "instruction": "1"
+            }
+          ]
+        }
+      },
+      {
+        "id": "payout:f8a80ed9a016b60deae43c58b3b8040946f01bcfb07d5aff9caaf754f6a817f0",
+        "asset": "Fc5fFibivjLFhXx5EijUnmEto1FoukBuz5zkysBGgebn",
+        "status": "finalized",
+        "result": {
+          "fee": "5000",
+          "raw": {
+            "source": "deterministic database-backed simulation"
+          },
+          "rent": "0",
+          "slot": 500001,
+          "error": null,
+          "input": "641454546",
+          "output": "3207272730",
+          "status": "finalized",
+          "testOnly": true,
+          "signature": "demo:d65961ae873d6ac3fad7b9a252f7780a2ec9bb9a0938ad99b322e05ec1639c18",
+          "transfers": [
+            {
+              "asset": "Fc5fFibivjLFhXx5EijUnmEto1FoukBuz5zkysBGgebn",
+              "amount": "427636364",
+              "source": "G5V1apkLtwtKkQ7iGQL8yCmLVQHnGAZcKKYxJFoVfHPp",
+              "destination": "3fmuVxA8LPJsXCkfmZx5uB2Gd9oXJ11S3KahwzURCyMn",
+              "instruction": "0"
+            },
+            {
+              "asset": "Fc5fFibivjLFhXx5EijUnmEto1FoukBuz5zkysBGgebn",
+              "amount": "213818182",
+              "source": "G5V1apkLtwtKkQ7iGQL8yCmLVQHnGAZcKKYxJFoVfHPp",
+              "destination": "FUXPGH8dME6SYajRA9p8iU6trdzBcjW331zTkkfCQZia",
+              "instruction": "1"
+            }
+          ]
+        }
+      }
+    ],
+    "ledger": [
+      {
+        "id": "fund:demo-epoch-001:cost:demo-epoch-001",
+        "kind": "movement",
+        "evidence": {},
+        "asset": "SOL",
+        "account": "revenue",
+        "amount": "-20000000"
+      },
+      {
+        "id": "fund:demo-epoch-001:buyback:demo-epoch-001",
+        "kind": "movement",
+        "evidence": {},
+        "asset": "SOL",
+        "account": "revenue",
+        "amount": "-98000000"
+      },
+      {
+        "id": "fund:demo-epoch-001:operations:demo-epoch-001",
+        "kind": "movement",
+        "evidence": {},
+        "asset": "SOL",
+        "account": "revenue",
+        "amount": "-98000000"
+      },
+      {
+        "id": "fund:purchase:demo-epoch-001:DiPGf2NHmRZP7pSye9Ns3FtC4gFhoEEjiBjJxQyZMXVH",
+        "kind": "movement",
+        "evidence": {},
+        "asset": "SOL",
+        "account": "revenue",
+        "amount": "-156800000"
+      },
+      {
+        "id": "fund:purchase:demo-epoch-001:5mw5LZYS5332DAdgoVkk4LTDZohEt9pE9xJk6ur4RC8e",
+        "kind": "movement",
+        "evidence": {},
+        "asset": "SOL",
+        "account": "revenue",
+        "amount": "-156800000"
+      },
+      {
+        "id": "fund:purchase:demo-epoch-001:Fc5fFibivjLFhXx5EijUnmEto1FoukBuz5zkysBGgebn",
+        "kind": "movement",
+        "evidence": {},
+        "asset": "SOL",
+        "account": "revenue",
+        "amount": "-156800000"
+      },
+      {
+        "id": "fund:purchase:demo-epoch-001:EcG98b9MJ1DAQaK9s2scBdbAEZnrQ4cwmncwXbUaNr46",
+        "kind": "movement",
+        "evidence": {},
+        "asset": "SOL",
+        "account": "revenue",
+        "amount": "-156800000"
+      },
+      {
+        "id": "fund:purchase:demo-epoch-001:oah8LwCAKzszwh4yE7sW7SWTRBnN6Cgugx3aKGhRHmo",
+        "kind": "movement",
+        "evidence": {},
+        "asset": "SOL",
+        "account": "revenue",
+        "amount": "-156800000"
+      },
+      {
+        "id": "fund:purchase:demo-epoch-001:5mw5LZYS5332DAdgoVkk4LTDZohEt9pE9xJk6ur4RC8e",
+        "kind": "movement",
+        "evidence": {},
+        "asset": "SOL",
+        "account": "budget:purchase:demo-epoch-001:5mw5LZYS5332DAdgoVkk4LTDZohEt9pE9xJk6ur4RC8e",
+        "amount": "156800000"
+      },
+      {
+        "id": "fund:demo-epoch-001:cost:demo-epoch-001",
+        "kind": "movement",
+        "evidence": {},
+        "asset": "SOL",
+        "account": "cost:demo-epoch-001",
+        "amount": "20000000"
+      },
+      {
+        "id": "fund:purchase:demo-epoch-001:DiPGf2NHmRZP7pSye9Ns3FtC4gFhoEEjiBjJxQyZMXVH",
+        "kind": "movement",
+        "evidence": {},
+        "asset": "SOL",
+        "account": "budget:purchase:demo-epoch-001:DiPGf2NHmRZP7pSye9Ns3FtC4gFhoEEjiBjJxQyZMXVH",
+        "amount": "156800000"
+      },
+      {
+        "id": "fund:purchase:demo-epoch-001:Fc5fFibivjLFhXx5EijUnmEto1FoukBuz5zkysBGgebn",
+        "kind": "movement",
+        "evidence": {},
+        "asset": "SOL",
+        "account": "budget:purchase:demo-epoch-001:Fc5fFibivjLFhXx5EijUnmEto1FoukBuz5zkysBGgebn",
+        "amount": "156800000"
+      },
+      {
+        "id": "fund:demo-epoch-001:operations:demo-epoch-001",
+        "kind": "movement",
+        "evidence": {},
+        "asset": "SOL",
+        "account": "operations:demo-epoch-001",
+        "amount": "98000000"
+      },
+      {
+        "id": "fund:purchase:demo-epoch-001:EcG98b9MJ1DAQaK9s2scBdbAEZnrQ4cwmncwXbUaNr46",
+        "kind": "movement",
+        "evidence": {},
+        "asset": "SOL",
+        "account": "budget:purchase:demo-epoch-001:EcG98b9MJ1DAQaK9s2scBdbAEZnrQ4cwmncwXbUaNr46",
+        "amount": "156800000"
+      },
+      {
+        "id": "fund:demo-epoch-001:buyback:demo-epoch-001",
+        "kind": "movement",
+        "evidence": {},
+        "asset": "SOL",
+        "account": "buyback:demo-epoch-001",
+        "amount": "98000000"
+      },
+      {
+        "id": "fund:purchase:demo-epoch-001:oah8LwCAKzszwh4yE7sW7SWTRBnN6Cgugx3aKGhRHmo",
+        "kind": "movement",
+        "evidence": {},
+        "asset": "SOL",
+        "account": "budget:purchase:demo-epoch-001:oah8LwCAKzszwh4yE7sW7SWTRBnN6Cgugx3aKGhRHmo",
+        "amount": "156800000"
+      },
+      {
+        "id": "debit:purchase:demo-epoch-001:5mw5LZYS5332DAdgoVkk4LTDZohEt9pE9xJk6ur4RC8e",
+        "kind": "movement",
+        "evidence": {
+          "fee": "5000",
+          "raw": {
+            "source": "deterministic database-backed simulation"
+          },
+          "rent": "0",
+          "slot": 500001,
+          "error": null,
+          "input": "156800000",
+          "output": "784000000",
+          "status": "finalized",
+          "testOnly": true,
+          "signature": "demo:d8f7dd6f5a8c2f5856d5d5d496b6634716cc1d544c5c534bf16d6064ca79156e"
+        },
+        "asset": "SOL",
+        "account": "budget:purchase:demo-epoch-001:5mw5LZYS5332DAdgoVkk4LTDZohEt9pE9xJk6ur4RC8e",
+        "amount": "-156800000"
+      },
+      {
+        "id": "network:demo:d8f7dd6f5a8c2f5856d5d5d496b6634716cc1d544c5c534bf16d6064ca79156e",
+        "kind": "movement",
+        "evidence": {
+          "fee": "5000",
+          "rent": "0",
+          "signature": "demo:d8f7dd6f5a8c2f5856d5d5d496b6634716cc1d544c5c534bf16d6064ca79156e"
+        },
+        "asset": "SOL",
+        "account": "cost:demo-epoch-001",
+        "amount": "-5000"
+      },
+      {
+        "id": "acquire:purchase:demo-epoch-001:5mw5LZYS5332DAdgoVkk4LTDZohEt9pE9xJk6ur4RC8e",
+        "kind": "movement",
+        "evidence": {
+          "fee": "5000",
+          "raw": {
+            "source": "deterministic database-backed simulation"
+          },
+          "rent": "0",
+          "slot": 500001,
+          "error": null,
+          "input": "156800000",
+          "output": "784000000",
+          "status": "finalized",
+          "testOnly": true,
+          "signature": "demo:d8f7dd6f5a8c2f5856d5d5d496b6634716cc1d544c5c534bf16d6064ca79156e"
+        },
+        "asset": "5mw5LZYS5332DAdgoVkk4LTDZohEt9pE9xJk6ur4RC8e",
+        "account": "external:swap",
+        "amount": "-784000000"
+      },
+      {
+        "id": "acquire:purchase:demo-epoch-001:5mw5LZYS5332DAdgoVkk4LTDZohEt9pE9xJk6ur4RC8e",
+        "kind": "movement",
+        "evidence": {
+          "fee": "5000",
+          "raw": {
+            "source": "deterministic database-backed simulation"
+          },
+          "rent": "0",
+          "slot": 500001,
+          "error": null,
+          "input": "156800000",
+          "output": "784000000",
+          "status": "finalized",
+          "testOnly": true,
+          "signature": "demo:d8f7dd6f5a8c2f5856d5d5d496b6634716cc1d544c5c534bf16d6064ca79156e"
+        },
+        "asset": "5mw5LZYS5332DAdgoVkk4LTDZohEt9pE9xJk6ur4RC8e",
+        "account": "liabilities",
+        "amount": "784000000"
+      },
+      {
+        "id": "debit:purchase:demo-epoch-001:5mw5LZYS5332DAdgoVkk4LTDZohEt9pE9xJk6ur4RC8e",
+        "kind": "movement",
+        "evidence": {
+          "fee": "5000",
+          "raw": {
+            "source": "deterministic database-backed simulation"
+          },
+          "rent": "0",
+          "slot": 500001,
+          "error": null,
+          "input": "156800000",
+          "output": "784000000",
+          "status": "finalized",
+          "testOnly": true,
+          "signature": "demo:d8f7dd6f5a8c2f5856d5d5d496b6634716cc1d544c5c534bf16d6064ca79156e"
+        },
+        "asset": "SOL",
+        "account": "external:swap",
+        "amount": "156800000"
+      },
+      {
+        "id": "network:demo:d8f7dd6f5a8c2f5856d5d5d496b6634716cc1d544c5c534bf16d6064ca79156e",
+        "kind": "movement",
+        "evidence": {
+          "fee": "5000",
+          "rent": "0",
+          "signature": "demo:d8f7dd6f5a8c2f5856d5d5d496b6634716cc1d544c5c534bf16d6064ca79156e"
+        },
+        "asset": "SOL",
+        "account": "external:network",
+        "amount": "5000"
+      },
+      {
+        "id": "debit:purchase:demo-epoch-001:DiPGf2NHmRZP7pSye9Ns3FtC4gFhoEEjiBjJxQyZMXVH",
+        "kind": "movement",
+        "evidence": {
+          "fee": "5000",
+          "raw": {
+            "source": "deterministic database-backed simulation"
+          },
+          "rent": "0",
+          "slot": 500001,
+          "error": null,
+          "input": "156800000",
+          "output": "784000000",
+          "status": "finalized",
+          "testOnly": true,
+          "signature": "demo:00c184127eccb3e3395fa254e6da8b46271f531cae8a2328967f6bebb1d40c42"
+        },
+        "asset": "SOL",
+        "account": "budget:purchase:demo-epoch-001:DiPGf2NHmRZP7pSye9Ns3FtC4gFhoEEjiBjJxQyZMXVH",
+        "amount": "-156800000"
+      },
+      {
+        "id": "network:demo:00c184127eccb3e3395fa254e6da8b46271f531cae8a2328967f6bebb1d40c42",
+        "kind": "movement",
+        "evidence": {
+          "fee": "5000",
+          "rent": "0",
+          "signature": "demo:00c184127eccb3e3395fa254e6da8b46271f531cae8a2328967f6bebb1d40c42"
+        },
+        "asset": "SOL",
+        "account": "cost:demo-epoch-001",
+        "amount": "-5000"
+      },
+      {
+        "id": "acquire:purchase:demo-epoch-001:DiPGf2NHmRZP7pSye9Ns3FtC4gFhoEEjiBjJxQyZMXVH",
+        "kind": "movement",
+        "evidence": {
+          "fee": "5000",
+          "raw": {
+            "source": "deterministic database-backed simulation"
+          },
+          "rent": "0",
+          "slot": 500001,
+          "error": null,
+          "input": "156800000",
+          "output": "784000000",
+          "status": "finalized",
+          "testOnly": true,
+          "signature": "demo:00c184127eccb3e3395fa254e6da8b46271f531cae8a2328967f6bebb1d40c42"
+        },
+        "asset": "DiPGf2NHmRZP7pSye9Ns3FtC4gFhoEEjiBjJxQyZMXVH",
+        "account": "external:swap",
+        "amount": "-784000000"
+      },
+      {
+        "id": "debit:purchase:demo-epoch-001:DiPGf2NHmRZP7pSye9Ns3FtC4gFhoEEjiBjJxQyZMXVH",
+        "kind": "movement",
+        "evidence": {
+          "fee": "5000",
+          "raw": {
+            "source": "deterministic database-backed simulation"
+          },
+          "rent": "0",
+          "slot": 500001,
+          "error": null,
+          "input": "156800000",
+          "output": "784000000",
+          "status": "finalized",
+          "testOnly": true,
+          "signature": "demo:00c184127eccb3e3395fa254e6da8b46271f531cae8a2328967f6bebb1d40c42"
+        },
+        "asset": "SOL",
+        "account": "external:swap",
+        "amount": "156800000"
+      },
+      {
+        "id": "acquire:purchase:demo-epoch-001:DiPGf2NHmRZP7pSye9Ns3FtC4gFhoEEjiBjJxQyZMXVH",
+        "kind": "movement",
+        "evidence": {
+          "fee": "5000",
+          "raw": {
+            "source": "deterministic database-backed simulation"
+          },
+          "rent": "0",
+          "slot": 500001,
+          "error": null,
+          "input": "156800000",
+          "output": "784000000",
+          "status": "finalized",
+          "testOnly": true,
+          "signature": "demo:00c184127eccb3e3395fa254e6da8b46271f531cae8a2328967f6bebb1d40c42"
+        },
+        "asset": "DiPGf2NHmRZP7pSye9Ns3FtC4gFhoEEjiBjJxQyZMXVH",
+        "account": "liabilities",
+        "amount": "784000000"
+      },
+      {
+        "id": "network:demo:00c184127eccb3e3395fa254e6da8b46271f531cae8a2328967f6bebb1d40c42",
+        "kind": "movement",
+        "evidence": {
+          "fee": "5000",
+          "rent": "0",
+          "signature": "demo:00c184127eccb3e3395fa254e6da8b46271f531cae8a2328967f6bebb1d40c42"
+        },
+        "asset": "SOL",
+        "account": "external:network",
+        "amount": "5000"
+      },
+      {
+        "id": "network:demo:0f4b1648fc0985d0fced7a3aaf42a9648cba8b03ac8e0dd870e66fab3978a00e",
+        "kind": "movement",
+        "evidence": {
+          "fee": "5000",
+          "rent": "0",
+          "signature": "demo:0f4b1648fc0985d0fced7a3aaf42a9648cba8b03ac8e0dd870e66fab3978a00e"
+        },
+        "asset": "SOL",
+        "account": "cost:demo-epoch-001",
+        "amount": "-5000"
+      },
+      {
+        "id": "debit:purchase:demo-epoch-001:EcG98b9MJ1DAQaK9s2scBdbAEZnrQ4cwmncwXbUaNr46",
+        "kind": "movement",
+        "evidence": {
+          "fee": "5000",
+          "raw": {
+            "source": "deterministic database-backed simulation"
+          },
+          "rent": "0",
+          "slot": 500001,
+          "error": null,
+          "input": "156800000",
+          "output": "784000000",
+          "status": "finalized",
+          "testOnly": true,
+          "signature": "demo:0f4b1648fc0985d0fced7a3aaf42a9648cba8b03ac8e0dd870e66fab3978a00e"
+        },
+        "asset": "SOL",
+        "account": "budget:purchase:demo-epoch-001:EcG98b9MJ1DAQaK9s2scBdbAEZnrQ4cwmncwXbUaNr46",
+        "amount": "-156800000"
+      },
+      {
+        "id": "acquire:purchase:demo-epoch-001:EcG98b9MJ1DAQaK9s2scBdbAEZnrQ4cwmncwXbUaNr46",
+        "kind": "movement",
+        "evidence": {
+          "fee": "5000",
+          "raw": {
+            "source": "deterministic database-backed simulation"
+          },
+          "rent": "0",
+          "slot": 500001,
+          "error": null,
+          "input": "156800000",
+          "output": "784000000",
+          "status": "finalized",
+          "testOnly": true,
+          "signature": "demo:0f4b1648fc0985d0fced7a3aaf42a9648cba8b03ac8e0dd870e66fab3978a00e"
+        },
+        "asset": "EcG98b9MJ1DAQaK9s2scBdbAEZnrQ4cwmncwXbUaNr46",
+        "account": "external:swap",
+        "amount": "-784000000"
+      },
+      {
+        "id": "debit:purchase:demo-epoch-001:EcG98b9MJ1DAQaK9s2scBdbAEZnrQ4cwmncwXbUaNr46",
+        "kind": "movement",
+        "evidence": {
+          "fee": "5000",
+          "raw": {
+            "source": "deterministic database-backed simulation"
+          },
+          "rent": "0",
+          "slot": 500001,
+          "error": null,
+          "input": "156800000",
+          "output": "784000000",
+          "status": "finalized",
+          "testOnly": true,
+          "signature": "demo:0f4b1648fc0985d0fced7a3aaf42a9648cba8b03ac8e0dd870e66fab3978a00e"
+        },
+        "asset": "SOL",
+        "account": "external:swap",
+        "amount": "156800000"
+      },
+      {
+        "id": "acquire:purchase:demo-epoch-001:EcG98b9MJ1DAQaK9s2scBdbAEZnrQ4cwmncwXbUaNr46",
+        "kind": "movement",
+        "evidence": {
+          "fee": "5000",
+          "raw": {
+            "source": "deterministic database-backed simulation"
+          },
+          "rent": "0",
+          "slot": 500001,
+          "error": null,
+          "input": "156800000",
+          "output": "784000000",
+          "status": "finalized",
+          "testOnly": true,
+          "signature": "demo:0f4b1648fc0985d0fced7a3aaf42a9648cba8b03ac8e0dd870e66fab3978a00e"
+        },
+        "asset": "EcG98b9MJ1DAQaK9s2scBdbAEZnrQ4cwmncwXbUaNr46",
+        "account": "liabilities",
+        "amount": "784000000"
+      },
+      {
+        "id": "network:demo:0f4b1648fc0985d0fced7a3aaf42a9648cba8b03ac8e0dd870e66fab3978a00e",
+        "kind": "movement",
+        "evidence": {
+          "fee": "5000",
+          "rent": "0",
+          "signature": "demo:0f4b1648fc0985d0fced7a3aaf42a9648cba8b03ac8e0dd870e66fab3978a00e"
+        },
+        "asset": "SOL",
+        "account": "external:network",
+        "amount": "5000"
+      },
+      {
+        "id": "acquire:purchase:demo-epoch-001:Fc5fFibivjLFhXx5EijUnmEto1FoukBuz5zkysBGgebn",
+        "kind": "movement",
+        "evidence": {
+          "fee": "5000",
+          "raw": {
+            "source": "deterministic database-backed simulation"
+          },
+          "rent": "0",
+          "slot": 500001,
+          "error": null,
+          "input": "156800000",
+          "output": "784000000",
+          "status": "finalized",
+          "testOnly": true,
+          "signature": "demo:4a3d06c77b793187390fe2ff22e7a848a654e2e2a5d929f0311dea67a79f0ec8"
+        },
+        "asset": "Fc5fFibivjLFhXx5EijUnmEto1FoukBuz5zkysBGgebn",
+        "account": "external:swap",
+        "amount": "-784000000"
+      },
+      {
+        "id": "network:demo:4a3d06c77b793187390fe2ff22e7a848a654e2e2a5d929f0311dea67a79f0ec8",
+        "kind": "movement",
+        "evidence": {
+          "fee": "5000",
+          "rent": "0",
+          "signature": "demo:4a3d06c77b793187390fe2ff22e7a848a654e2e2a5d929f0311dea67a79f0ec8"
+        },
+        "asset": "SOL",
+        "account": "cost:demo-epoch-001",
+        "amount": "-5000"
+      },
+      {
+        "id": "debit:purchase:demo-epoch-001:Fc5fFibivjLFhXx5EijUnmEto1FoukBuz5zkysBGgebn",
+        "kind": "movement",
+        "evidence": {
+          "fee": "5000",
+          "raw": {
+            "source": "deterministic database-backed simulation"
+          },
+          "rent": "0",
+          "slot": 500001,
+          "error": null,
+          "input": "156800000",
+          "output": "784000000",
+          "status": "finalized",
+          "testOnly": true,
+          "signature": "demo:4a3d06c77b793187390fe2ff22e7a848a654e2e2a5d929f0311dea67a79f0ec8"
+        },
+        "asset": "SOL",
+        "account": "budget:purchase:demo-epoch-001:Fc5fFibivjLFhXx5EijUnmEto1FoukBuz5zkysBGgebn",
+        "amount": "-156800000"
+      },
+      {
+        "id": "debit:purchase:demo-epoch-001:Fc5fFibivjLFhXx5EijUnmEto1FoukBuz5zkysBGgebn",
+        "kind": "movement",
+        "evidence": {
+          "fee": "5000",
+          "raw": {
+            "source": "deterministic database-backed simulation"
+          },
+          "rent": "0",
+          "slot": 500001,
+          "error": null,
+          "input": "156800000",
+          "output": "784000000",
+          "status": "finalized",
+          "testOnly": true,
+          "signature": "demo:4a3d06c77b793187390fe2ff22e7a848a654e2e2a5d929f0311dea67a79f0ec8"
+        },
+        "asset": "SOL",
+        "account": "external:swap",
+        "amount": "156800000"
+      },
+      {
+        "id": "network:demo:4a3d06c77b793187390fe2ff22e7a848a654e2e2a5d929f0311dea67a79f0ec8",
+        "kind": "movement",
+        "evidence": {
+          "fee": "5000",
+          "rent": "0",
+          "signature": "demo:4a3d06c77b793187390fe2ff22e7a848a654e2e2a5d929f0311dea67a79f0ec8"
+        },
+        "asset": "SOL",
+        "account": "external:network",
+        "amount": "5000"
+      },
+      {
+        "id": "acquire:purchase:demo-epoch-001:Fc5fFibivjLFhXx5EijUnmEto1FoukBuz5zkysBGgebn",
+        "kind": "movement",
+        "evidence": {
+          "fee": "5000",
+          "raw": {
+            "source": "deterministic database-backed simulation"
+          },
+          "rent": "0",
+          "slot": 500001,
+          "error": null,
+          "input": "156800000",
+          "output": "784000000",
+          "status": "finalized",
+          "testOnly": true,
+          "signature": "demo:4a3d06c77b793187390fe2ff22e7a848a654e2e2a5d929f0311dea67a79f0ec8"
+        },
+        "asset": "Fc5fFibivjLFhXx5EijUnmEto1FoukBuz5zkysBGgebn",
+        "account": "liabilities",
+        "amount": "784000000"
+      },
+      {
+        "id": "network:demo:54f475a9d3a69214b0fddffd6c9d6fd564ce72070c94b7be89ced70d2e6cd440",
+        "kind": "movement",
+        "evidence": {
+          "fee": "5000",
+          "rent": "0",
+          "signature": "demo:54f475a9d3a69214b0fddffd6c9d6fd564ce72070c94b7be89ced70d2e6cd440"
+        },
+        "asset": "SOL",
+        "account": "cost:demo-epoch-001",
+        "amount": "-5000"
+      },
+      {
+        "id": "acquire:purchase:demo-epoch-001:oah8LwCAKzszwh4yE7sW7SWTRBnN6Cgugx3aKGhRHmo",
+        "kind": "movement",
+        "evidence": {
+          "fee": "5000",
+          "raw": {
+            "source": "deterministic database-backed simulation"
+          },
+          "rent": "0",
+          "slot": 500001,
+          "error": null,
+          "input": "156800000",
+          "output": "784000000",
+          "status": "finalized",
+          "testOnly": true,
+          "signature": "demo:54f475a9d3a69214b0fddffd6c9d6fd564ce72070c94b7be89ced70d2e6cd440"
+        },
+        "asset": "oah8LwCAKzszwh4yE7sW7SWTRBnN6Cgugx3aKGhRHmo",
+        "account": "external:swap",
+        "amount": "-784000000"
+      },
+      {
+        "id": "debit:purchase:demo-epoch-001:oah8LwCAKzszwh4yE7sW7SWTRBnN6Cgugx3aKGhRHmo",
+        "kind": "movement",
+        "evidence": {
+          "fee": "5000",
+          "raw": {
+            "source": "deterministic database-backed simulation"
+          },
+          "rent": "0",
+          "slot": 500001,
+          "error": null,
+          "input": "156800000",
+          "output": "784000000",
+          "status": "finalized",
+          "testOnly": true,
+          "signature": "demo:54f475a9d3a69214b0fddffd6c9d6fd564ce72070c94b7be89ced70d2e6cd440"
+        },
+        "asset": "SOL",
+        "account": "budget:purchase:demo-epoch-001:oah8LwCAKzszwh4yE7sW7SWTRBnN6Cgugx3aKGhRHmo",
+        "amount": "-156800000"
+      },
+      {
+        "id": "debit:purchase:demo-epoch-001:oah8LwCAKzszwh4yE7sW7SWTRBnN6Cgugx3aKGhRHmo",
+        "kind": "movement",
+        "evidence": {
+          "fee": "5000",
+          "raw": {
+            "source": "deterministic database-backed simulation"
+          },
+          "rent": "0",
+          "slot": 500001,
+          "error": null,
+          "input": "156800000",
+          "output": "784000000",
+          "status": "finalized",
+          "testOnly": true,
+          "signature": "demo:54f475a9d3a69214b0fddffd6c9d6fd564ce72070c94b7be89ced70d2e6cd440"
+        },
+        "asset": "SOL",
+        "account": "external:swap",
+        "amount": "156800000"
+      },
+      {
+        "id": "network:demo:54f475a9d3a69214b0fddffd6c9d6fd564ce72070c94b7be89ced70d2e6cd440",
+        "kind": "movement",
+        "evidence": {
+          "fee": "5000",
+          "rent": "0",
+          "signature": "demo:54f475a9d3a69214b0fddffd6c9d6fd564ce72070c94b7be89ced70d2e6cd440"
+        },
+        "asset": "SOL",
+        "account": "external:network",
+        "amount": "5000"
+      },
+      {
+        "id": "acquire:purchase:demo-epoch-001:oah8LwCAKzszwh4yE7sW7SWTRBnN6Cgugx3aKGhRHmo",
+        "kind": "movement",
+        "evidence": {
+          "fee": "5000",
+          "raw": {
+            "source": "deterministic database-backed simulation"
+          },
+          "rent": "0",
+          "slot": 500001,
+          "error": null,
+          "input": "156800000",
+          "output": "784000000",
+          "status": "finalized",
+          "testOnly": true,
+          "signature": "demo:54f475a9d3a69214b0fddffd6c9d6fd564ce72070c94b7be89ced70d2e6cd440"
+        },
+        "asset": "oah8LwCAKzszwh4yE7sW7SWTRBnN6Cgugx3aKGhRHmo",
+        "account": "liabilities",
+        "amount": "784000000"
+      },
+      {
+        "id": "debit:buyback:demo-epoch-001",
+        "kind": "movement",
+        "evidence": {
+          "fee": "5000",
+          "raw": {
+            "source": "deterministic database-backed simulation"
+          },
+          "rent": "0",
+          "slot": 500001,
+          "error": null,
+          "input": "98000000",
+          "output": "490000000",
+          "status": "finalized",
+          "testOnly": true,
+          "signature": "demo:99d88730d0efc23517550c1151400134f64af54c78ee050a8378fcdee9064d92"
+        },
+        "asset": "SOL",
+        "account": "buyback:demo-epoch-001",
+        "amount": "-98000000"
+      },
+      {
+        "id": "acquire:buyback:demo-epoch-001",
+        "kind": "movement",
+        "evidence": {
+          "fee": "5000",
+          "raw": {
+            "source": "deterministic database-backed simulation"
+          },
+          "rent": "0",
+          "slot": 500001,
+          "error": null,
+          "input": "98000000",
+          "output": "490000000",
+          "status": "finalized",
+          "testOnly": true,
+          "signature": "demo:99d88730d0efc23517550c1151400134f64af54c78ee050a8378fcdee9064d92"
+        },
+        "asset": "8tdtPAVkkkB4LxYCbipX3c1LgMZzf3td1RESXGdMTKdA",
+        "account": "external:swap",
+        "amount": "-490000000"
+      },
+      {
+        "id": "network:demo:99d88730d0efc23517550c1151400134f64af54c78ee050a8378fcdee9064d92",
+        "kind": "movement",
+        "evidence": {
+          "fee": "5000",
+          "rent": "0",
+          "signature": "demo:99d88730d0efc23517550c1151400134f64af54c78ee050a8378fcdee9064d92"
+        },
+        "asset": "SOL",
+        "account": "cost:demo-epoch-001",
+        "amount": "-5000"
+      },
+      {
+        "id": "acquire:buyback:demo-epoch-001",
+        "kind": "movement",
+        "evidence": {
+          "fee": "5000",
+          "raw": {
+            "source": "deterministic database-backed simulation"
+          },
+          "rent": "0",
+          "slot": 500001,
+          "error": null,
+          "input": "98000000",
+          "output": "490000000",
+          "status": "finalized",
+          "testOnly": true,
+          "signature": "demo:99d88730d0efc23517550c1151400134f64af54c78ee050a8378fcdee9064d92"
+        },
+        "asset": "8tdtPAVkkkB4LxYCbipX3c1LgMZzf3td1RESXGdMTKdA",
+        "account": "burn-units:buyback:demo-epoch-001",
+        "amount": "490000000"
+      },
+      {
+        "id": "network:demo:99d88730d0efc23517550c1151400134f64af54c78ee050a8378fcdee9064d92",
+        "kind": "movement",
+        "evidence": {
+          "fee": "5000",
+          "rent": "0",
+          "signature": "demo:99d88730d0efc23517550c1151400134f64af54c78ee050a8378fcdee9064d92"
+        },
+        "asset": "SOL",
+        "account": "external:network",
+        "amount": "5000"
+      },
+      {
+        "id": "debit:buyback:demo-epoch-001",
+        "kind": "movement",
+        "evidence": {
+          "fee": "5000",
+          "raw": {
+            "source": "deterministic database-backed simulation"
+          },
+          "rent": "0",
+          "slot": 500001,
+          "error": null,
+          "input": "98000000",
+          "output": "490000000",
+          "status": "finalized",
+          "testOnly": true,
+          "signature": "demo:99d88730d0efc23517550c1151400134f64af54c78ee050a8378fcdee9064d92"
+        },
+        "asset": "SOL",
+        "account": "external:swap",
+        "amount": "98000000"
+      },
+      {
+        "id": "network:demo:c1427ddf55d6b43b52fe7e263cf120077c6f7f2d50628e9c730a70045dec0965",
+        "kind": "movement",
+        "evidence": {
+          "fee": "5000",
+          "rent": "0",
+          "signature": "demo:c1427ddf55d6b43b52fe7e263cf120077c6f7f2d50628e9c730a70045dec0965"
+        },
+        "asset": "SOL",
+        "account": "cost:demo-epoch-001",
+        "amount": "-5000"
+      },
+      {
+        "id": "burned:burn:buyback:demo-epoch-001",
+        "kind": "movement",
+        "evidence": {
+          "fee": "5000",
+          "raw": {
+            "source": "deterministic database-backed simulation"
+          },
+          "rent": "0",
+          "slot": 500001,
+          "error": null,
+          "input": "490000000",
+          "burned": "490000000",
+          "output": "2450000000",
+          "status": "finalized",
+          "testOnly": true,
+          "signature": "demo:c1427ddf55d6b43b52fe7e263cf120077c6f7f2d50628e9c730a70045dec0965"
+        },
+        "asset": "8tdtPAVkkkB4LxYCbipX3c1LgMZzf3td1RESXGdMTKdA",
+        "account": "burn-units:buyback:demo-epoch-001",
+        "amount": "-490000000"
+      },
+      {
+        "id": "network:demo:c1427ddf55d6b43b52fe7e263cf120077c6f7f2d50628e9c730a70045dec0965",
+        "kind": "movement",
+        "evidence": {
+          "fee": "5000",
+          "rent": "0",
+          "signature": "demo:c1427ddf55d6b43b52fe7e263cf120077c6f7f2d50628e9c730a70045dec0965"
+        },
+        "asset": "SOL",
+        "account": "external:network",
+        "amount": "5000"
+      },
+      {
+        "id": "burned:burn:buyback:demo-epoch-001",
+        "kind": "movement",
+        "evidence": {
+          "fee": "5000",
+          "raw": {
+            "source": "deterministic database-backed simulation"
+          },
+          "rent": "0",
+          "slot": 500001,
+          "error": null,
+          "input": "490000000",
+          "burned": "490000000",
+          "output": "2450000000",
+          "status": "finalized",
+          "testOnly": true,
+          "signature": "demo:c1427ddf55d6b43b52fe7e263cf120077c6f7f2d50628e9c730a70045dec0965"
+        },
+        "asset": "8tdtPAVkkkB4LxYCbipX3c1LgMZzf3td1RESXGdMTKdA",
+        "account": "external:burn",
+        "amount": "490000000"
+      }
+    ],
+    "definitions": {
+      "settled": "Purchase accounting complete; unpaid credits can remain.",
+      "paid": "Verified finalized delivery only.",
+      "amounts": "All money is decimal-string base units."
+    }
+  },
+  "wallets": [
+    {
+      "address": "2Ud8NvNy9pynh7jVrUNYRg6PvcnEhQjbqcnqSNXfexNw",
+      "eligibility": {
+        "owner": "2Ud8NvNy9pynh7jVrUNYRg6PvcnEhQjbqcnqSNXfexNw",
+        "reason": null,
+        "balance": "300000000000",
+        "eligible": true
+      },
+      "snapshotSlot": 500000,
+      "entitlements": [
+        {
+          "asset": "5mw5LZYS5332DAdgoVkk4LTDZohEt9pE9xJk6ur4RC8e",
+          "credited": "427636364",
+          "paid": "427636364",
+          "pending": "0"
+        },
+        {
+          "asset": "DiPGf2NHmRZP7pSye9Ns3FtC4gFhoEEjiBjJxQyZMXVH",
+          "credited": "427636364",
+          "paid": "427636364",
+          "pending": "0"
+        },
+        {
+          "asset": "EcG98b9MJ1DAQaK9s2scBdbAEZnrQ4cwmncwXbUaNr46",
+          "credited": "427636364",
+          "paid": "427636364",
+          "pending": "0"
+        },
+        {
+          "asset": "Fc5fFibivjLFhXx5EijUnmEto1FoukBuz5zkysBGgebn",
+          "credited": "427636364",
+          "paid": "427636364",
+          "pending": "0"
+        },
+        {
+          "asset": "oah8LwCAKzszwh4yE7sW7SWTRBnN6Cgugx3aKGhRHmo",
+          "credited": "427636364",
+          "paid": "427636364",
+          "pending": "0"
+        }
+      ],
+      "deliveries": [
+        {
+          "id": "payout:f8a80ed9a016b60deae43c58b3b8040946f01bcfb07d5aff9caaf754f6a817f0",
+          "asset": "Fc5fFibivjLFhXx5EijUnmEto1FoukBuz5zkysBGgebn",
+          "status": "finalized",
+          "result": {
+            "fee": "5000",
+            "raw": {
+              "source": "deterministic database-backed simulation"
+            },
+            "rent": "0",
+            "slot": 500001,
+            "error": null,
+            "input": "641454546",
+            "output": "3207272730",
+            "status": "finalized",
+            "testOnly": true,
+            "signature": "demo:d65961ae873d6ac3fad7b9a252f7780a2ec9bb9a0938ad99b322e05ec1639c18",
+            "transfers": [
+              {
+                "asset": "Fc5fFibivjLFhXx5EijUnmEto1FoukBuz5zkysBGgebn",
+                "amount": "427636364",
+                "source": "G5V1apkLtwtKkQ7iGQL8yCmLVQHnGAZcKKYxJFoVfHPp",
+                "destination": "3fmuVxA8LPJsXCkfmZx5uB2Gd9oXJ11S3KahwzURCyMn",
+                "instruction": "0"
+              },
+              {
+                "asset": "Fc5fFibivjLFhXx5EijUnmEto1FoukBuz5zkysBGgebn",
+                "amount": "213818182",
+                "source": "G5V1apkLtwtKkQ7iGQL8yCmLVQHnGAZcKKYxJFoVfHPp",
+                "destination": "FUXPGH8dME6SYajRA9p8iU6trdzBcjW331zTkkfCQZia",
+                "instruction": "1"
+              }
+            ]
+          }
+        },
+        {
+          "id": "payout:e06219a197df07a494b6639412620d707b04f7dd20c7be386e5df308979e17f4",
+          "asset": "EcG98b9MJ1DAQaK9s2scBdbAEZnrQ4cwmncwXbUaNr46",
+          "status": "finalized",
+          "result": {
+            "fee": "5000",
+            "raw": {
+              "source": "deterministic database-backed simulation"
+            },
+            "rent": "0",
+            "slot": 500001,
+            "error": null,
+            "input": "641454546",
+            "output": "3207272730",
+            "status": "finalized",
+            "testOnly": true,
+            "signature": "demo:f9cf76dd97a6a47a6ab8311d914dd30b73fd11b4c3c7900d7eef060bf03df45a",
+            "transfers": [
+              {
+                "asset": "EcG98b9MJ1DAQaK9s2scBdbAEZnrQ4cwmncwXbUaNr46",
+                "amount": "427636364",
+                "source": "31twNbfSh8Woxz7i6eGEiLZXhgy1wxXNrTdHirXWXENo",
+                "destination": "9DYToiBK9LzhpzWLgrh4aw2L4euxp3QAs2RS3QCcFs8L",
+                "instruction": "0"
+              },
+              {
+                "asset": "EcG98b9MJ1DAQaK9s2scBdbAEZnrQ4cwmncwXbUaNr46",
+                "amount": "213818182",
+                "source": "31twNbfSh8Woxz7i6eGEiLZXhgy1wxXNrTdHirXWXENo",
+                "destination": "5ov2BxMMqUHUjP48PBR9Z5u6vYsPbJmdAFf5p8xSoHLL",
+                "instruction": "1"
+              }
+            ]
+          }
+        },
+        {
+          "id": "payout:c32d2917761c1cbc9539f7d34160e419973577c7280e95853ea156e2122fda32",
+          "asset": "DiPGf2NHmRZP7pSye9Ns3FtC4gFhoEEjiBjJxQyZMXVH",
+          "status": "finalized",
+          "result": {
+            "fee": "5000",
+            "raw": {
+              "source": "deterministic database-backed simulation"
+            },
+            "rent": "0",
+            "slot": 500001,
+            "error": null,
+            "input": "641454546",
+            "output": "3207272730",
+            "status": "finalized",
+            "testOnly": true,
+            "signature": "demo:a26bdb115bfee1d2a52cd52141cadea594c2a59df34ffd252750beddd23eba8b",
+            "transfers": [
+              {
+                "asset": "DiPGf2NHmRZP7pSye9Ns3FtC4gFhoEEjiBjJxQyZMXVH",
+                "amount": "427636364",
+                "source": "8geVdAzT8CNvUZfgKgXuTVKj2xtgCb8ERMnHsNZzi2aY",
+                "destination": "EzUZ65E64GH6JVcqWcaVPJCMaEsgD2gcqdBrWgfcET3",
+                "instruction": "0"
+              },
+              {
+                "asset": "DiPGf2NHmRZP7pSye9Ns3FtC4gFhoEEjiBjJxQyZMXVH",
+                "amount": "213818182",
+                "source": "8geVdAzT8CNvUZfgKgXuTVKj2xtgCb8ERMnHsNZzi2aY",
+                "destination": "3zmhTeVHcF5UoptERK9m5tfLooD2nzfEpWuCyLxF2aUu",
+                "instruction": "1"
+              }
+            ]
+          }
+        },
+        {
+          "id": "payout:7ff1b65981e84d4c20178020b46a86d75699542ce9e1014f657a6c399d2dd353",
+          "asset": "5mw5LZYS5332DAdgoVkk4LTDZohEt9pE9xJk6ur4RC8e",
+          "status": "finalized",
+          "result": {
+            "fee": "5000",
+            "raw": {
+              "source": "deterministic database-backed simulation"
+            },
+            "rent": "0",
+            "slot": 500001,
+            "error": null,
+            "input": "641454546",
+            "output": "3207272730",
+            "status": "finalized",
+            "testOnly": true,
+            "signature": "demo:092e3db8c423d91f32f0acd875479a467567fa380f8d992756224a19ee93d9e8",
+            "transfers": [
+              {
+                "asset": "5mw5LZYS5332DAdgoVkk4LTDZohEt9pE9xJk6ur4RC8e",
+                "amount": "427636364",
+                "source": "FR9vFND7861E6v25a3JXLJQyEPvMEQoYUVy313bwVoxR",
+                "destination": "Absb2uitcmSi1NNivpb1hKx3n64jbmW2BtXpjc378bmg",
+                "instruction": "0"
+              },
+              {
+                "asset": "5mw5LZYS5332DAdgoVkk4LTDZohEt9pE9xJk6ur4RC8e",
+                "amount": "213818182",
+                "source": "FR9vFND7861E6v25a3JXLJQyEPvMEQoYUVy313bwVoxR",
+                "destination": "9zBNNHUvZcAK1MhUn2cPjJxz135e4ekPWJLSjZKemvf7",
+                "instruction": "1"
+              }
+            ]
+          }
+        },
+        {
+          "id": "payout:0a54bb14b8af0e878fae933ca114a65568ab038fb6bbc3170a1f267a2e3cdbf6",
+          "asset": "oah8LwCAKzszwh4yE7sW7SWTRBnN6Cgugx3aKGhRHmo",
+          "status": "finalized",
+          "result": {
+            "fee": "5000",
+            "raw": {
+              "source": "deterministic database-backed simulation"
+            },
+            "rent": "0",
+            "slot": 500001,
+            "error": null,
+            "input": "641454546",
+            "output": "3207272730",
+            "status": "finalized",
+            "testOnly": true,
+            "signature": "demo:8e7a6ff8003d71b62ddf808fb293ea9992c84651fe5db1b536e230fd91465d70",
+            "transfers": [
+              {
+                "asset": "oah8LwCAKzszwh4yE7sW7SWTRBnN6Cgugx3aKGhRHmo",
+                "amount": "427636364",
+                "source": "2efUspEYR8WU2NSfvpL8ToTgE1qYm3D5AY7EMyvecUHx",
+                "destination": "FQ7zrNitoBZiRjYj9tm1LH7t4L2w7jUPijYyscexq3pE",
+                "instruction": "0"
+              },
+              {
+                "asset": "oah8LwCAKzszwh4yE7sW7SWTRBnN6Cgugx3aKGhRHmo",
+                "amount": "213818182",
+                "source": "2efUspEYR8WU2NSfvpL8ToTgE1qYm3D5AY7EMyvecUHx",
+                "destination": "3U66qsc79kVEuByoV82E4gU5gqfuKeffPq4yVRSaziFm",
+                "instruction": "1"
+              }
+            ]
+          }
+        }
+      ],
+      "reason": null
+    },
+    {
+      "address": "5SAkPvwVM6zuqT4egeA3mxHvumgvKG9uNJRGgtZys1aE",
+      "eligibility": {
+        "owner": "5SAkPvwVM6zuqT4egeA3mxHvumgvKG9uNJRGgtZys1aE",
+        "reason": null,
+        "balance": "100000000000",
+        "eligible": true
+      },
+      "snapshotSlot": 500000,
+      "entitlements": [
+        {
+          "asset": "5mw5LZYS5332DAdgoVkk4LTDZohEt9pE9xJk6ur4RC8e",
+          "credited": "142545454",
+          "paid": "0",
+          "pending": "142545454"
+        },
+        {
+          "asset": "DiPGf2NHmRZP7pSye9Ns3FtC4gFhoEEjiBjJxQyZMXVH",
+          "credited": "142545454",
+          "paid": "0",
+          "pending": "142545454"
+        },
+        {
+          "asset": "EcG98b9MJ1DAQaK9s2scBdbAEZnrQ4cwmncwXbUaNr46",
+          "credited": "142545454",
+          "paid": "0",
+          "pending": "142545454"
+        },
+        {
+          "asset": "Fc5fFibivjLFhXx5EijUnmEto1FoukBuz5zkysBGgebn",
+          "credited": "142545454",
+          "paid": "0",
+          "pending": "142545454"
+        },
+        {
+          "asset": "oah8LwCAKzszwh4yE7sW7SWTRBnN6Cgugx3aKGhRHmo",
+          "credited": "142545454",
+          "paid": "0",
+          "pending": "142545454"
+        }
+      ],
+      "deliveries": [],
+      "reason": null
+    },
+    {
+      "address": "AEqeDfVNmZW5fowqFF6KAiuoMDBCUTeYDGVioFmhP1jF",
+      "eligibility": {
+        "owner": "AEqeDfVNmZW5fowqFF6KAiuoMDBCUTeYDGVioFmhP1jF",
+        "reason": null,
+        "balance": "150000000000",
+        "eligible": true
+      },
+      "snapshotSlot": 500000,
+      "entitlements": [
+        {
+          "asset": "5mw5LZYS5332DAdgoVkk4LTDZohEt9pE9xJk6ur4RC8e",
+          "credited": "213818182",
+          "paid": "213818182",
+          "pending": "0"
+        },
+        {
+          "asset": "DiPGf2NHmRZP7pSye9Ns3FtC4gFhoEEjiBjJxQyZMXVH",
+          "credited": "213818182",
+          "paid": "213818182",
+          "pending": "0"
+        },
+        {
+          "asset": "EcG98b9MJ1DAQaK9s2scBdbAEZnrQ4cwmncwXbUaNr46",
+          "credited": "213818182",
+          "paid": "213818182",
+          "pending": "0"
+        },
+        {
+          "asset": "Fc5fFibivjLFhXx5EijUnmEto1FoukBuz5zkysBGgebn",
+          "credited": "213818182",
+          "paid": "213818182",
+          "pending": "0"
+        },
+        {
+          "asset": "oah8LwCAKzszwh4yE7sW7SWTRBnN6Cgugx3aKGhRHmo",
+          "credited": "213818182",
+          "paid": "213818182",
+          "pending": "0"
+        }
+      ],
+      "deliveries": [
+        {
+          "id": "payout:f8a80ed9a016b60deae43c58b3b8040946f01bcfb07d5aff9caaf754f6a817f0",
+          "asset": "Fc5fFibivjLFhXx5EijUnmEto1FoukBuz5zkysBGgebn",
+          "status": "finalized",
+          "result": {
+            "fee": "5000",
+            "raw": {
+              "source": "deterministic database-backed simulation"
+            },
+            "rent": "0",
+            "slot": 500001,
+            "error": null,
+            "input": "641454546",
+            "output": "3207272730",
+            "status": "finalized",
+            "testOnly": true,
+            "signature": "demo:d65961ae873d6ac3fad7b9a252f7780a2ec9bb9a0938ad99b322e05ec1639c18",
+            "transfers": [
+              {
+                "asset": "Fc5fFibivjLFhXx5EijUnmEto1FoukBuz5zkysBGgebn",
+                "amount": "427636364",
+                "source": "G5V1apkLtwtKkQ7iGQL8yCmLVQHnGAZcKKYxJFoVfHPp",
+                "destination": "3fmuVxA8LPJsXCkfmZx5uB2Gd9oXJ11S3KahwzURCyMn",
+                "instruction": "0"
+              },
+              {
+                "asset": "Fc5fFibivjLFhXx5EijUnmEto1FoukBuz5zkysBGgebn",
+                "amount": "213818182",
+                "source": "G5V1apkLtwtKkQ7iGQL8yCmLVQHnGAZcKKYxJFoVfHPp",
+                "destination": "FUXPGH8dME6SYajRA9p8iU6trdzBcjW331zTkkfCQZia",
+                "instruction": "1"
+              }
+            ]
+          }
+        },
+        {
+          "id": "payout:e06219a197df07a494b6639412620d707b04f7dd20c7be386e5df308979e17f4",
+          "asset": "EcG98b9MJ1DAQaK9s2scBdbAEZnrQ4cwmncwXbUaNr46",
+          "status": "finalized",
+          "result": {
+            "fee": "5000",
+            "raw": {
+              "source": "deterministic database-backed simulation"
+            },
+            "rent": "0",
+            "slot": 500001,
+            "error": null,
+            "input": "641454546",
+            "output": "3207272730",
+            "status": "finalized",
+            "testOnly": true,
+            "signature": "demo:f9cf76dd97a6a47a6ab8311d914dd30b73fd11b4c3c7900d7eef060bf03df45a",
+            "transfers": [
+              {
+                "asset": "EcG98b9MJ1DAQaK9s2scBdbAEZnrQ4cwmncwXbUaNr46",
+                "amount": "427636364",
+                "source": "31twNbfSh8Woxz7i6eGEiLZXhgy1wxXNrTdHirXWXENo",
+                "destination": "9DYToiBK9LzhpzWLgrh4aw2L4euxp3QAs2RS3QCcFs8L",
+                "instruction": "0"
+              },
+              {
+                "asset": "EcG98b9MJ1DAQaK9s2scBdbAEZnrQ4cwmncwXbUaNr46",
+                "amount": "213818182",
+                "source": "31twNbfSh8Woxz7i6eGEiLZXhgy1wxXNrTdHirXWXENo",
+                "destination": "5ov2BxMMqUHUjP48PBR9Z5u6vYsPbJmdAFf5p8xSoHLL",
+                "instruction": "1"
+              }
+            ]
+          }
+        },
+        {
+          "id": "payout:c32d2917761c1cbc9539f7d34160e419973577c7280e95853ea156e2122fda32",
+          "asset": "DiPGf2NHmRZP7pSye9Ns3FtC4gFhoEEjiBjJxQyZMXVH",
+          "status": "finalized",
+          "result": {
+            "fee": "5000",
+            "raw": {
+              "source": "deterministic database-backed simulation"
+            },
+            "rent": "0",
+            "slot": 500001,
+            "error": null,
+            "input": "641454546",
+            "output": "3207272730",
+            "status": "finalized",
+            "testOnly": true,
+            "signature": "demo:a26bdb115bfee1d2a52cd52141cadea594c2a59df34ffd252750beddd23eba8b",
+            "transfers": [
+              {
+                "asset": "DiPGf2NHmRZP7pSye9Ns3FtC4gFhoEEjiBjJxQyZMXVH",
+                "amount": "427636364",
+                "source": "8geVdAzT8CNvUZfgKgXuTVKj2xtgCb8ERMnHsNZzi2aY",
+                "destination": "EzUZ65E64GH6JVcqWcaVPJCMaEsgD2gcqdBrWgfcET3",
+                "instruction": "0"
+              },
+              {
+                "asset": "DiPGf2NHmRZP7pSye9Ns3FtC4gFhoEEjiBjJxQyZMXVH",
+                "amount": "213818182",
+                "source": "8geVdAzT8CNvUZfgKgXuTVKj2xtgCb8ERMnHsNZzi2aY",
+                "destination": "3zmhTeVHcF5UoptERK9m5tfLooD2nzfEpWuCyLxF2aUu",
+                "instruction": "1"
+              }
+            ]
+          }
+        },
+        {
+          "id": "payout:7ff1b65981e84d4c20178020b46a86d75699542ce9e1014f657a6c399d2dd353",
+          "asset": "5mw5LZYS5332DAdgoVkk4LTDZohEt9pE9xJk6ur4RC8e",
+          "status": "finalized",
+          "result": {
+            "fee": "5000",
+            "raw": {
+              "source": "deterministic database-backed simulation"
+            },
+            "rent": "0",
+            "slot": 500001,
+            "error": null,
+            "input": "641454546",
+            "output": "3207272730",
+            "status": "finalized",
+            "testOnly": true,
+            "signature": "demo:092e3db8c423d91f32f0acd875479a467567fa380f8d992756224a19ee93d9e8",
+            "transfers": [
+              {
+                "asset": "5mw5LZYS5332DAdgoVkk4LTDZohEt9pE9xJk6ur4RC8e",
+                "amount": "427636364",
+                "source": "FR9vFND7861E6v25a3JXLJQyEPvMEQoYUVy313bwVoxR",
+                "destination": "Absb2uitcmSi1NNivpb1hKx3n64jbmW2BtXpjc378bmg",
+                "instruction": "0"
+              },
+              {
+                "asset": "5mw5LZYS5332DAdgoVkk4LTDZohEt9pE9xJk6ur4RC8e",
+                "amount": "213818182",
+                "source": "FR9vFND7861E6v25a3JXLJQyEPvMEQoYUVy313bwVoxR",
+                "destination": "9zBNNHUvZcAK1MhUn2cPjJxz135e4ekPWJLSjZKemvf7",
+                "instruction": "1"
+              }
+            ]
+          }
+        },
+        {
+          "id": "payout:0a54bb14b8af0e878fae933ca114a65568ab038fb6bbc3170a1f267a2e3cdbf6",
+          "asset": "oah8LwCAKzszwh4yE7sW7SWTRBnN6Cgugx3aKGhRHmo",
+          "status": "finalized",
+          "result": {
+            "fee": "5000",
+            "raw": {
+              "source": "deterministic database-backed simulation"
+            },
+            "rent": "0",
+            "slot": 500001,
+            "error": null,
+            "input": "641454546",
+            "output": "3207272730",
+            "status": "finalized",
+            "testOnly": true,
+            "signature": "demo:8e7a6ff8003d71b62ddf808fb293ea9992c84651fe5db1b536e230fd91465d70",
+            "transfers": [
+              {
+                "asset": "oah8LwCAKzszwh4yE7sW7SWTRBnN6Cgugx3aKGhRHmo",
+                "amount": "427636364",
+                "source": "2efUspEYR8WU2NSfvpL8ToTgE1qYm3D5AY7EMyvecUHx",
+                "destination": "FQ7zrNitoBZiRjYj9tm1LH7t4L2w7jUPijYyscexq3pE",
+                "instruction": "0"
+              },
+              {
+                "asset": "oah8LwCAKzszwh4yE7sW7SWTRBnN6Cgugx3aKGhRHmo",
+                "amount": "213818182",
+                "source": "2efUspEYR8WU2NSfvpL8ToTgE1qYm3D5AY7EMyvecUHx",
+                "destination": "3U66qsc79kVEuByoV82E4gU5gqfuKeffPq4yVRSaziFm",
+                "instruction": "1"
+              }
+            ]
+          }
+        }
+      ],
+      "reason": null
+    },
+    {
+      "address": "E831hpezmt3juzpMmYmUbzHrid3cbWHfdKimXHnfBfL9",
+      "eligibility": {
+        "owner": "E831hpezmt3juzpMmYmUbzHrid3cbWHfdKimXHnfBfL9",
+        "reason": "below threshold",
+        "balance": "99000000000",
+        "eligible": false
+      },
+      "snapshotSlot": 500000,
+      "entitlements": [],
+      "deliveries": [],
+      "reason": "below threshold"
+    },
+    {
+      "address": "G7xoyETXZBr1knKexbiLrWzry88UgHhaVR299eqpmS5o",
+      "eligibility": {
+        "owner": "G7xoyETXZBr1knKexbiLrWzry88UgHhaVR299eqpmS5o",
+        "reason": "project treasury",
+        "balance": "1000000000000",
+        "eligible": false
+      },
+      "snapshotSlot": 500000,
+      "entitlements": [],
+      "deliveries": [],
+      "reason": "project treasury"
+    }
+  ]
+}

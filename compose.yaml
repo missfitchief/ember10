@@ -1,0 +1,49 @@
+services:
+  postgres:
+    image: postgres:18.4
+    environment:
+      POSTGRES_USER: ember5
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set a deployment database password}
+      POSTGRES_DB: ember5_prelaunch
+    volumes:
+      - postgres_data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ember5 -d ember5_prelaunch"]
+      interval: 5s
+      retries: 20
+  migrate:
+    build: .
+    command: ["npm", "run", "db:migrate"]
+    environment: &app-env
+      MODE: prelaunch
+      MASTER_PAUSE: 'true'
+      BROADCAST_ENABLED: 'false'
+      DATABASE_URL: postgresql://ember5:${POSTGRES_PASSWORD}@postgres:5432/ember5_prelaunch
+      HOST: 0.0.0.0
+    depends_on:
+      postgres:
+        condition: service_healthy
+  api:
+    build: .
+    environment: *app-env
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+  worker:
+    build: .
+    command: ["npm", "run", "worker"]
+    environment: *app-env
+    restart: unless-stopped
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+  web:
+    image: nginx:1.28-alpine
+    ports:
+      - '127.0.0.1:8080:80'
+    volumes:
+      - ./dist/web:/usr/share/nginx/html:ro
+      - ./deploy/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on: [api]
+volumes:
+  postgres_data:
