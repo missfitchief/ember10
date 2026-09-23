@@ -1,8 +1,8 @@
-# EMBER5 controlled-pilot implementation
+# EMBER10 controlled-pilot implementation
 
-A React dashboard, Node API, independent Node worker and PostgreSQL ledger. The default is **prelaunch, paused, no signing and no broadcast**. EMBER5 is a working name with a known name collision. No project mint was created and no mainnet funds were used.
+A React dashboard, Node API, independent Node worker and PostgreSQL ledger. The default is **prelaunch, paused, no signing and no broadcast**. The current prospective policy is EMBER10; legacy EMBER5 records are preserved. No project mint was created and no mainnet funds were used.
 
-Hosted recorded demo: **https://ember5-pilot.vercel.app**. This deployment displays public synthetic records and supports wallet lookup and exports; it does not run settlement. See [Vercel deployment](docs/VERCEL.md) for connecting a separately hosted public API.
+Public pilot URL: **https://ember5-pilot.vercel.app**. This update replaces the hosted synthetic fallback with a real, read-only Ember catalogue integration and an EMBER10 frontend. Deployment verification is recorded separately in the review evidence; local source alone is not proof of publication. The hosted service does not run settlement.
 
 ## Run locally
 
@@ -59,4 +59,21 @@ Read [readiness](docs/READINESS.md), [integration evidence](docs/INTEGRATIONS.md
 | `scripts` | Local startup, demo, operator CLI, evidence capture, test-chain procedure |
 | `tests` | Financial, recovery, concurrency, API and transaction-validation tests |
 
-The frontend can be hosted independently as static files from `dist/web`. The financial service requires a persistent Node worker and PostgreSQL; a static website host cannot run settlement. `compose.yaml` and `deploy/nginx.conf` provide a local container layout. The Vercel deployment is a recorded read-only demo. No custom domain, project token or mainnet transaction has been created.
+The frontend can be hosted independently as static files from `dist/web`. The financial service requires a persistent Node worker and PostgreSQL; a static website host cannot run settlement. `compose.yaml` and `deploy/nginx.conf` provide a local container layout. The Vercel adapter serves real-source prelaunch discovery and reports missing ledger data as unavailable. No custom domain, project token or mainnet transaction has been created.
+
+## EMBER10 update workflow
+
+The existing application is maintained in one local Git repository with separate `data-01` and `ui-01` worktrees. The `integration/ember10` branch is the canonical integration branch. Shared progress and independent review are recorded in the adjacent `EMBER10-review` directory. No two-PC transfers are required.
+
+The display contract is `packages/shared/public.ts`. Current market observations, eligible selection, funded epochs and settlement are separate records. A new ten-asset policy uses ten equal 1,000-basis-point purchase budgets and keeps 80/10/10 unchanged. Legacy version-one five-asset epochs, hashes and liabilities are not rewritten.
+
+The Ember catalogue's reported USD market caps are informational. Source-flagged suspect observations do not receive a normal market rank. Missing circulating-supply, full-coverage, on-chain origin, liquidity, holder census and route evidence are not passes; ten certified assets may therefore be unavailable even while the ranking loads. No reference snapshot is a production seed.
+
+To inspect the exact hosted adapter locally after building:
+
+```sh
+npm run build
+npm run preview:hosted
+```
+
+Open `http://127.0.0.1:5180`. This read-only preview uses the actual Ember upstream and does not require a database, wallet or signer. For full API/worker/database development, keep using the existing local commands above.
