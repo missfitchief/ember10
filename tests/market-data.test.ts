@@ -1,6 +1,8 @@
 ﻿import {readFileSync} from 'node:fs';
-import {expect,it} from 'vitest';
-import {decimalValue,MarketDataService,normalizeCatalogue} from '../packages/integrations/market-data.js';
+import {expect,it,vi} from 'vitest';
+import {decimalValue,MarketDataService,normalizeCatalogue,publicCatalogueSchema} from '../packages/integrations/market-data.js';
+import {catalogueCapacity} from '../packages/shared/catalogue-capacity.js';
+import catalogueLimits from '../packages/shared/catalogue-limits.json';
 import {overview} from '../apps/api/overview.js';
 import {selectBasket} from '../packages/core/selection.js';
 import {defaultPolicy,hash,policyBasketSize} from '../packages/core/model.js';
@@ -13,6 +15,26 @@ const at='2026-09-23T15:03:19.224Z';
 const sample=(rows:unknown[],warming=false)=>({...raw,markets:rows,warming});
 const row=(n:number,cap:unknown,extra:Record<string,unknown>={})=>({...raw.markets[0],mint:testAddress('market-'+n),pool:testAddress('market-pool-'+n),dammPool:'',marketCapUsd:cap,suspect:false,...extra});
 const registry={count:1,updatedAt:1790175809,configs:[{config:raw.markets[0].config}]};
+it('admits growth beyond 20,000 rows while bounding rows and warning before either capacity is exhausted',()=>{
+ expect(publicCatalogueSchema.safeParse(sample(Array(20_001).fill(null))).success).toBe(true);
+ expect(publicCatalogueSchema.safeParse(sample(Array(catalogueLimits.maxRows+1).fill(null))).success).toBe(false);
+ expect(catalogueCapacity(51_199_999,39_999).nearLimit).toBe(false);
+ expect(catalogueCapacity(51_200_000,1).nearLimit).toBe(true);
+ expect(catalogueCapacity(1,40_000).nearLimit).toBe(true);
+});
+it('surfaces capacity alerts and preserves stale last-good data on a row-limit breach',async()=>{
+ let rows:unknown[]=Array(40_000).fill(null),now=Date.parse(at);
+ const warn=vi.spyOn(console,'warn').mockImplementation(()=>{}),error=vi.spyOn(console,'error').mockImplementation(()=>{});
+ try {
+  const source=new MarketDataService(async(url)=>Response.json(String(url).endsWith('/configs')?registry:sample(rows)),()=>now);
+  const first=await source.read();
+  expect(first.observed?.normalized.coverage.note).toContain('approaching a configured resource limit');
+  expect(warn).toHaveBeenCalledWith('Ember catalogue nearing capacity',expect.objectContaining({code:'catalogue_capacity',rows:40_000}));
+  rows=Array(catalogueLimits.maxRows+1).fill(null);now+=46_000;
+  const later=await source.read();expect(later.status).toBe('stale');expect(later.observed?.fetchedAt).toBe(at);
+  expect(error).toHaveBeenCalledWith('Ember catalogue refresh failed',expect.objectContaining({code:'source_row_limit'}));
+ } finally {warn.mockRestore();error.mockRestore();}
+});
 it('validates the complete current response without fixture names deciding rank or eligibility',()=>{
  const result=normalizeCatalogue(raw,configs,null,at);
  expect(result.coverage).toMatchObject({rawRows:3062,uniqueMints:3061,rankedMints:3059,duplicateRows:1,invalidRows:0,complete:false});

@@ -5,7 +5,7 @@ Raw public responses and timestamps are under `docs/evidence/`. These are untrus
 | Surface | Actual observation | Confidence / execution consequence |
 |---|---|---|
 | Ember developers / how | HTTP 200 application shells; public JS documentation chunks inspected | High for documented routes, not proof of economic execution |
-| `/api/solana/markets` | HTTP 200; initial response 7,876,999 bytes, 3,040 rows; later reads changed | Observed schema, bounded 12 MB reader; all rows remain unverified candidates |
+| `/api/solana/markets` | HTTP 200; initial response 7,876,999 bytes, 3,040 rows; later reads changed | Observed schema; current reader and evidence collector share a 64 MB cap, with a 50,000 row schema bound and warnings at 80% of capacity. All rows remain unverified candidates. |
 | `/api/solana/quotes` | HTTP 200; `economics` and 1,291 `quotes` | `shareByMode.keep.pctOfTax=32`; SOL quote support observed; no project launch attempted |
 | `/api/solana/configs` | HTTP 200; `program`, `partner`, `feeClaimer`, `configs`, `count`, `updatedAt`; 2,949 configs in initial capture | Off-chain list is checked against decoded on-chain config/pool identity before selection |
 | `/api/solana/pools.csv` | HTTP 200; historical CSV with mint, DBC pool/config, DAMM pool and launch metadata | Historical catalogue evidence only |

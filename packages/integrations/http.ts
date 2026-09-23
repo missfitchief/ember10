@@ -1,7 +1,8 @@
 import { ensure } from '../core/model.js';
 import Decimal from 'decimal.js';
-// Matches the bounded 20,000-row catalogue contract, with room for current row sizes.
-export const CATALOGUE_MAX_BYTES=64_000_000;
+import catalogueLimits from '../shared/catalogue-limits.json';
+export const CATALOGUE_MAX_BYTES=catalogueLimits.maxBytes;
+export const CATALOGUE_MAX_ROWS=catalogueLimits.maxRows;
 export async function boundedFetch(url:string,init:RequestInit={},maxBytes=12_000_000):Promise<unknown>{
  const parsed=new URL(url);ensure(parsed.protocol==='https:'||(['127.0.0.1','localhost'].includes(parsed.hostname)&&parsed.protocol==='http:'),'unsafe upstream URL');
  for(let n=0;n<3;n++){

@@ -3,6 +3,12 @@ import { hostedRead } from '../apps/api/hosted.js';
 import entry from '../api/index.js';
 const request=(path:string,options?:RequestInit)=>hostedRead(new Request('https://pilot.example/api/'+path,options),'');
 afterEach(()=>{vi.unstubAllGlobals();vi.unstubAllEnvs();});
+it('does not call an unavailable empty catalogue a complete universe',async()=>{
+ vi.stubGlobal('fetch',vi.fn().mockRejectedValue(new Error('offline')));
+ const basket=await(await request('basket')).json();
+ expect(basket.discovery.status).toBe('unavailable');expect(basket.universe).toEqual([]);
+ expect(basket.universeComplete).toBe(false);expect(basket.ready).toBe(false);
+});
 it('ignores hosting runtime context and defaults to real prelaunch without fixture identity',async()=>{
  vi.stubEnv('EMBER5_API_ORIGIN','');vi.stubEnv('OUR_MINT','');vi.stubEnv('EMBER10_REVISION','tested-commit');
  const handler=entry.fetch as (request:Request,context:unknown)=>Promise<Response>;

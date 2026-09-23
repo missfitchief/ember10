@@ -1,4 +1,5 @@
 import {mkdir,writeFile} from 'node:fs/promises';
+import catalogueLimits from '../packages/shared/catalogue-limits.json' with { type: 'json' };
 const dir = new URL('../docs/evidence/', import.meta.url); await mkdir(dir,{recursive:true});
 const urls = [
  ['ember-developers','https://embercurve.fun/developers'], ['ember-how','https://embercurve.fun/how'],
@@ -10,9 +11,9 @@ const urls = [
 const index=[];
 for(const [name,url] of urls){
  const observedAt=new Date().toISOString();
- try {const r=await fetch(url,{signal:AbortSignal.timeout(20000),redirect:'error'});const chunks=[];let size=0;for await(const chunk of r.body){size+=chunk.byteLength;if(size>12000000)throw Error('response too large');chunks.push(Buffer.from(chunk));}const body=Buffer.concat(chunks).toString('utf8');
+ try {const maxBytes=name==='ember-markets'?catalogueLimits.maxBytes:12000000;const r=await fetch(url,{signal:AbortSignal.timeout(20000),redirect:'error'});if(Number(r.headers.get('content-length')??0)>maxBytes){await r.body?.cancel();throw Error('response too large');}const chunks=[];let size=0;for await(const chunk of r.body){size+=chunk.byteLength;if(size>maxBytes)throw Error('response too large');chunks.push(Buffer.from(chunk));}const body=Buffer.concat(chunks).toString('utf8');
  const file=name+(r.headers.get('content-type')?.includes('json')?'.json':'.txt');
- await writeFile(new URL(file,dir),body); index.push({url,observedAt,status:r.status,contentType:r.headers.get('content-type'),bytes:body.length,file});
+ await writeFile(new URL(file,dir),body); index.push({url,observedAt,status:r.status,contentType:r.headers.get('content-type'),bytes:size,maxBytes,file});
  console.log(name,r.status,body.length,body.slice(0,150).replace(/\s+/g,' '));
  }catch(e){index.push({url,observedAt,error:e.message}); console.log(name,'unavailable',e.message);}
 }

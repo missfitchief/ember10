@@ -73,7 +73,7 @@ export async function hostedRead(request: Request, backendOrigin = process.env.E
   }
   if (route === 'status') return json({ mode: 'prelaunch', phase: 'prelaunch', dataMode: 'real', hostedSnapshot: false, broadcastEnabled: false, workerActive: false, paused: true, revision: revision(), waitingReason: 'Contract not deployed; settlement not configured.' });
   if (route === 'project') return json({ ...projectIdentity(), policy: publicPolicy, pool: null, treasury: null, operations: null });
-  if (route === 'basket') { const value = await overview(); return json({ ...value.selection, selected: [], universe: value.markets, universePage: value.marketPage, universeComplete: !value.marketPage.hasMore, ready: false, discovery: value.discovery, fundedBasket: value.fundedBasket }); }
+  if (route === 'basket') { const value = await overview(); return json({ ...value.selection, selected: [], universe: value.markets, universePage: value.marketPage, universeComplete: value.discovery.status === 'ready' && value.discovery.fetchedAt !== null && !value.marketPage.hasMore, ready: false, discovery: value.discovery, fundedBasket: value.fundedBasket }); }
   if (route === 'transparency') return json({ status: 'unavailable', receivedLamports: null, assets: [], accrued: [], finalizedPayoutTransactions: null, burns: [], balances: [], reconciliation: null, incidents: [], accountingHealth: 'unavailable', message: 'No verified project ledger is connected.' });
   if (route === 'epochs') return json({ status: 'unavailable', items: [], nextCursor: null, message: 'No verified project ledger is connected.' });
   if (route.startsWith('wallets/')) {

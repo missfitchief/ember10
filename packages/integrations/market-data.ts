@@ -2,7 +2,8 @@ import { createHash } from 'node:crypto';
 import Decimal from 'decimal.js';
 import bs58 from 'bs58';
 import { z } from 'zod';
-import { CATALOGUE_MAX_BYTES } from './http.js';
+import { CATALOGUE_MAX_BYTES, CATALOGUE_MAX_ROWS } from './http.js';
+import { catalogueCapacity } from '../shared/catalogue-capacity.js';
 import type { EligibilityCheck, PublicMarket, PublicOverview } from '../shared/public.js';
 
 export const MARKET_SOURCE = 'https://embercurve.fun/api/solana/markets';
@@ -18,7 +19,7 @@ const rowSchema = z.object({
   holders: z.number().finite().nonnegative().optional(), holdersCapped: z.boolean().optional(),
   suspect: z.boolean().optional(), paused: z.boolean().optional(), chain: z.string().optional(), engine: z.string().optional()
 }).passthrough();
-export const publicCatalogueSchema = z.object({ markets: z.array(z.unknown()).max(20_000), warming: z.boolean(), economics: z.unknown(), totals: z.unknown() }).passthrough();
+export const publicCatalogueSchema = z.object({ markets: z.array(z.unknown()).max(CATALOGUE_MAX_ROWS), warming: z.boolean(), economics: z.unknown(), totals: z.unknown() }).passthrough();
 const configSchema = z.object({ count: z.number().int().nonnegative(), updatedAt: z.number().finite(), configs: z.array(z.object({ config: mint }).passthrough()) }).passthrough();
 
 /** Preserve the source's decimal value; never coerce absent/empty/formatted strings to zero. */
@@ -101,7 +102,7 @@ async function fetchJson(url: string, fetcher: typeof fetch) {
       if (Number(response.headers.get('content-length') ?? 0) > CATALOGUE_MAX_BYTES) { await response.body.cancel(); throw new Error('source_size'); }
       const reader = response.body.getReader(), chunks: Uint8Array[] = []; let bytes = 0;
       while (true) { const result = await reader.read(); if (result.done) break; bytes += result.value.length; if (bytes > CATALOGUE_MAX_BYTES) { await reader.cancel(); throw new Error('source_size'); } chunks.push(result.value); }
-      return JSON.parse(Buffer.concat(chunks).toString('utf8')) as unknown;
+      return { value: JSON.parse(Buffer.concat(chunks).toString('utf8')) as unknown, bytes };
     } catch (error) { if (attempt === 1) throw error; await new Promise(r => setTimeout(r, 1000)); }
   }
   throw new Error('source_unavailable');
@@ -121,10 +122,17 @@ export class MarketDataService {
     if (!this.pending && now - this.lastAttempt >= delay) {
       this.lastAttempt = now;
       this.pending = (async () => { try {
-        const [raw, configs] = await Promise.all([fetchJson(MARKET_SOURCE, this.fetcher), fetchJson(CONFIG_SOURCE, this.fetcher).catch(() => null)]);
+        const [response, configs] = await Promise.all([fetchJson(MARKET_SOURCE, this.fetcher), fetchJson(CONFIG_SOURCE, this.fetcher).catch(() => null)]);
+        const raw = response.value;
+        const rows = typeof raw === 'object' && raw !== null && 'markets' in raw && Array.isArray(raw.markets) ? raw.markets.length : 0;
+        const capacity = catalogueCapacity(response.bytes, rows);
+        if (capacity.nearLimit) console.warn('Ember catalogue nearing capacity', { code: 'catalogue_capacity', ...capacity });
+        if (rows > CATALOGUE_MAX_ROWS) throw new Error('source_row_limit');
         const fetchedAt = new Date(this.clock()).toISOString();
-        this.lastGood = { normalized: normalizeCatalogue(raw, configs, ownMint, fetchedAt), fetchedAt }; this.failed = false; this.failures = 0;
-      } catch (error) { this.failed = true; this.failures++; console.error('Ember catalogue refresh failed',{code:error instanceof Error&&error.message==='source_size'?'source_size':'source_unavailable_or_invalid',attempt:this.failures,maxBytes:CATALOGUE_MAX_BYTES}); } finally { this.pending = null; } })();
+        const normalized = normalizeCatalogue(raw, configs?.value, ownMint, fetchedAt);
+        if (capacity.nearLimit) normalized.coverage.note += ' Catalogue approaching a configured resource limit; operator review required.';
+        this.lastGood = { normalized, fetchedAt }; this.failed = false; this.failures = 0;
+      } catch (error) { this.failed = true; this.failures++; console.error('Ember catalogue refresh failed',{code:error instanceof Error&&['source_size','source_row_limit'].includes(error.message)?error.message:'source_unavailable_or_invalid',attempt:this.failures,maxBytes:CATALOGUE_MAX_BYTES,maxRows:CATALOGUE_MAX_ROWS}); } finally { this.pending = null; } })();
     }
     if (this.pending) await this.pending;
     const observed = this.lastGood;

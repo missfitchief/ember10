@@ -1,0 +1,5 @@
+{
+  "maxBytes": 64000000,
+  "maxRows": 50000,
+  "warningFraction": 0.8
+}
