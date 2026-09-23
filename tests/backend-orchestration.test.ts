@@ -22,6 +22,9 @@ import {createServer} from '../apps/api/server.js';
 import {hostedRead} from '../apps/api/hosted.js';
 import {clientKey,proxyHeaders,takeRateLimit} from '../apps/api/proxy.js';
 import {admitFundedMint} from '../packages/core/admission.js';
+import {Connection,PublicKey} from '@solana/web3.js';
+import {MAINNET_GENESIS} from '../packages/core/model.js';
+import {status as apiStatus} from '../apps/api/queries.js';
 
 const base=process.env.TEST_DATABASE_URL??'postgresql://ember5:local-development-only@127.0.0.1:55432/ember5_test';
 const admin=new Store(base),schema='orchestration_'+Date.now()+'_'+process.pid;
@@ -35,7 +38,7 @@ async function commit(id='first',rows=candidates()) {const service=new Automatic
 const realConfig=()=>({...loadConfig({MODE:'prelaunch',MASTER_PAUSE:'false'}),MODE:'live' as const,BROADCAST_ENABLED:true,TREASURY:f.treasury});
 beforeAll(async()=>{await admin.pool.query(`CREATE SCHEMA ${schema}`);const url=new URL(base);url.searchParams.set('options','-c search_path='+schema);db=new Store(url.toString());await migrate(db);await db.bindMode('prelaunch');chain=new DemoChain(db);await chain.init();});
 beforeEach(async()=>{await db.pool.query('TRUNCATE documents,incoming_transfers,cursors,epochs,intents,attempts,entitlements,payout_batches,batch_items,ledger_events,postings,leases,jobs,incidents,operator_audit,chain_receipts,demo_chain,assets,api_rate_limits CASCADE');await db.pool.query("UPDATE control SET paused=false,reason='isolated test'");f=fixtures();engine=new Engine(db,'demo');chain=new DemoChain(db);lease=(await db.lease('integration-test',300))!;});
-afterEach(()=>{vi.unstubAllEnvs();vi.unstubAllGlobals();});
+afterEach(()=>{vi.restoreAllMocks();vi.unstubAllEnvs();vi.unstubAllGlobals();});
 afterAll(async()=>{await db?.close();await admin.pool.query(`DROP SCHEMA ${schema} CASCADE`);await admin.close();});
 
 it('commits a new current top ten each round, admits a newly discovered mint, and preserves the first epoch across restart',async()=>{
@@ -108,4 +111,50 @@ it('operator recovery and expense endpoints require authentication and reject us
  const c=loadConfig({MODE:'prelaunch',OPERATOR_TOKEN:'operator-secret-test'.repeat(3)}),app=createServer(db,c);
  for(const url of ['/operator/recovery','/operator/expenses','/operator/expenses/settlement'])expect((await app.inject({method:'POST',url,payload:{finalized:true}})).statusCode).toBe(401);
  expect((await app.inject({method:'POST',url:'/operator/recovery',headers:{authorization:'Bearer '+c.OPERATOR_TOKEN},payload:{finalized:true}})).statusCode).toBeGreaterThanOrEqual(400);await app.close();
+});
+it('a funding route change during asynchronous evidence validation blocks signing',async()=>{
+ const a=approval();let route=a.expectedFundingRoute;
+ const authorize=executionAuthorizer(engine,realConfig(),{approval:async()=>a,conditions:async()=>{route={pool:'changed-after-evidence'};},fundingRoute:async()=>route});
+ await expect(authorize({kind:'swap'} as never)).rejects.toThrow('funding route changed');expect((await db.pool.query('SELECT paused FROM control')).rows[0].paused).toBe(true);
+});
+it('public discovery status follows current observed-market records and does not return the full catalogue',async()=>{
+ await db.doc('observation',{type:'observed_market',status:'ready',fetchedAt:new Date().toISOString(),normalized:{coverage:{uniqueMints:3000},evidenceHash:'abc',markets:[{private:'not-needed-in-status'}]}});
+ const value=await apiStatus(db,loadConfig({}));expect(value.discoveryStale).toBe(false);expect(value.discovery).toMatchObject({status:'ready',coverage:{uniqueMints:3000}});expect(JSON.stringify(value)).not.toContain('not-needed-in-status');
+});
+it('partial automatic evidence remains an explicit unknown asset check instead of disappearing',async()=>{
+ const raw=JSON.parse(readFileSync(new URL('./fixtures/ember-catalogue-2026-09-23.json',import.meta.url),'utf8')),configs=JSON.parse(readFileSync(new URL('./fixtures/ember-configs-2026-09-23.json',import.meta.url),'utf8'));
+ const mint=raw.markets[0].mint,source=new MarketDataService(async url=>Response.json(String(url).endsWith('/configs')?configs:raw));
+ const service=new AutomaticSelectionService(policy(),f.mint,async()=>({candidates:[{...candidates()[0],mint,evidenceFailures:['Automatic metrics provider is not configured.']}],complete:false,rawCatalogueHash:'catalogue',observedAt:Date.now()}));
+ await db.doc('observation',await service.read(1n));const value=await backendOverview(db,loadConfig({}),{query:mint},source);
+ expect(value.markets[0].reasons).toContainEqual({code:'verification_unavailable',state:'unknown',label:'Automatic metrics provider is not configured.'});expect(value.selection.commitmentsAllowed).toBe(false);expect(value.accounting.status).toBe('unavailable');
+});
+it('public epoch export preserves attribution while withholding raw credentials and signed payloads',async()=>{
+ await seed();await commit();await db.tx(t=>db.event(t,'private-provider-response','audit',[],{signature:'public-proof',slot:500001,raw:{authorization:'private-credential'},signed_payload:'signed-secret-payload'},'first'));
+ const value=await exportEpoch(db,'first'),text=JSON.stringify(value);expect(text).not.toContain('private-credential');expect(text).not.toContain('signed-secret-payload');expect(text).toContain('public-proof');
+});
+it('operator ledger writes require actual mainnet genesis, successful metadata and the requested signature',async()=>{
+ const c={...realConfig(),OPERATOR_TOKEN:'test-operator-token'.repeat(3)},app=createServer(db,c),signature='A'.repeat(88),headers={authorization:'Bearer '+c.OPERATOR_TOKEN};
+ const genesis=vi.spyOn(Connection.prototype,'getGenesisHash').mockResolvedValue('devnet'),parsed=vi.spyOn(Connection.prototype,'getParsedTransaction');
+ expect((await app.inject({method:'POST',url:'/operator/capital',headers,payload:{signature}})).statusCode).toBe(503);expect(parsed).not.toHaveBeenCalled();
+ genesis.mockResolvedValue(MAINNET_GENESIS);parsed.mockResolvedValue({slot:500000,meta:null,transaction:{signatures:[signature],message:{instructions:[],accountKeys:[]}}} as never);
+ expect((await app.inject({method:'POST',url:'/operator/capital',headers,payload:{signature}})).statusCode).toBe(503);
+ parsed.mockResolvedValue({slot:500000,meta:{err:null,innerInstructions:[]},transaction:{signatures:['wrong-signature'],message:{instructions:[],accountKeys:[]}}} as never);
+ expect((await app.inject({method:'POST',url:'/operator/capital',headers,payload:{signature}})).statusCode).toBe(503);expect((await db.pool.query('SELECT id FROM incoming_transfers')).rowCount).toBe(0);await app.close();
+});
+it('expense settlement endpoint fetches chain proof and rejects double accounting rather than accepting supplied outcomes',async()=>{
+ const c={...realConfig(),OPERATOR_TOKEN:'test-operator-token'.repeat(3)},app=createServer(db,c),headers={authorization:'Bearer '+c.OPERATOR_TOKEN},signature='B'.repeat(88),payee=testAddress('verified-vendor');
+ await db.tx(async t=>{await db.lock(t);await db.move(t,'fee',SOL,'external:fee','revenue',100000000n);await db.move(t,'allocation',SOL,'revenue','operations:api',100000000n);});
+ const expense=await app.inject({method:'POST',url:'/operator/expenses',headers,payload:{id:'api-invoice',amountLamports:'10000000',costAllowanceLamports:'1000',payee,description:'Reviewed provider invoice',evidenceReference:'invoice-reference'}});expect(expense.statusCode).toBe(200);
+ vi.spyOn(Connection.prototype,'getGenesisHash').mockResolvedValue(MAINNET_GENESIS);
+ vi.spyOn(Connection.prototype,'getParsedTransaction').mockResolvedValue({slot:500001,meta:{err:null,fee:1000,preBalances:[100000000,0],postBalances:[89999000,10000000],innerInstructions:[]},transaction:{signatures:[signature],message:{accountKeys:[{pubkey:new PublicKey(f.treasury)},{pubkey:new PublicKey(payee)}],instructions:[{program:'system',parsed:{type:'transfer',info:{source:f.treasury,destination:payee,lamports:10000000}}}]}}} as never);
+ const request={method:'POST' as const,url:'/operator/expenses/settlement',headers,payload:{expenseId:'api-invoice',signature,instruction:'0'}};
+ expect((await app.inject({...request,payload:{...request.payload,finalized:true}})).statusCode).toBe(400);
+ expect((await app.inject(request)).statusCode).toBe(200);expect((await app.inject(request)).statusCode).toBe(200);
+ expect((await db.pool.query('SELECT amount::text,fee::text FROM operating_expense_payments')).rows).toEqual([{amount:'10000000',fee:'1000'}]);await app.close();
+});
+it('a persisted pause blocks new holder reservations inside the ledger transaction while preserving existing credits',async()=>{
+ await seed();await commit();const row=(await db.pool.query("SELECT id,expected FROM intents WHERE kind='swap' LIMIT 1")).rows[0];await runIntent(engine,chain,row.id,lease);await runIntent(engine,chain,row.id,lease);
+ const asset=candidates().find(x=>x.mint===row.expected.outputAsset)!,before=await db.balance(asset.mint,'liabilities');await db.pool.query('UPDATE control SET paused=true');
+ await expect(engine.schedulePayout({asset,chain,price:{microUsd:'1000000',at:Date.now(),source:'test'},ata:new Map(f.owners.map(o=>[o,{exists:true,valid:true,costMicroUsd:0n}])),policy:policy(),costAccount:'reserve',lease,sourceTokenAccount:chain.destination(f.treasury,asset.mint)})).rejects.toThrow('reservations paused');
+ expect(await db.balance(asset.mint,'liabilities')).toBe(before);expect((await db.pool.query('SELECT id FROM payout_batches')).rowCount).toBe(0);
 });

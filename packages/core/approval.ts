@@ -8,7 +8,7 @@ export const approvalSchema=z.object({approvalId:z.string().min(8),approvedBy:z.
  approvedMints:z.array(address).default([]),approvedPrograms:z.array(address).min(1),expectedFundingRoute:z.record(z.string(),z.unknown()),policy:policySchema,
  metricsFile:z.string().min(1).optional(),
  assetAdmission:z.object({version:z.literal('ember-provenance-v1')}).optional(),
- selectionEvidence:z.object({version:z.literal('ember-evidence-v1'),metricsEndpoint:z.string().url().refine(value=>{const u=new URL(value);return u.protocol==='https:'&&!u.username&&!u.password&&!u.hash;},'HTTPS evidence endpoint required'),allowedOrigins:z.array(httpsOrigin).min(1),catalogueCompleteContract:z.boolean()}).optional(),
+ selectionEvidence:z.object({version:z.literal('ember-evidence-v1'),provider:z.enum(['custom','jupiter-tokens-v2']).optional(),metricsEndpoint:z.string().url().refine(value=>{const u=new URL(value);return u.protocol==='https:'&&!u.username&&!u.password&&!u.hash;},'HTTPS evidence endpoint required').optional(),allowedOrigins:z.array(httpsOrigin).min(1),catalogueCompleteContract:z.boolean()}).superRefine((v,ctx)=>{if(v.provider==='jupiter-tokens-v2'){if(v.metricsEndpoint&&v.metricsEndpoint!=='https://api.jup.ag/tokens/v2/search'||!v.allowedOrigins.includes('https://api.jup.ag'))ctx.addIssue({code:'custom',message:'Jupiter evidence origin/endpoint must match reviewed adapter'});}else if(!v.metricsEndpoint)ctx.addIssue({code:'custom',message:'custom metrics endpoint required'});}).optional(),
  developerPayout:z.object({destination:address,minimumPayoutLamports:raw,retainedReserveLamports:raw,payoutCostLamports:raw,maxFeeLamports:raw,payoutHourUtc:z.number().int().min(0).max(23)}).optional()
 });
 export type Approval=z.infer<typeof approvalSchema>;

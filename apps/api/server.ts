@@ -8,10 +8,11 @@ import { canonical } from '../../packages/core/model.js';
 import * as q from './queries.js';
 import {backendOverview} from './backend-overview.js';
 import {clientKey,takeRateLimit} from './proxy.js';
-import {parsedTransfers,SolanaChain} from '../../packages/integrations/solana.js';
+import {SolanaChain} from '../../packages/integrations/solana.js';
 import {recoverIntent} from '../worker/recovery.js';
 import {DeveloperAccounting} from '../../packages/core/developer.js';
 import {developerPolicy} from '../../packages/core/developer-config.js';
+import {verifiedOperatorTransfer} from './operator-evidence.js';
 import {Engine} from '../../packages/core/engine.js';
 import {ensure} from '../../packages/core/model.js';
 export function createServer(db:Store,c:Config){
@@ -30,11 +31,11 @@ export function createServer(db:Store,c:Config){
  app.get<{Params:{id:string}}>('/api/epochs/:id',req=>q.exportEpoch(db,z.string().max(200).parse(req.params.id)));
  app.get<{Params:{id:string};Querystring:{format?:string}}>('/api/epochs/:id/export',async(req,reply)=>{const value=await q.exportEpoch(db,req.params.id);if(req.query.format==='csv')return reply.header('content-type','text/csv').header('content-disposition','attachment; filename="epoch-allocations.csv"').send(q.csv(value.entitlements));return value;});
  app.get<{Params:{address:string}}>('/api/wallets/:address/rewards',req=>{try{new PublicKey(req.params.address);}catch{throw Error('invalid address');}return q.wallet(db,req.params.address);});
- app.get('/api/transparency',async()=>({...await q.transparency(db),developerAccounting:['prelaunch','live'].includes(c.MODE)?await new DeveloperAccounting(db,c.MODE).summary(developerPolicy(c)):null}));
+ app.get('/api/transparency',async()=>{const dev=['prelaunch','live'].includes(c.MODE)?await new DeveloperAccounting(db,c.MODE).summary(developerPolicy(c)):null;return {...await q.transparency(db),developerAccounting:dev?.hasRecords?dev:null};});
  app.post('/operator/pause',async req=>{const body=z.object({reason:z.string().min(1).max(200)}).parse(req.body);await db.tx(async t=>{await db.lock(t);await t.query('UPDATE control SET paused=true,reason=$1',[body.reason]);await t.query('INSERT INTO operator_audit(actor,action,body) VALUES($1,$2,$3)',['authenticated-operator','pause',canonical(body)]);});return {paused:true};});
  app.post('/operator/resume',async()=>{if(c.MASTER_PAUSE||c.MODE==='prelaunch'||c.MODE==='live'&&!c.APPROVAL_FILE)throw Error('master pause/configuration blocks resume');await db.tx(async t=>{await db.lock(t);if((await t.query('SELECT id FROM incidents WHERE resolved_at IS NULL')).rowCount)throw Error('unresolved incidents');await t.query("UPDATE control SET paused=false,reason='Waiting for fresh verified funding and selection'");await t.query("INSERT INTO operator_audit(actor,action,body) VALUES('authenticated-operator','resume','{}')");});return {paused:false};});
  app.get('/operator/funding',async()=>({balances:await db.balances(),receipts:(await db.pool.query('SELECT id,classification,asset,amount::text FROM incoming_transfers ORDER BY id')).rows}));
- app.post('/operator/capital',async req=>{const {signature}=z.object({signature:z.string().regex(/^[1-9A-HJ-NP-Za-km-z]{80,90}$/)}).parse(req.body);ensure(c.TREASURY&&c.MODE!=='demo','configured real test/live treasury required');const connection=new Connection(c.RPC_URL,'finalized');const evidence=await parsedTransfers(connection,signature);ensure(evidence&&!evidence.tx.meta?.err,'finalized successful capital transfer required');
+ app.post('/operator/capital',async req=>{const {signature}=z.object({signature:z.string().regex(/^[1-9A-HJ-NP-Za-km-z]{80,90}$/)}).parse(req.body);ensure(c.TREASURY&&['live','test'].includes(c.MODE),'configured real test/live treasury required');const connection=new Connection(c.RPC_URL,'finalized');const evidence=await verifiedOperatorTransfer(connection,c,signature);
   const incoming=evidence.transfers.filter(t=>t.asset==='SOL'&&t.destination===c.TREASURY);ensure(incoming.length,'no native SOL transfers to configured treasury');
   for(const tr of incoming)await new Engine(db,c.MODE).recognizeCapital({...tr,signature,slot:evidence.tx.slot,finalized:true,error:null,kind:'seed',attributionVerified:true,rawEvidence:{operatorApprovedCapital:true,transfer:tr}},c.TREASURY);
   await db.pool.query("INSERT INTO operator_audit(actor,action,body) VALUES('authenticated-operator','recognize-capital',$1)",[canonical({signature})]);return {classified:'capital',transfers:incoming.length};
@@ -57,7 +58,7 @@ export function createServer(db:Store,c:Config){
  app.post('/operator/expenses/settlement',async req=>{
   ensure(c.MODE==='live'&&c.TREASURY,'configured live treasury required');
   const body=z.object({expenseId:z.string().min(1).max(120),signature:z.string().regex(/^[1-9A-HJ-NP-Za-km-z]{80,90}$/),instruction:z.string().regex(/^[0-9]+(?:\.[0-9]+)?$/)}).strict().parse(req.body);
-  const connection=new Connection(c.RPC_URL,'finalized'),record=await parsedTransfers(connection,body.signature);ensure(record&&!record.tx.meta?.err,'finalized successful expense evidence required');
+  const connection=new Connection(c.RPC_URL,'finalized'),record=await verifiedOperatorTransfer(connection,c,body.signature);
   const outgoing=record.transfers.filter(t=>t.source===c.TREASURY);ensure(outgoing.length===1&&outgoing[0].asset==='SOL'&&outgoing[0].instruction===body.instruction,'one exact native expense transfer required');
   const tr=outgoing[0],meta=record.tx.meta!;ensure(record.tx.transaction.message.accountKeys[0].pubkey.toBase58()===c.TREASURY,'treasury must be expense fee payer');
   ensure(Number.isSafeInteger(meta.fee)&&Number.isSafeInteger(meta.preBalances[0])&&Number.isSafeInteger(meta.postBalances[0])&&BigInt(meta.preBalances[0])-BigInt(meta.postBalances[0])===BigInt(tr.amount)+BigInt(meta.fee),'unexplained treasury debit in expense transaction');

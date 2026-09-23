@@ -124,6 +124,7 @@ export class Engine {
  }
  async schedulePayout(args:{asset:Asset;chain:Chain;price?:Price;ata:Map<string,{exists:boolean;valid:boolean;costMicroUsd?:bigint}>;policy:Policy;costAccount:string;lease:Lease;maxRecipients?:number;sourceTokenAccount:string}){
   return this.db.tx(async t=>{await this.db.fence(t,args.lease);await this.db.lock(t);
+   ensure(!(await t.query('SELECT paused FROM control')).rows[0].paused,'new payout reservations paused');
    const rows=(await t.query('SELECT e.*,e.amount::text,e.paid::text FROM entitlements e WHERE e.asset=$1 AND e.paid<e.amount AND NOT EXISTS(SELECT 1 FROM batch_items b WHERE b.entitlement_id=e.id AND b.active) ORDER BY e.owner,e.id FOR UPDATE',[args.asset.mint])).rows;
    const groups=new Map<string,typeof rows>();for(const r of rows)groups.set(r.owner,[...(groups.get(r.owner)??[]),r]);
    const transfers:NonNullable<Plan['transfers']>=[];const selected:typeof rows=[];

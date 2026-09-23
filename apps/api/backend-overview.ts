@@ -37,10 +37,12 @@ export async function backendOverview(db: Store, c: Config, page: Parameters<typ
    observedAt: selection ? new Date(selection.observedAt).toISOString() : null, evidenceHash: selection?.evidenceHash ?? null, sourceHash: selection?.sourceHash ?? null, policyHash: selection?.policyHash ?? null, complete: !!(usable && selection.complete) };
   // Keep reported market ranking separate from eligibility and the immutable funded epoch.
   const universe = new Map(selection?.basket?.universe.map(x => [x.mint, x]) ?? []);
+  const candidates = new Map(selection?.candidates.map(x => [x.mint, x]) ?? []);
   const selected = new Set(members.map(x => x.mint));
   const all = (observed?.normalized.markets ?? []).map(m => {
    const candidate = universe.get(m.mint);
-   if (!candidate || !usable) return { ...m, selected: false, weightBps: null, eligibility: m.eligibility === 'excluded' ? 'excluded' as const : 'unknown' as const };
+   if (!candidate || !usable) return { ...m, selected: false, weightBps: null, eligibility: m.eligibility === 'excluded' ? 'excluded' as const : 'unknown' as const,
+    reasons: [...m.reasons,...(candidates.get(m.mint)?.evidenceFailures ?? []).map(reason => ({ code:'verification_unavailable', state:'unknown' as const, label:reason }))] };
    return { ...m, eligibility: candidate.reasons.length ? 'excluded' as const : 'eligible' as const,
     reasons: candidate.reasons.length ? candidate.reasons.map(reason => ({ code: 'policy_exclusion', state: 'fail' as const, label: reason })) : [{ code: 'verified_policy', state: 'pass' as const, label: 'All current eligibility gates verified; this is not a funded purchase.' }],
     selected: selected.has(m.mint), weightBps: selected.has(m.mint) ? 1000 : null };

@@ -15,9 +15,10 @@ export function executionAuthorizer(engine: Engine, c: Config, control: Executio
   ensure(c.MODE === 'live' && c.BROADCAST_ENABLED && !c.MASTER_PAUSE, 'configuration blocks new execution');
   const a = await control.approval();
   ensure(!(await engine.db.pool.query('SELECT paused FROM control')).rows[0].paused, 'new execution paused');
+  if (intent) await control.conditions(intent, a);
+  // Observe the route after any slow evidence refresh so it is current at the signer boundary.
   const route = await control.fundingRoute(a);
   ensure(await engine.fundingRoute(a.expectedFundingRoute, route), 'funding route changed');
-  if (intent) await control.conditions(intent, a);
   // Re-read approval after asynchronous data/build checks, even if the file changed mid-cycle.
   const effective = await control.approval();
   ensure(hash(effective) === hash(a), 'approval changed during execution checks');

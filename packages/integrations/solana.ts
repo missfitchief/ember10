@@ -28,6 +28,8 @@ export async function fullSnapshot(connection:Connection,mint:string,policy:Poli
 }
 export async function parsedTransfers(connection:Connection,signature:string){
  const tx=await connection.getParsedTransaction(signature,{commitment:'finalized',maxSupportedTransactionVersion:0});if(!tx)return null;
+ ensure(tx.meta&&Number.isSafeInteger(tx.slot)&&tx.slot>0,'finalized transaction metadata missing');
+ ensure(tx.transaction.signatures[0]===signature,'RPC transaction signature mismatch');
  const transfers:TransferEvidence[]=[];
  const visit=(ix:any,identity:string)=>{if(!ix.parsed)return;const p=ix.parsed;const info=p.info;
   if(ix.program==='system'&&p.type==='transfer'){ensure(Number.isSafeInteger(info.lamports)&&info.lamports>=0,'unsafe native transfer integer');transfers.push({instruction:identity,asset:SOL,source:info.source,destination:info.destination,amount:String(info.lamports)});}
