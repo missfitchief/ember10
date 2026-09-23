@@ -21,8 +21,9 @@ npm run preview:hosted
 Check the actual app at `http://127.0.0.1:5180`. Independent review must cover the tested source commit, real-source ranking evidence and desktop/mobile implementation. Deployment then sets `EMBER10_REVISION` to that exact source commit:
 
 ```sh
-vercel deploy --prod --yes --env EMBER10_REVISION=<tested-commit>
+vercel deploy --prod --yes --env EMBER10_REVISION=<tested-commit> --build-env PUBLIC_SITE_URL=https://ember5-pilot.vercel.app
 node scripts/verify-public.mjs https://ember5-pilot.vercel.app <tested-commit> <proof-output.json>
+node scripts/verify-sharing.mjs https://ember5-pilot.vercel.app https://ember5-pilot.vercel.app <sharing-proof.json>
 ```
 
 The deployed `/api/status` and `/api/overview` expose this revision. A successful local build or Vercel READY result alone is not verification of the public issue. Record public HTTP checks and screenshots after the alias points to the new deployment.
@@ -32,3 +33,5 @@ For a separately hosted real ledger, the existing server-only `EMBER5_API_ORIGIN
 Secrets, local databases, runtime keys, logs and Vercel account metadata are excluded from Git and deployment uploads. Tests remain in build inputs because existing development scripts import isolated fixtures during type checking; the production function's dependency graph does not import them. Supplied design references and dated snapshots are review inputs outside the application.
 
 Exact deployment IDs, final revision and verification results belong to the adjacent `EMBER10-review` evidence directory and `docs/deployment.json`.
+
+The subsequent warm-light correction evidence is kept separately in `EMBER10-light-review` so the prior verified deployment evidence remains intact. `PUBLIC_SITE_URL` is a build-time setting for canonical and static sharing metadata; it does not configure a project mint or financial backend. The committed share image must be reachable with an image MIME type. Verify the initial response without JavaScript, inspect the card visually and keep social-network cache refresh claims separate from these checks.

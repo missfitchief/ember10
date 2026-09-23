@@ -1,6 +1,6 @@
 # EMBER10 controlled-pilot implementation
 
-A React dashboard, Node API, independent Node worker and PostgreSQL ledger. The default is **prelaunch, paused, no signing and no broadcast**. The current prospective policy is EMBER10; legacy EMBER5 records are preserved. No project mint was created and no mainnet funds were used.
+A React frontend, Node API, independent Node worker and PostgreSQL ledger. The default is **prelaunch, paused, no signing and no broadcast**. The current prospective policy is EMBER10; legacy EMBER5 records are preserved. No project mint was created and no mainnet funds were used.
 
 Public pilot URL: **https://ember5-pilot.vercel.app**. This update replaces the hosted synthetic fallback with a real, read-only Ember catalogue integration and an EMBER10 frontend. Deployment verification is recorded separately in the review evidence; local source alone is not proof of publication. The hosted service does not run settlement.
 
@@ -77,3 +77,15 @@ npm run preview:hosted
 ```
 
 Open `http://127.0.0.1:5180`. This read-only preview uses the actual Ember upstream and does not require a database, wallet or signer. For full API/worker/database development, keep using the existing local commands above.
+
+## Frontend audit corrections
+
+The warm-light product homepage explains prelaunch readiness, the configured holder threshold and ten equal purchase budgets before a compact preview of ten ranked market observations. The separate explorer retains full-catalogue search, eligibility and immutable funded-basket views. Visible short mints distinguish repeated names; mobile details expose reported market facts separately from eligibility evidence. Rewards lookup explains missing records before requesting an address.
+
+The correction iteration uses `frontend-light` and `frontend-fixes` worktrees from the previously deployed commit, with one integrator. Source-level handoff is in `docs/FRONTEND-LIGHT-HANDOFF.md`; independent review and published revision evidence are in the adjacent `EMBER10-light-review` directory. Existing financial worker and accounting rules are outside the visual refactor.
+
+Open Graph/Twitter metadata is present in the initial HTML. `PUBLIC_SITE_URL` sets the HTTPS canonical origin at build time and defaults to the existing public pilot URL. The original share card is committed at `apps/web/public/ember10-share.png`; regeneration with `scripts/generate-share-image.py` requires Pillow with WOFF2 support and is not part of the deployment build.
+
+```sh
+node scripts/verify-sharing.mjs https://ember5-pilot.vercel.app https://ember5-pilot.vercel.app sharing-proof.json
+```
