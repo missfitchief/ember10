@@ -1,5 +1,5 @@
 import {afterAll,beforeAll,beforeEach,describe,expect,it,vi} from 'vitest';
-import {Store,type Lease} from '../packages/db/store.js';
+import {Store,type Lease,type Tx} from '../packages/db/store.js';
 import {migrate} from '../packages/db/migrate.js';
 import {Engine,type Intent,type Signed} from '../packages/core/engine.js';
 import {DemoChain,testAddress,testKey} from '../packages/integrations/demo.js';
@@ -33,6 +33,22 @@ async function legacyAttempt(i:Intent,signed?:Signed){
  await db.pool.query('INSERT INTO attempts(intent_id,attempt_no,signature,signed_payload,blockhash,last_valid_height,approved_message_hash) VALUES($1,1,$2,$3,$4,1000,$5)',[i.id,signed?.signature??'legacy:'+i.id,signed?.bytes??Buffer.from('original legacy signed bytes'),signed?.blockhash??'legacy-block',signed?.messageHash??'legacy-message']);
  await db.pool.query("UPDATE intents SET status='unknown' WHERE id=$1",[i.id]);
 }
+async function expenseFixtureTables(){
+ // These runner tests also run on the pre-developer schema. Integrated migrations supply full constraints.
+ await db.pool.query('CREATE TABLE IF NOT EXISTS operating_expenses (id text PRIMARY KEY,event_id text,amount numeric,cost_allowance numeric,payee text,description text,evidence_hash text,actor text)');
+ await db.pool.query('CREATE TABLE IF NOT EXISTS operating_expense_payments (id text PRIMARY KEY,event_id text,expense_id text,amount numeric,fee numeric,signature text,instruction text,slot bigint,source text,destination text,evidence_hash text,actor text)');
+}
+async function approveFixtureExpense(id:string){
+ await db.tx(async t=>{await db.lock(t);await db.event(t,'expense:'+id,'operating_expense_approved',[],{testOnly:true});
+  await t.query('INSERT INTO operating_expenses(id,event_id,amount,cost_allowance,payee,description,evidence_hash,actor) VALUES($1,$2,100,5000,$3,$4,$5,$6)',[id,'expense:'+id,testAddress('expense-payee'),'Expense approved during external authorization','fixture','test']);
+ });
+}
+async function lockedExpenseCheck(_i:Intent,t:Tx){
+ // A separate transaction must be unable to acquire the control lock while this callback runs.
+ await expect(db.tx(other=>other.query('SELECT id FROM control WHERE id=true FOR UPDATE NOWAIT'))).rejects.toMatchObject({code:'55P03'});
+ const amount=BigInt((await t.query('SELECT coalesce(sum(amount),0)::text AS amount FROM operating_expenses')).rows[0].amount);
+ if(amount>0n)throw Error('new operating obligations block developer signing');
+}
 function actualAdapter(){
  const signer=new FileTestSigner(testKey('cost-signer'),'devnet'),recipient=testAddress('cost-recipient');
  const adapter=new SolanaChain(loadConfig({MODE:'test',CLUSTER:'devnet',BROADCAST_ENABLED:'true',MASTER_PAUSE:'false',TREASURY:signer.publicKey.toBase58(),OPERATIONS:recipient}),signer);
@@ -48,8 +64,8 @@ function actualAdapter(){
  vi.spyOn(adapter,'broadcast').mockResolvedValue();
  return {adapter,signer,recipient};
 }
-beforeAll(async()=>{await admin.pool.query(`CREATE SCHEMA ${schema}`);const url=new URL(base);url.searchParams.set('options','-c search_path='+schema);db=new Store(url.toString());await migrate(db);await db.bindMode('demo');chain=new ControlledChain(db);await chain.init();});
-beforeEach(async()=>{await db.pool.query('TRUNCATE intents,attempts,execution_recoveries,ledger_events,postings,leases,jobs,incidents,operator_audit,chain_receipts,demo_chain,documents CASCADE');await db.pool.query("UPDATE control SET paused=false,reason='test'");engine=new Engine(db,'demo');chain=new ControlledChain(db);lease=(await db.lease('execution',300))!;await db.tx(t=>db.move(t,'capital',SOL,'external:test','reserve',100000n));});
+beforeAll(async()=>{await admin.pool.query(`CREATE SCHEMA ${schema}`);const url=new URL(base);url.searchParams.set('options','-c search_path='+schema);db=new Store(url.toString());await migrate(db);await db.bindMode('demo');chain=new ControlledChain(db);await chain.init();await expenseFixtureTables();});
+beforeEach(async()=>{await db.pool.query('TRUNCATE intents,attempts,execution_recoveries,ledger_events,postings,leases,jobs,incidents,operator_audit,chain_receipts,demo_chain,documents,operating_expense_payments,operating_expenses CASCADE');await db.pool.query("UPDATE control SET paused=false,reason='test'");engine=new Engine(db,'demo');chain=new ControlledChain(db);lease=(await db.lease('execution',300))!;await db.tx(t=>db.move(t,'capital',SOL,'external:test','reserve',100000n));});
 afterAll(async()=>{await db?.close();await admin.pool.query(`DROP SCHEMA ${schema} CASCADE`);await admin.close();});
 describe('Execution orchestration regressions',()=>{
  it('backoffs a bad unsigned route without starving unrelated work and preserves retries across restart',async()=>{
@@ -80,6 +96,29 @@ describe('Execution orchestration regressions',()=>{
  it('rechecks the database pause immediately at the signer boundary',async()=>{
   await intent('paused','TOKEN');chain.beforeSigning=async()=>{await db.pool.query('UPDATE control SET paused=true');};
   await runIntent(engine,chain,'paused',lease);expect(chain.signed).toHaveLength(0);expect(await db.balance('TOKEN','reserve:paused')).toBe(100n);expect((await status('paused')).status).toBe('waiting_for_route');
+ });
+ it.each([1,2])('checks newly approved expenses under lock at authorization boundary %s before actual signing',async boundary=>{
+  const {adapter,signer,recipient}=actualAdapter(),i=await intent('expense-race');
+  i.expected={...i.expected,purpose:'developer_payout',sourceTokenAccount:signer.publicKey.toBase58(),transfers:[{owner:recipient,destination:recipient,amount:'100',entitlements:[]}]};await db.pool.query('UPDATE intents SET expected=$2 WHERE id=$1',[i.id,JSON.stringify(i.expected)]);engine=new Engine(db,'test');
+  let externalReads=0;const sign=vi.spyOn(signer,'sign'),prepare=vi.spyOn(adapter,'prepare'),locked=vi.fn(lockedExpenseCheck);
+  const options={authorizeNewSigning:async()=>{externalReads++;expect((await db.pool.query('SELECT count(*)::int AS n FROM operating_expenses')).rows[0].n).toBe(0);if(externalReads===boundary)await approveFixtureExpense('during-route');},authorizeNewSigningLocked:locked};
+  const run=runIntent(engine,adapter,i.id,lease,undefined,options);if(boundary===1)await expect(run).rejects.toThrow('new operating obligations');else await run;
+  expect(externalReads).toBe(boundary);expect(locked).toHaveBeenCalledTimes(boundary);expect(prepare).toHaveBeenCalledTimes(boundary===1?0:1);expect(sign).not.toHaveBeenCalled();expect(adapter.broadcast).not.toHaveBeenCalled();expect((await db.pool.query('SELECT * FROM attempts')).rowCount).toBe(0);expect(await db.balance(SOL,i.expected.from)).toBe(100n);
+ });
+ it('rechecks locked obligations before rebroadcast but allows paused original-signature finality accounting',async()=>{
+  const {adapter,signer,recipient}=actualAdapter(),i=await intent('resend-expense-race');i.expected={...i.expected,purpose:'developer_payout',sourceTokenAccount:signer.publicKey.toBase58(),transfers:[{owner:recipient,destination:recipient,amount:'100',entitlements:[]}]};await db.pool.query('UPDATE intents SET expected=$2 WHERE id=$1',[i.id,JSON.stringify(i.expected)]);engine=new Engine(db,'test');
+  const sign=vi.spyOn(signer,'sign');await expect(runIntent(engine,adapter,i.id,lease,'after_sign',{authorizeNewSigning:async()=>{},authorizeNewSigningLocked:lockedExpenseCheck})).rejects.toThrow('INJECTED_CRASH');const original=await signature(i.id);
+  const locked=vi.fn(lockedExpenseCheck);await runIntent(engine,adapter,i.id,lease,undefined,{authorizeNewSigning:async()=>{await approveFixtureExpense('before-resend');},authorizeNewSigningLocked:locked});
+  expect(locked).toHaveBeenCalledOnce();expect(sign).toHaveBeenCalledOnce();expect(adapter.broadcast).not.toHaveBeenCalled();expect(await signature(i.id)).toBe(original);expect((await status(i.id)).status).toBe('unknown');expect(await db.balance(SOL,i.expected.from)).toBe(100n);
+  await db.pool.query('UPDATE control SET paused=true');vi.mocked(adapter.inspect).mockResolvedValue({status:'finalized',signature:original,slot:600,fee:'5000',rent:'0',transfers:[{instruction:'0',asset:SOL,source:signer.publicKey.toBase58(),destination:recipient,amount:'100'}]});
+  const deny=vi.fn(async()=>{throw Error('new signing denied');});await runIntent(engine,adapter,i.id,lease,undefined,{recoveryOnly:true,authorizeNewSigning:deny,authorizeNewSigningLocked:deny});await runIntent(engine,adapter,i.id,lease,undefined,{recoveryOnly:true,authorizeNewSigning:deny,authorizeNewSigningLocked:deny});
+  expect(deny).not.toHaveBeenCalled();expect((await status(i.id)).status).toBe('finalized');expect(await db.balance(SOL,i.expected.from)).toBe(0n);expect(await db.balance(SOL,'reserve')).toBe(95000n);expect((await db.pool.query('SELECT * FROM chain_receipts')).rowCount).toBe(1);expect(adapter.broadcast).not.toHaveBeenCalled();
+ });
+ it('rejects a prepared signature already attributed to an expense without broadcasting or releasing its reservation',async()=>{
+  const i=await intent('expense-signature-race'),prepare=chain.prepare.bind(chain),broadcast=vi.spyOn(chain,'broadcast'),inspect=vi.spyOn(chain,'inspect');
+  vi.spyOn(chain,'prepare').mockImplementation(async(current,guard)=>{const signed=await prepare(current,guard);await approveFixtureExpense('same-transaction');await db.tx(async t=>{await db.lock(t);await db.move(t,'expense-paid:principal',SOL,'reserve','external:operating-expense',100n);await db.move(t,'expense-paid:fee',SOL,'reserve','external:network',5000n);await db.event(t,'expense-paid','operating_expense_paid',[],{signature:signed.signature,testOnly:true});await t.query('INSERT INTO operating_expense_payments(id,event_id,expense_id,amount,fee,signature,instruction,slot,source,destination,evidence_hash,actor) VALUES($1,$2,$3,100,5000,$4,$5,600,$6,$7,$8,$9)',['paid','expense-paid','same-transaction',signed.signature,'0',testAddress('expense-treasury'),testAddress('expense-payee'),'fixture','test']);});return signed;});
+  await runIntent(engine,chain,i.id,lease);
+  expect(broadcast).not.toHaveBeenCalled();expect(inspect).not.toHaveBeenCalled();expect((await db.pool.query('SELECT * FROM attempts')).rowCount).toBe(0);expect((await db.pool.query('SELECT * FROM chain_receipts')).rowCount).toBe(0);expect((await status(i.id)).status).toBe('waiting_for_route');expect(await db.balance(SOL,i.expected.from)).toBe(100n);expect(await db.balance(SOL,'reserve')).toBe(94900n);expect((await db.pool.query('SELECT paused FROM control')).rows[0].paused).toBe(true);expect((await db.pool.query("SELECT * FROM incidents WHERE kind='execution_signature_already_attributed'")).rowCount).toBe(1);
  });
  it('the actual Solana adapter invokes authorization after building and before the signer',async()=>{
   const signer=new FileTestSigner(testKey('execution-signer'),'devnet'),recipient=testAddress('execution-recipient');

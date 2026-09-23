@@ -8,6 +8,8 @@ export interface ExecutionOptions {
  recoveryOnly?:boolean;
  /** Re-read effective approval, funding route and execution conditions; throw to deny. */
  authorizeNewSigning?:(intent:Intent)=>Promise<void>;
+ /** Recheck ledger obligations under the final control lock after external reads; no network I/O. */
+ authorizeNewSigningLocked?:(intent:Intent,tx:Tx)=>Promise<void>;
 }
 export const retryDelaySeconds=(failures:number)=>Math.min(300,2**Math.min(9,Math.max(1,failures)));
 const inflightStatuses="('signed','submitted','unknown','confirmed','needs_review')";
@@ -33,19 +35,30 @@ export async function runIntent(engine:Engine,chain:Chain,id:string,lease:Lease,
     // This is a cash authorization only; the adapter must bind a separate transaction cost cap.
     ensure(availableCost>=BigInt(i.expected.maxFee),'cost reserve too small');i.expected={...i.expected,maxTotalCost:availableCost.toString()};
     const busy=await t.query(`SELECT id FROM intents WHERE id<>$1 AND status IN ${inflightStatuses}`,[id]);ensure(!busy.rowCount,'reconcile in-flight treasury operations first');
+    await options.authorizeNewSigningLocked?.(i,t);
+    await db.fence(t,lease);
    });
   };
   // Preserve direct-call guard failures for operators. tick() fairly defers denied unsigned work.
   await authorize();
   let signed:Signed;
   try {signed=await chain.prepare(i,authorize);}catch(e){await defer(engine,id,(e as Error).message,lease);return;}
-  await db.tx(async t=>{await db.fence(t,lease);await db.lock(t);
+  const persisted=await db.tx(async t=>{await db.fence(t,lease);await db.lock(t);
+   // Expense recording takes the same control lock and rejects existing attempts in the other order.
+   const expenses=(await t.query("SELECT to_regclass('operating_expense_payments') AS relation")).rows[0].relation;
+   if(expenses&&(await t.query('SELECT id FROM operating_expense_payments WHERE signature=$1 LIMIT 1',[signed.signature])).rowCount){
+    const reason='Prepared signature already attributed to an operating expense; reservation retained for review';
+    await defer(engine,id,reason,lease,t);
+    await t.query('INSERT INTO incidents(kind,details) VALUES($1,$2)',['execution_signature_already_attributed',canonical({intentId:id,signature:signed.signature})]);
+    await t.query('UPDATE control SET paused=true,reason=$1',[reason]);return false;
+   }
    if(signed.approvedPlan){ensure(signed.approvedPlan.inputAsset===i.expected.inputAsset&&signed.approvedPlan.outputAsset===i.expected.outputAsset&&signed.approvedPlan.from===i.expected.from&&signed.approvedPlan.to===i.expected.to,'prepared plan changed economic identity');ensure(BigInt(signed.approvedPlan.minOutput??'0')>=BigInt(i.expected.minOutput??'0'),'prepared quote loosened minimum output');i.expected=signed.approvedPlan;}
    const nativeCap=maximumNativeCost(i);ensure(nativeCap!==null&&nativeCap<=BigInt(String(i.expected.maxTotalCost)),'prepared transaction omitted or exceeded its native cost bound');
    await t.query('UPDATE intents SET expected=$2,last_attempt_at=clock_timestamp() WHERE id=$1',[id,canonical(i.expected)]);
    await t.query(`INSERT INTO attempts(intent_id,attempt_no,signature,signed_payload,blockhash,last_valid_height,approved_message_hash) SELECT $1,coalesce(max(attempt_no),0)+1,$2,$3,$4,$5,$6 FROM attempts WHERE intent_id=$1`,[id,signed.signature,signed.bytes,signed.blockhash,signed.lastValidHeight,signed.messageHash]);
    await t.query("UPDATE intents SET status='signed',reason=null WHERE id=$1",[id]);
   });
+  if(persisted===false)return;
   if(crash==='after_sign')throw Error('INJECTED_CRASH after_sign');
   attempt=(await db.pool.query('SELECT * FROM attempts WHERE signature=$1',[signed.signature])).rows[0];
  }
@@ -69,11 +82,15 @@ export async function runIntent(engine:Engine,chain:Chain,id:string,lease:Lease,
   await t.query('UPDATE intents SET status=$2,reason=$3 WHERE id=$1',[id,review?'needs_review':'unknown',review?'Original signature requires finalized history evidence; no replacement authorized':null]);
  });
  if(options.recoveryOnly||review)return;
- if(engine.mode==='live'){
-  if(!options.authorizeNewSigning)return;
-  try{await options.authorizeNewSigning(i);}catch{return;}
- }
- if((await db.pool.query('SELECT paused FROM control')).rows[0].paused)return;
+ if(engine.mode==='live'&&!options.authorizeNewSigning)return;
+ try{
+  await options.authorizeNewSigning?.(i);
+  await db.tx(async t=>{await db.fence(t,lease);await db.lock(t);
+   ensure(!(await t.query('SELECT paused FROM control')).rows[0].paused,'transaction rebroadcast paused');
+   await options.authorizeNewSigningLocked?.(i,t);
+   await db.fence(t,lease);
+  });
+ }catch{return;}
  // While unpaused, only the original bytes may be resent and only after adapter validity checks.
  try{await chain.broadcast(signed);}catch{/* unknown outcome remains durable; reconcile on next tick */}
  if(crash==='after_send')throw Error('INJECTED_CRASH after_send');
