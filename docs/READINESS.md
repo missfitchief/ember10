@@ -3,7 +3,7 @@
 | Area | Status |
 |---|---|
 | Public UI | Implemented; desktop and mobile inspected, real prelaunch discovery, empty/error/demo states verified |
-| Vercel deployment | Recorded synthetic dashboard at https://ember5-pilot.vercel.app; read-only API and exports; no financial worker or signing |
+| Vercel deployment | EMBER10 real-source prelaunch correction prepared for existing URL; exact publication result is recorded in deployment evidence; no financial worker or signing |
 | API and operator boundary | Implemented; address/limit validation, rate limiting, bearer authentication and public write rejection tested |
 | Core accounting | Implemented and tested against PostgreSQL: integer allocation, budgets, source attribution, liabilities, immutable records and recovery |
 | Durable worker | Runs independently; persisted intents, signed bytes, lease fencing, restart reconciliation and synthetic replay tested |
@@ -20,7 +20,7 @@
 
 ## External configuration required
 
-- Resolve the EMBER5 name collision and choose final branding. Do not use the competing mint or trade URL.
+- EMBER10 is the current product name. Do not use the competing EMBER5 mint as this project identity or buy URL.
 - Create/verify our own mint and pool in a separately approved launch; confirm actual supply, decimals, legacy SPL semantics, authorities and quote asset.
 - Configure a dedicated treasury, operations recipient, approved fee sender, confirmed Keep-it module and actual migration/fee route.
 - Publish treasury, operations, team, vault, escrow and other justified exclusions. Custody owners are treated as owners; beneficial ownership is not invented.
@@ -36,3 +36,7 @@
 No token extensions, transfer hooks/taxes, rebasing assets, claim flow or native Ember Stock Basket integration. Jupiter routes outside the decoded direct exact-input subset remain pending. No automatic replacement for an ambiguously expired transaction. Treasury operations serialize while unresolved. Current implementation prioritizes correct obligations over high-volume throughput.
 
 `APPROVAL_FILE` has a strict schema in `packages/core/approval.ts`; setting its filename alone does not authorize a pilot. The application checks identities, approved assets, expiry, budget bounds and mandatory exclusions. Real signing additionally requires the remote signer and master broadcast switches. This source delivery is not approval to deploy or spend.
+
+## EMBER10 correction
+
+New prospective purchases use policy version 2 with ten equal basket budgets; historical version-one five-asset records remain intact. Real catalogue availability does not verify investment eligibility. The hosted ledger and OPS/DEV amounts are unavailable until an actual authoritative backend is configured. User confirmed that the existing OPS/DEV rules remain unchanged.

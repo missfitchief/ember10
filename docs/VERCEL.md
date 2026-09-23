@@ -1,21 +1,34 @@
-# Vercel dashboard deployment
+# EMBER10 Vercel deployment
 
-Project: `plavi/ember5-pilot`. Production dashboard: **https://ember5-pilot.vercel.app**. This is a regular authenticated account deployment; no temporary claim is required.
+Project: `plavi/ember5-pilot`. Public URL: https://ember5-pilot.vercel.app. The existing project and URL are retained.
 
-The Vercel project hosts the React dashboard and a read-only function. By default it serves a **recorded synthetic demo**, captured from the separate PostgreSQL demo ledger by `node scripts/prepare-hosted-demo.mjs`. It does not run the financial worker, sign, broadcast, or invent new ledger activity. The visible banner and status endpoint identify this explicitly. Wallet lookup and JSON/CSV exports use the original public records.
+## Runtime boundary
 
-`vercel.json` builds `dist/web` and routes `/api/*` into the single public function. `.vercelignore` excludes local databases, test keys, environment files, logs and dependencies from source upload. No operator route is exposed.
+`vercel.json` builds `dist/web` and rewrites `/api/*` to `api/index.ts`. The normal function reads Ember's actual public catalogue through a bounded, cached server-side adapter. It does not import `deploy/hosted-demo.json`, seed a database, sign, broadcast or run a settlement worker. A failed source produces an unavailable state, or a dated last-good observation while the same instance retains one. A cold instance has no invented substitute.
+
+The source exposes reported USD market caps, not a verified circulating-supply contract. Source-flagged suspect entries and conflicting duplicate valuations remain inspectable but do not receive normal ranks. The entire response is processed before the public API paginates its projection. Public coverage records show unresolved completeness and eligibility limitations.
+
+The public host has no configured project mint, funded epoch or authoritative financial ledger. Those values remain unavailable. Synthetic history stays in the explicitly isolated local demo workflow. The frontend's observed ranking, eligibility and funded-basket views are separate.
+
+## Validation and publication
 
 ```sh
 npm run build
-npm test -- tests/hosted.test.ts
-npx vercel@59.25.4 deploy --prod --yes
+npm test
+npm run preview:hosted
 ```
 
-Vercel CLI 59.25.4 supports a temporary deployment without account login. Use the returned claim link to move it into your Vercel account before its stated expiry. For an authenticated permanent deployment, use `vercel login` followed by `vercel deploy --prod`.
+Check the actual app at `http://127.0.0.1:5180`. Independent review must cover the tested source commit, real-source ranking evidence and desktop/mobile implementation. Deployment then sets `EMBER10_REVISION` to that exact source commit:
 
-To connect the real public API later, set the server-side `EMBER5_API_ORIGIN` to its HTTPS origin. Only approved GET endpoints are forwarded; no caller cookies, authorization headers, operator routes or arbitrary URLs are accepted. If that configured backend fails, the function returns an unavailable error rather than substituting demo values.
+```sh
+vercel deploy --prod --yes --env EMBER10_REVISION=<tested-commit>
+node scripts/verify-public.mjs https://ember5-pilot.vercel.app <tested-commit> <proof-output.json>
+```
 
-The settlement service still requires PostgreSQL and a persistent Node worker on its own host. Vercel request handlers do not become the authoritative ledger. See `RUNBOOK.md` and `READINESS.md` for the separate funded-pilot requirements. Publishing this dashboard does not enable mainnet execution.
+The deployed `/api/status` and `/api/overview` expose this revision. A successful local build or Vercel READY result alone is not verification of the public issue. Record public HTTP checks and screenshots after the alias points to the new deployment.
 
-Primary deployment references checked 23 September 2026: https://vercel.com/docs/frameworks/frontend/vite and https://vercel.com/docs/functions/runtimes/node-js. Temporary deployment support was verified in the installed CLI's `deploy --help` output.
+For a separately hosted real ledger, the existing server-only `EMBER5_API_ORIGIN` remains compatible. The adapter checks the backend's mode and rejects demo/test status. A failed configured backend returns an error, never synthetic fallback. The external ledger still requires its own PostgreSQL service and durable Node worker; this deployment does not activate either.
+
+Secrets, local databases, runtime keys, logs and Vercel account metadata are excluded from Git and deployment uploads. Tests remain in build inputs because existing development scripts import isolated fixtures during type checking; the production function's dependency graph does not import them. Supplied design references and dated snapshots are review inputs outside the application.
+
+Exact deployment IDs, final revision and verification results belong to the adjacent `EMBER10-review` evidence directory and `docs/deployment.json`.
