@@ -9,7 +9,7 @@ export interface Intent {id:string;epoch_id:string|null;kind:'swap'|'buyback'|'p
 export interface Signed {signature:string;bytes:Buffer;blockhash:string;lastValidHeight:number;messageHash:string;approvedPlan?:Plan}
 export interface Outcome {status:'finalized'|'failed'|'pending'|'unknown'|'expired';slot?:number;signature:string;fee?:string;rent?:string;input?:string;output?:string;transfers?:TransferEvidence[];burned?:string;error?:unknown;raw?:unknown;testOnly?:boolean;settlementPrice?:Price}
 export interface Chain {
- mode:'demo'|'test'|'live'; prepare(intent:Intent):Promise<Signed>;
+ mode:'demo'|'test'|'live'; prepare(intent:Intent,authorizeSigning?:()=>Promise<void>):Promise<Signed>;
  inspect(intent:Intent,signed:Signed):Promise<Outcome>;
  broadcast(signed:Signed):Promise<void>;
  destination(owner:string,asset:string):string;
@@ -144,13 +144,28 @@ export class Engine {
   if((await t.query('SELECT id FROM intents WHERE id=$1',[id])).rowCount)return id;const amount=await this.db.balance(SOL,id,t);if(amount===0n)return null;
   await this.addIntent(t,{id,epoch_id:epoch,kind:'operations',asset:SOL,amount:amount.toString(),status:'planned',expected:{inputAsset:SOL,from:id,maxFee:this.transactionFeeCap.toString(),costAccount:'cost:'+epoch,sourceTokenAccount:treasury,transfers:[{owner:recipient,destination:recipient,amount:amount.toString(),entitlements:[]}]}});return id;
  });}
- async reconcile(actual:{asset:string;amount:string;slot:number}[]){const balances=await this.db.balances();const reports=[];
-  for(const a of actual){const expected=balances.filter(b=>b.asset===a.asset&&!b.account.startsWith('external:')).reduce((s,b)=>s+BigInt(b.amount),0n);
-   const inflight=(await this.db.pool.query("SELECT id FROM intents WHERE (asset=$1 OR expected->>'outputAsset'=$1) AND status IN ('signed','submitted','unknown','confirmed','needs_review')",[a.asset])).rows;
-   const delta=BigInt(a.amount)-expected;const state=inflight.length?'in_flight':delta===0n?'balanced':delta<0n?'deficit':'unclassified_surplus';
-   const report={...a,expected:expected.toString(),delta:delta.toString(),state,inflight:inflight.map(x=>x.id)};reports.push(report);
-   if(!inflight.length&&delta!==0n)await this.db.incident('reconciliation_'+state,report);
-  }await this.db.doc('reconciliation',{at:new Date().toISOString(),reports});return reports;
+ async reconcile(actual:{asset:string;amount:string;slot:number}[]){
+  return this.db.tx(async t=>{
+   // Every accounting mutation uses the control lock. Read ledger and pending work coherently.
+   await this.db.lock(t);const balances=await this.db.balances(t);const reports=[];
+   const intents=(await t.query("SELECT id,asset,amount::text,expected FROM intents WHERE status IN ('signed','submitted','unknown','confirmed','needs_review')")).rows as Intent[];
+   const latest=(await t.query("SELECT coalesce(max((evidence->>'slot')::bigint),0)::text AS slot FROM attempts WHERE status IN ('finalized','failed')")).rows[0];
+   for(const a of actual){
+    ensure(Number.isSafeInteger(a.slot)&&a.slot>0&&/^\d+$/.test(a.amount),'invalid reconciliation observation');
+    const expected=balances.filter(b=>b.asset===a.asset&&!b.account.startsWith('external:')).reduce((n,b)=>n+BigInt(b.amount),0n);
+    const inflight=intents.filter(i=>i.asset===a.asset||i.expected.outputAsset===a.asset||a.asset===SOL);
+    const debitBound=inflight.reduce((n,i)=>n+(i.asset===a.asset?BigInt(i.amount):0n)+(a.asset===SOL?BigInt(String(i.expected.maxTotalCost??i.expected.maxFee)):0n),0n);
+    const mayCredit=inflight.some(i=>i.expected.outputAsset===a.asset);
+    const delta=BigInt(a.amount)-expected;
+    const stale=a.slot<Number(latest.slot);
+    // An in-flight token transfer also spends SOL fees/rent, but cannot hide an arbitrary deficit.
+    const explained=inflight.length>0&&(delta===0n||delta<0n&&-delta<=debitBound||delta>0n&&mayCredit);
+    const state=stale?'stale_observation':explained?'in_flight':delta===0n?'balanced':delta<0n?'deficit':'unclassified_surplus';
+    const report={...a,expected:expected.toString(),delta:delta.toString(),state,inflight:inflight.map(i=>i.id),maximumPendingDebit:debitBound.toString(),ledgerFinalizedSlot:Number(latest.slot)};reports.push(report);
+    if(!stale&&!explained&&delta!==0n){await t.query('INSERT INTO incidents(kind,details) VALUES($1,$2)',['reconciliation_'+state,canonical(report)]);await t.query('UPDATE control SET paused=true,reason=$1',['reconciliation_'+state]);}
+   }
+   await this.db.doc('reconciliation',{at:new Date().toISOString(),reports},t);return reports;
+  });
  }
  async fundingRoute(expected:unknown,observed:unknown){if(hash(expected)!==hash(observed)){await this.db.incident('funding route changed',{expected,observed});return false;}return true;}
 }

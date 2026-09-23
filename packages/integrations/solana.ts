@@ -51,8 +51,9 @@ export class SolanaChain implements Chain {
   if(this.config.MODE==='live')ensure(genesis===MAINNET_GENESIS,'wrong genesis for live');return genesis;}
  async destinationStatus(owner:string,asset:string){const ata=new PublicKey(this.destination(owner,asset));const info=await this.connection.getAccountInfo(ata,'finalized');if(!info)return {exists:false,valid:true,rent:BigInt(await this.connection.getMinimumBalanceForRentExemption(ACCOUNT_SIZE,'finalized'))};
   const account=await getAccount(this.connection,ata,'finalized',TOKEN_PROGRAM_ID);return {exists:true,valid:account.owner.toBase58()===owner&&account.mint.toBase58()===asset&&!account.isFrozen,rent:0n};}
- async prepare(i:Intent):Promise<Signed>{
+ async prepare(i:Intent,authorizeSigning?:()=>Promise<void>):Promise<Signed>{
   ensure(!this.config.MASTER_PAUSE,'master pause prevents new signing');
+  ensure(this.mode!=='live'||authorizeSigning,'live preparation requires a fresh signing authorization');
   await this.verifyCluster();const payer=this.signer.publicKey;ensure(!this.config.TREASURY||payer.toBase58()===this.config.TREASURY,'signer/treasury mismatch');
   const ix:TransactionInstruction[]=[];let tx:VersionedTransaction;
   const addAta=(owner:PublicKey,mint:PublicKey)=>{const ata=getAssociatedTokenAddressSync(mint,owner,true);ix.push(createAssociatedTokenAccountIdempotentInstruction(payer,ata,owner,mint));return ata;};
@@ -61,7 +62,7 @@ export class SolanaChain implements Chain {
     const market=this.simulatedMarket.signer,mint=new PublicKey(i.expected.outputAsset!);const metadata=await getMint(this.connection,mint,'finalized');ensure(metadata.freezeAuthority===null,'test mint freeze authority unsupported');
     const dest=addAta(payer,mint);ix.push(SystemProgram.transfer({fromPubkey:payer,toPubkey:market.publicKey,lamports:BigInt(i.amount)}));
     ix.push(createTransferCheckedInstruction(getAssociatedTokenAddressSync(mint,market.publicKey),mint,dest,market.publicKey,this.simulatedMarket.outputFor(i),metadata.decimals));
-   }else {ensure(this.swapBuilder,'live swap validator/build adapter not configured');tx=await this.swapBuilder(i);const fee=await this.connection.getFeeForMessage(tx.message,'finalized');ensure(fee.value!==null&&BigInt(fee.value)<=BigInt(i.expected.maxFee),'fee cap');const signed=await this.signer.sign(tx);return this.checkedSigned(signed,i);}
+   }else {ensure(this.swapBuilder,'live swap validator/build adapter not configured');tx=await this.swapBuilder(i);const fee=await this.connection.getFeeForMessage(tx.message,'finalized');ensure(fee.value!==null&&BigInt(fee.value)<=BigInt(i.expected.maxFee),'fee cap');await authorizeSigning?.();const signed=await this.signer.sign(tx);return this.checkedSigned(signed,i);}
   }else if(i.kind==='burn'){
    const mint=new PublicKey(i.asset),metadata=await getMint(this.connection,mint,'finalized');ix.push(createBurnCheckedInstruction(getAssociatedTokenAddressSync(mint,payer),mint,payer,BigInt(i.amount),metadata.decimals));
   }else{
@@ -78,7 +79,7 @@ export class SolanaChain implements Chain {
   const rentBound=BigInt(await this.connection.getMinimumBalanceForRentExemption(ACCOUNT_SIZE,'finalized'))*BigInt(ataCount);
   ensure(rentBound+BigInt(i.expected.maxFee)<=BigInt(String(i.expected.maxTotalCost??'0')),'rent/fee allowance insufficient; defer before signing');
   tx=new VersionedTransaction(legacy.compileMessage());if(this.simulatedMarket&&(i.kind==='swap'||i.kind==='buyback'))tx.sign([this.simulatedMarket.signer]);
-  tx=await this.signer.sign(tx);const fee=await this.connection.getFeeForMessage(tx.message,'finalized');ensure(fee.value!==null&&BigInt(fee.value)<=BigInt(i.expected.maxFee),'transaction fee cap');
+  const fee=await this.connection.getFeeForMessage(tx.message,'finalized');ensure(fee.value!==null&&BigInt(fee.value)<=BigInt(i.expected.maxFee),'transaction fee cap');await authorizeSigning?.();tx=await this.signer.sign(tx);
   return this.checkedSigned(tx,i,block.lastValidBlockHeight);
  }
  async checkedSigned(tx:VersionedTransaction,i:Intent,height?:number){
