@@ -24,7 +24,7 @@ import {clientKey,proxyHeaders,takeRateLimit} from '../apps/api/proxy.js';
 import {admitFundedMint} from '../packages/core/admission.js';
 import {Connection,PublicKey} from '@solana/web3.js';
 import {MAINNET_GENESIS} from '../packages/core/model.js';
-import {status as apiStatus} from '../apps/api/queries.js';
+import {status as apiStatus,transparency} from '../apps/api/queries.js';
 
 const base=process.env.TEST_DATABASE_URL??'postgresql://ember5:local-development-only@127.0.0.1:55432/ember5_test';
 const admin=new Store(base),schema='orchestration_'+Date.now()+'_'+process.pid;
@@ -157,4 +157,14 @@ it('a persisted pause blocks new holder reservations inside the ledger transacti
  const asset=candidates().find(x=>x.mint===row.expected.outputAsset)!,before=await db.balance(asset.mint,'liabilities');await db.pool.query('UPDATE control SET paused=true');
  await expect(engine.schedulePayout({asset,chain,price:{microUsd:'1000000',at:Date.now(),source:'test'},ata:new Map(f.owners.map(o=>[o,{exists:true,valid:true,costMicroUsd:0n}])),policy:policy(),costAccount:'reserve',lease,sourceTokenAccount:chain.destination(f.treasury,asset.mint)})).rejects.toThrow('reservations paused');
  expect(await db.balance(asset.mint,'liabilities')).toBe(before);expect((await db.pool.query('SELECT id FROM payout_batches')).rowCount).toBe(0);
+});
+it('recovery configuration needs no signer or effective approval while enabling new signing still requires both',()=>{
+ const env={MODE:'live',CLUSTER:'mainnet-beta',TREASURY:f.treasury,SECONDARY_RPC_URL:'https://history.example',BROADCAST_ENABLED:'false'};
+ const c=loadConfig(env);expect(c.BROADCAST_ENABLED).toBe(false);expect(c.SIGNER_URL).toBeUndefined();expect(c.APPROVAL_FILE).toBeUndefined();
+ expect(()=>loadConfig({...env,BROADCAST_ENABLED:'true'})).toThrow();
+});
+it('public accounting never labels an in-flight or stale reconciliation as reconciled',async()=>{
+ await db.doc('reconciliation',{at:new Date().toISOString(),reports:[{state:'in_flight'}]});expect((await transparency(db)).accountingHealth).toBe('pending');
+ await db.doc('reconciliation',{at:new Date().toISOString(),reports:[{state:'stale_observation'}]});expect((await transparency(db)).accountingHealth).toBe('stale');
+ await db.doc('reconciliation',{at:new Date().toISOString(),reports:[{state:'balanced'}]});expect((await transparency(db)).accountingHealth).toBe('reconciled');
 });

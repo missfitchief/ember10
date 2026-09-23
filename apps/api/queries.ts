@@ -38,6 +38,9 @@ export async function transparency(db:Store){
  const reconciliation=(await db.pool.query("SELECT body FROM documents WHERE kind='reconciliation' ORDER BY created_at DESC LIMIT 1")).rows[0]?.body??null;
  const incidents=(await db.pool.query('SELECT kind,created_at FROM incidents WHERE resolved_at IS NULL ORDER BY id DESC LIMIT 10')).rows;
  const balances=await db.balances(),recorded=received!=='0'||balances.length>0||accrued.length>0||!!reconciliation;
- return {status:recorded?'available':'unavailable',receivedLamports:recorded?received:null,assets,accrued,finalizedPayoutTransactions:recorded?txCount:null,burns,balances,reconciliation,incidents,accountingHealth:recorded?(incidents.length?'needs_review':reconciliation?'reconciled':'not_yet_verified'):'unavailable'};
+ const changed=(await db.pool.query('SELECT max(created_at) AS at FROM ledger_events')).rows[0].at;
+ const reports=reconciliation?.reports??[],asOf=Date.parse(reconciliation?.at??''),current=Number.isFinite(asOf)&&Date.now()-asOf<=180000&&(!changed||new Date(changed).getTime()<=asOf);
+ const health=incidents.length?'needs_review':reports.some((r:{state:string})=>r.state==='stale_observation')||reconciliation&&!current?'stale':reports.length&&reports.every((r:{state:string})=>r.state==='balanced')?'reconciled':reports.some((r:{state:string})=>r.state==='in_flight')?'pending':'not_yet_verified';
+ return {status:recorded?'available':'unavailable',receivedLamports:recorded?received:null,assets,accrued,finalizedPayoutTransactions:recorded?txCount:null,burns,balances,reconciliation,incidents,accountingHealth:recorded?health:'unavailable'};
 }
 export function csv(rows:Record<string,unknown>[]){const keys=['asset','owner','amount','paid','unpaid'];const cell=(v:unknown)=>'"'+String(v??'').replace(/^[=+@-]/,"'$&").replaceAll('"','""')+'"';return keys.join(',')+'\n'+rows.map(row=>keys.map(k=>cell(row[k])).join(',')).join('\n');}

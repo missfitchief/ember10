@@ -30,9 +30,13 @@ export const configSchema=z.object({
  if(c.DEVELOPER_PAYOUT_WALLET===c.TREASURY&&c.DEVELOPER_PAYOUT_WALLET)fail('developer destination must differ from treasury');
  if(c.MODE==='live'){
   if(c.CLUSTER!=='mainnet-beta')fail('live requires mainnet identity');
-  if(!c.OUR_MINT||!c.OUR_POOL||!c.TREASURY||!c.OPERATIONS||!c.SECONDARY_RPC_URL||!c.JUPITER_API_KEY)fail('live configuration incomplete');
-  if(!c.SIGNER_URL||c.SIGNER_FILE)fail('live requires remote secret-store signer; file keys forbidden');
-  if(!c.APPROVAL_FILE)fail('separate signed-off pilot approval required');
+  if(!c.TREASURY||!c.SECONDARY_RPC_URL)fail('live inspection requires treasury and independent history provider');
+  if(c.SIGNER_FILE)fail('live file keys forbidden');
+  if(c.BROADCAST_ENABLED){
+   if(!c.OUR_MINT||!c.OUR_POOL||!c.OPERATIONS||!c.JUPITER_API_KEY)fail('live signing configuration incomplete');
+   if(!c.SIGNER_URL)fail('live signing requires remote secret-store signer');
+   if(!c.APPROVAL_FILE)fail('separate signed-off pilot approval required');
+  }
  }
  if(c.OUR_MINT==='9LYpEqkpgCoZ99NsrPuoobDZsShteajdqtCtpKscStq7')fail('competitor mint is forbidden as project identity');
 });
