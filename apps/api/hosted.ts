@@ -2,6 +2,7 @@ import bs58 from 'bs58';
 import { overview, projectIdentity, publicPolicy, revision } from './overview.js';
 import type { PublicWalletRewards } from '../../packages/shared/public.js';
 import { proxyHeaders } from './proxy.js';
+import { tokenImage } from './token-image.js';
 
 const headers = { 'cache-control': 'no-store', 'x-content-type-options': 'nosniff' };
 const json = (body: unknown, status = 200) => Response.json(body, { status, headers });
@@ -42,6 +43,7 @@ export async function hostedRead(request: Request, backendOrigin = process.env.E
   if (!['GET', 'HEAD'].includes(request.method)) return json({ error: 'read_only', message: 'This host cannot start financial operations.' }, 405);
   const url = new URL(request.url);
   const route = url.searchParams.get('__route') ?? url.pathname.replace(/^\/api\//, '');
+  if (route === 'token-image') return tokenImage(request);
   if (route.startsWith('wallets/') && !validAddress(route.split('/')[1] ?? '')) return json({ error: 'invalid_request', message: 'Check the address and request parameters.' }, 400);
   if (!isPublicRoute(route)) return json({ error: 'not_found' }, 404);
   const limit = url.searchParams.get('limit') ?? '20';

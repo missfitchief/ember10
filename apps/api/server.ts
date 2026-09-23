@@ -15,6 +15,7 @@ import {developerPolicy} from '../../packages/core/developer-config.js';
 import {verifiedOperatorTransfer} from './operator-evidence.js';
 import {Engine} from '../../packages/core/engine.js';
 import {ensure} from '../../packages/core/model.js';
+import {tokenImage} from './token-image.js';
 export function createServer(db:Store,c:Config){
  const app=Fastify({logger:false,bodyLimit:8192,trustProxy:false});
  app.addHook('onRequest',async(req,reply)=>{reply.header('x-content-type-options','nosniff').header('referrer-policy','no-referrer');
@@ -24,6 +25,7 @@ export function createServer(db:Store,c:Config){
   }
  });
  app.setErrorHandler((error,req,reply)=>{const e=error as Error;const bad=e instanceof z.ZodError||e.message==='invalid address';return reply.code(bad?400:e.message==='epoch not found'?404:503).send({error:bad?'invalid_request':e.message==='epoch not found'?'not_found':'service_unavailable',message:bad?'Check the address and request parameters.':'This data is currently unavailable. No estimated values have been substituted.'});});
+ app.get('/api/token-image',async(req,reply)=>{const response=await tokenImage(new Request(new URL(req.url,'https://local.invalid'),{method:req.method,headers:typeof req.headers['if-none-match']==='string'?{'if-none-match':req.headers['if-none-match']}:{}}));response.headers.forEach((value,key)=>reply.header(key,value));return reply.code(response.status).send(req.method==='HEAD'?undefined:Buffer.from(await response.arrayBuffer()));});
  app.get('/api/overview',async(req,reply)=>{if(c.MODE==='demo'||c.MODE==='test')return reply.code(404).send({error:'not_available_in_demo'});const p=z.object({q:z.string().max(100).optional(),view:z.enum(['all','selection','excluded']).default('all'),offset:z.coerce.number().int().min(0).max(999999).default(0),limit:z.coerce.number().int().min(1).max(100).default(100)}).parse(req.query);return backendOverview(db,c,{query:p.q,offset:p.offset,limit:p.limit,view:p.view});});
  const page=z.object({limit:z.coerce.number().int().min(1).max(100).default(20),cursor:z.string().max(200).optional()});
  app.get('/api/status',()=>q.status(db,c));app.get('/api/project',()=>q.project(db,c));app.get('/api/basket',()=>q.basket(db));

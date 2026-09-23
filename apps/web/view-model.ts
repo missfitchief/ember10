@@ -12,7 +12,7 @@ export function safeUrl(value: string | null | undefined, hosts?: string[]) {
   try { const u = new URL(value); return u.protocol === 'https:' && !u.username && !u.password && (!hosts || hosts.includes(u.hostname)) ? u.href : null; } catch { return null; }
 }
 export const sourceUrl = (market: PublicMarket) => safeUrl(market.sourceUrl, ['embercurve.fun']);
-export const logoUrl = (value: string | null) => safeUrl(value, ['embercurve.fun', 'www.embercurve.fun', 'ipfs.io', 'gateway.pinata.cloud', 'arweave.net']);
+export { tokenImageUrl as logoUrl } from '../../packages/shared/token-image.js';
 export function dateTime(value: string | number | null | undefined) {
   if (value == null) return 'Not reported';
   const date = new Date(value);

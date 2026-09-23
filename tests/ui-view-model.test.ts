@@ -31,7 +31,7 @@ describe('Public UI adapters', () => {
     expect(safeUrl('javascript:alert(1)')).toBeNull();
     expect(safeUrl('https://user:secret@embercurve.fun/')).toBeNull();
     expect(logoUrl('https://example.com/token.png')).toBeNull();
-    expect(logoUrl('https://embercurve.fun/token.png')).toBe('https://embercurve.fun/token.png');
+    expect(logoUrl('https://embercurve.fun/token.png')).toBeNull();
     expect(logoUrl('http://embercurve.fun/token.png')).toBeNull();
   });
 
