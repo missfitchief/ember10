@@ -47,7 +47,23 @@ export function marketView(data: PublicOverview) {
     selectedLabel: `${data.selection.selectedCount} / ${data.selection.requiredCount} selected`,
   };
 }
-export const eligibilityLabel = (asset: PublicMarket) => asset.selected ? 'Selected · unfunded' : asset.eligibility === 'eligible' ? 'Eligible' : asset.eligibility === 'excluded' ? 'Excluded' : 'Not verified';
+export const eligibilityLabel = (asset: PublicMarket) => asset.selected ? 'Current eligible selection' : asset.eligibility === 'eligible' ? 'Eligible' : asset.eligibility === 'excluded' ? 'Excluded' : 'Not verified';
+
+export const phaseLabel = (data?: PublicOverview) => !data ? 'Status pending' : data.project.phase === 'prelaunch' ? 'Prelaunch' : 'Configured';
+export const settlementLabel = (data?: PublicOverview) => !data ? 'Not reported' : ({ not_configured: 'Not configured', paused: 'Paused', configured: 'Configured' }[data.settlement.status]);
+export function rewardStatusLabel(data?: PublicOverview) {
+  if (!data) return 'Reward status unavailable';
+  if (data.project.phase === 'prelaunch' && data.settlement.status === 'not_configured') return 'Prelaunch · rewards are not active';
+  return `Settlement ${settlementLabel(data).toLowerCase()} · inspect reward records`;
+}
+export function payoutStatusLabel(data?: PublicOverview) {
+  const enabled = data?.accounting.developerPayoutEnabled;
+  return enabled === true ? 'Enabled · subject to checks' : enabled === false ? 'Payouts disabled' : data?.settlement.status === 'not_configured' ? 'Payouts not active' : 'Payout status unreported';
+}
+/** Only the explicit backend lamport contract permits conversion to SOL. */
+export function accountingSol(value: string | null | undefined, accounting?: PublicOverview['accounting']) {
+  return accounting?.status === 'available' && accounting.unit === 'lamports' && value != null && /^\d+$/.test(value) ? `${units(value, 9)} SOL` : 'Unreported';
+}
 
 /** Counts describe different sets; inspecting a search never changes selection. */
 export function marketCounts(data: PublicOverview) {

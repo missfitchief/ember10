@@ -1,35 +1,79 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import type { PublicMarket, PublicOverview } from '../../packages/shared/public.js';
-import { Allocation, Empty, Icon, Skeleton } from './components.js';
+import { Flame, Icon } from './components.js';
 import { AssetDialog, Avatar } from './market.js';
-import { dateTime, eligibilityLabel, money, short, units } from './view-model.js';
+import { change, dateTime, money, rewardStatusLabel, short, units } from './view-model.js';
+import { observedTen } from './orbit-model.js';
 
-function FeeFlow() {
-  return <section className="fee-flow" aria-label="Proposed fee flow, not active rewards">
-    <div className="flow-end"><span className="flow-icon"><Icon name="rewards" /></span><div><span className="step-caption">01 / RECEIVE</span><h3>Creator fees</h3><p>Only what is actually received</p></div></div><span className="flow-arrow" aria-hidden="true"><Icon name="arrow" /></span>
-    <div className="flow-budget"><div className="flow-budget-label"><span className="step-caption">02 / PURCHASE</span><h3>Ten equal budgets</h3></div><div className="budget-cells" role="img" aria-label="Ten purchase budgets, each 10 percent of the basket budget">{Array.from({ length: 10 }, (_, i) => <span key={i} aria-hidden="true"><i>{String(i + 1).padStart(2, '0')}</i><b>10<small>%</small></b></span>)}</div></div><span className="flow-arrow" aria-hidden="true"><Icon name="arrow" /></span>
-    <div className="flow-end"><span className="flow-icon"><Icon name="wallet" /></span><div><span className="step-caption">03 / CREDIT</span><h3>Eligible holders</h3><p>By verified snapshot balance</p></div></div>
-  </section>;
+// Positions describe artwork only. Token identities and ranks always come from the API.
+const positions = [[26, 13], [50, 7], [74, 13], [9, 39], [91, 39], [10, 69], [90, 69], [26, 91], [50, 97], [74, 91]];
+type Inspect = (asset: PublicMarket) => void;
+
+function Constellation({ assets, inspect, loading }: { assets: PublicMarket[]; inspect: Inspect; loading: boolean }) {
+  const scene = useRef<HTMLDivElement>(null);
+  const [paused, setPaused] = useState(false);
+  const [reduced, setReduced] = useState(false);
+  const [inView, setInView] = useState(true);
+  const [visible, setVisible] = useState(true);
+  const [active, setActive] = useState<number>();
+  useEffect(() => {
+    const preference = matchMedia('(prefers-reduced-motion: reduce)');
+    const update = () => setReduced(preference.matches);
+    const visibility = () => setVisible(!document.hidden);
+    update(); visibility();
+    preference.addEventListener('change', update);
+    document.addEventListener('visibilitychange', visibility);
+    const observer = new IntersectionObserver(([entry]) => setInView(entry.isIntersecting));
+    if (scene.current) observer.observe(scene.current);
+    return () => { preference.removeEventListener('change', update); document.removeEventListener('visibilitychange', visibility); observer.disconnect(); };
+  }, []);
+  const still = paused || reduced || !inView || !visible;
+  return <div className={`constellation ${still ? 'is-still' : ''}`} ref={scene}>
+    <div className="orbit-stage" aria-label="Ten leading observed Ember markets">
+      <div className="orbit-aura" aria-hidden="true" />
+      <div className="orbit-ring ring-one" aria-hidden="true" /><div className="orbit-ring ring-two" aria-hidden="true" />
+      <svg className="orbit-wires" viewBox="0 0 1000 420" preserveAspectRatio="none" aria-hidden="true">
+        {positions.map(([x, y], i) => {
+          const path = `M500 218 Q${500 + (x * 10 - 500) * .58} ${218 + (y * 4.2 - 218) * .12} ${x * 10} ${y * 4.2}`;
+          return <g key={i} className={active === i ? 'wire-active' : ''}><path className="orbit-wire" d={path} /><path className="orbit-signal" d={path} pathLength="100" style={{ animationDelay: `${i * -.63}s` }} /></g>;
+        })}
+      </svg>
+      <div className="ember-core" aria-hidden="true"><div className="core-halo" /><div className="core-tile"><div className="core-shine" /><Flame /><span className="core-ten">10</span></div><span className="core-name">EMBER<span>10</span></span><span className="core-caption">ONE INTO TEN</span></div>
+      {positions.map(([x, y], i) => {
+        const asset = assets[i];
+        const style = { '--x': `${x}%`, '--y': `${y}%`, '--drift': `${5.8 + (i % 4) * .6}s`, '--delay': `${i * -.79}s` } as React.CSSProperties;
+        return <div className={`orbit-position position-${i} ${active === i ? 'is-active' : ''}`} key={asset?.mint ?? `slot-${i}`} style={style}>
+          {asset ? <button className="orbit-token" onClick={() => inspect(asset)} onMouseEnter={() => setActive(i)} onMouseLeave={() => setActive(undefined)} onFocus={() => setActive(i)} onBlur={() => setActive(undefined)} aria-label={`Inspect ${asset.symbol}, rank ${asset.rank}, mint ${asset.mint}`}><span className="orbit-rank">{String(asset.rank).padStart(2, '0')}</span><Avatar asset={asset} /><span className="orbit-token-text"><strong>{asset.symbol}</strong><small>{money(asset.marketCapUsd)}</small></span><span className="orbit-peek" aria-hidden="true"><Icon name="external" /></span></button> : <div className="orbit-token orbit-placeholder" aria-label={`Market slot ${i + 1}: ${loading ? 'loading' : 'unavailable'}`}><span className="placeholder-coin">{String(i + 1).padStart(2, '0')}</span><span className="orbit-token-text"><strong>{loading ? 'Loading' : 'Awaiting data'}</strong><small>Ember market</small></span></div>}
+        </div>;
+      })}
+    </div>
+    <div className="orbit-caption"><span>Market leaders. <span className="caption-muted">Not funded holdings.</span></span><button className="motion-toggle" onClick={() => setPaused(value => !value)} aria-pressed={paused || reduced} disabled={reduced} aria-label={reduced ? 'Reduced motion enabled by your device' : paused ? 'Resume token animation' : 'Pause token animation'}><Icon name={paused || reduced ? 'play' : 'pause'} /><span>{reduced ? 'Reduced motion' : paused ? 'Resume motion' : 'Pause motion'}</span></button></div>
+  </div>;
 }
+
+function MarketList({ assets, inspect }: { assets: PublicMarket[]; inspect: Inspect }) {
+  return <div className="ten-list">{[assets.slice(0, 5), assets.slice(5, 10)].map((group, i) => <div className="ten-list-column" key={i}><div className="ten-column-label" aria-hidden="true"><span>TOKEN / RANK</span><span>MARKET CAP · 24H</span></div>{group.map(asset => <button className="ten-row" key={asset.mint} onClick={() => inspect(asset)} aria-label={`Details for ${asset.symbol}, mint ${asset.mint}`}><span className="ten-row-rank">{String(asset.rank).padStart(2, '0')}</span><Avatar asset={asset} /><span className="ten-row-identity"><strong>{asset.symbol}</strong><code>{short(asset.mint)}</code></span><span className="ten-row-values"><strong>{money(asset.marketCapUsd)}</strong><small className={asset.change24hPct?.startsWith('-') ? 'negative' : asset.change24hPct == null ? 'muted' : 'positive'}>{change(asset.change24hPct)}</small></span><Icon name="external" /></button>)}</div>)}</div>;
+}
+
 export function Homepage({ data, loading, error, retry }: { data?: PublicOverview; loading: boolean; error: string; retry: () => void }) {
   const [detail, setDetail] = useState<{ asset: PublicMarket; snapshot: PublicOverview }>();
-  const observations = data?.markets.filter(asset => asset.rank !== null).slice(0, 10) ?? [];
-  const prelaunch = data?.project.phase === 'prelaunch';
-  return <>
-    <section className="hero"><div className="hero-orbit" aria-hidden="true"><span /><span /><span /></div><div className="hero-copy"><div className="eyebrow accent">A little more of the Ember ecosystem</div><h1>One Ember holding.<span>Ten possibilities.</span></h1><p className="hero-description">A proposed reward basket of ten leading Ember assets, funded by received creator fees and shared with eligible EMBER10 holders.</p>
-      <p className="launch-note"><i className="dot" />{prelaunch ? 'Prelaunch — rewards are not active yet.' : 'Confirming project readiness. Rewards are not active.'}</p>
-      <div className="hero-actions"><a className="btn primary" href="#basket">Explore the ten <Icon name="arrow" /></a><a className="btn ghost" href="#how">How it works <Icon name="external" /></a></div>
-      <a className="qualification" href="#wallet"><Icon name="transparency" /><span><strong>{data ? `${units(data.policy.holderUnits, 0)} EMBER10` : loading ? 'Loading balance requirement' : 'Balance requirement unavailable'}</strong>{data && ' snapshot threshold'}<span className="qualification-link">View eligibility rules ↗</span></span></a>
-      <a className="hero-readiness" href="#transparency">{data ? `${data.selection.selectedCount}/10 assets selected · ${data.fundedBasket.status === 'funded' ? 'Funded round recorded' : data.fundedBasket.status === 'none' ? 'No funded round' : 'Funded basket unavailable'}` : loading ? 'Loading current project readiness' : 'Project readiness unavailable'} <Icon name="arrow" /></a>
-      </div><div className="hero-seal" aria-hidden="true"><div className="seal-top">THE EMBER COLLECTION</div><span className="seal-number">10</span><div className="seal-grid">{Array.from({ length: 10 }, (_, i) => <i key={i} />)}</div><span className="seal-bottom">EQUAL BUDGETS. SHARED POSSIBILITY.</span></div></section>
-    <FeeFlow />
-    <section className="observations" aria-labelledby="observations-title"><div className="section-heading"><div><div className="eyebrow accent">Explore the ecosystem</div><h2 id="observations-title">Ten in the spotlight.</h2><p>The ten highest ranked observations in the current Ember catalogue.<br className="desktop-break" /> These are market observations, not a selected or funded reward basket.</p></div><a className="btn small" href="#basket">Full market explorer <Icon name="arrow" /></a></div><div className="preview-source"><span><i className="dot" />{data?.discovery.status === 'stale' ? 'Stale observations' : data?.discovery.status === 'warming' ? 'Incomplete observations' : data?.discovery.status === 'unavailable' ? 'Source unavailable' : data ? 'Ember catalogue observations' : loading ? 'Loading Ember observations' : 'Source unavailable'}</span>{data?.discovery.fetchedAt && <span>Fetched {dateTime(data.discovery.fetchedAt)}</span>}</div>
-      {loading && data && <p className="preview-refresh" role="status">Refreshing observations. The previous fetch remains visible until the request completes.</p>}
-      {data?.discovery.status === 'stale' && <p className="preview-notice" role="status">Showing the last successful observation. Ranking may have changed; new purchases remain blocked.</p>}{data?.discovery.status === 'warming' && <p className="preview-notice" role="status">The source catalogue is incomplete. These observations do not establish a complete ranking or an eligible basket.</p>}
-      {loading && !data ? <div className="preview-loading"><Skeleton /></div> : !observations.length ? <div className="panel"><Empty title={data?.discovery.status === 'unavailable' || !data ? 'Market observations are unavailable.' : 'No ranked observations yet.'} text={data?.discovery.message || error || 'No replacement assets are shown while we verify the source.'}><button className="btn" onClick={retry}>Try again</button></Empty></div> : <div className="asset-preview-grid">{observations.map(asset => <button className="asset-preview-card" key={asset.mint} onClick={() => data && setDetail({ asset, snapshot: data })} aria-label={`Details for ${asset.symbol}, mint ${asset.mint}`}><span className="asset-card-top"><Avatar asset={asset} /><span className="card-rank">#{String(asset.rank).padStart(2, '0')}</span></span><span className="card-symbol">{asset.symbol}</span><span className="card-name">{asset.name || 'Name not reported'}</span><span className="token-mint">{short(asset.mint)}</span><span className="card-cap"><small>Observed market cap</small><strong>{money(asset.marketCapUsd)}</strong></span><span className="card-bottom"><span className="status-small">{eligibilityLabel(asset)}</span><span className="card-detail">Details <Icon name="arrow" /></span></span></button>)}</div>}<p className="preview-footnote">Mint addresses identify assets. Market caps are Ember-reported USD observations; supply basis is undocumented.</p>
+  const observations = observedTen(data?.markets ?? []);
+  const inspect: Inspect = asset => { if (data) setDetail({ asset, snapshot: data }); };
+  const stale = data?.discovery.status === 'stale';
+  const validEmpty = data?.discovery.status === 'ready' && !observations.length;
+  const sourceLabel = stale ? 'Stale data' : data?.discovery.status === 'warming' ? 'Partial catalogue' : data?.discovery.status === 'unavailable' ? 'Source unavailable' : validEmpty ? 'No ranked markets' : observations.length ? 'Ember market data' : loading ? 'Connecting to Ember' : 'Source unavailable';
+  const scrollToTen = () => document.getElementById('the-ten')?.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth', block: 'start' });
+  return <div className="orbit-home">
+    <section className="orbit-hero" aria-labelledby="hero-title"><div className="hero-kicker"><span className="tiny-spark" aria-hidden="true">✳</span> THE EMBER ECOSYSTEM, TOGETHER</div><h1 id="hero-title">One token.<br /><span>Ten possibilities.</span></h1><p className="orbit-description">Creator fees. Ten Ember tokens. Your share.</p><Constellation assets={observations} inspect={inspect} loading={loading && !data} />
+      <div className="orbit-actions"><button className="btn primary orbit-cta" onClick={scrollToTen}>Meet the ten <Icon name="arrow" /></button><a className="btn orbit-secondary" href="#wallet">My rewards <Icon name="wallet" /></a></div>
+      <p className="orbit-eligibility">{data ? <><strong>{units(data.policy.holderUnits, 0)} EMBER10</strong> to qualify <span>·</span> No staking</> : loading ? 'Eligibility loading…' : 'Eligibility unavailable'}<a href="#how" aria-label="How EMBER10 rewards work"><Icon name="how" /></a></p>
+      <a className="orbit-prelaunch" href="#transparency">{rewardStatusLabel(data)} <Icon name="external" /></a>
     </section>
-    <section className="readiness-section" aria-labelledby="readiness-title"><div className="readiness-intro"><div className="eyebrow accent">Where things stand</div><h2 id="readiness-title">Built on checks. <br />Ready on evidence.</h2><p>Real market observations are a start. Verified assets, a funded round and connected reward records are separate requirements.</p><a className="link-inline" href="#transparency">View current readiness <Icon name="arrow" /></a></div><div className="readiness-list"><div><span className="readiness-icon"><Icon name="transparency" /></span><div><h3>Asset eligibility</h3><p>{data ? data.selection.selectedCount === 10 ? 'Selection recorded; funding is a separate step.' : 'All ten must pass the published policy before new purchases.' : loading ? 'Loading the current selection policy.' : 'The selection policy could not be fetched.'}</p></div><strong>{data ? `${data.selection.selectedCount}/10` : loading ? 'Pending' : 'Unavailable'}</strong></div><div><span className="readiness-icon"><Icon name="basket" /></span><div><h3>Funded basket</h3><p>{data?.fundedBasket.status === 'funded' ? 'Membership is fixed to its funded round.' : 'No funded round is available to inspect.'}</p></div><strong>{data ? data.fundedBasket.status === 'funded' ? 'Recorded' : data.fundedBasket.status === 'none' ? 'Not funded' : 'Unavailable' : loading ? 'Pending' : 'Unavailable'}</strong></div><div><span className="readiness-icon"><Icon name="wallet" /></span><div><h3>Reward accounting</h3><p>Unknown amounts are never presented as zero. <a href="#wallet">Check record availability</a></p></div><strong>{data ? 'Unreported' : loading ? 'Pending' : 'Unavailable'}</strong></div></div></section>
-    <section className="home-rules"><div className="section-heading"><div><div className="eyebrow accent">Simple split. Visible rules.</div><h2>Every fee has a purpose.</h2><p>The allocation applies after bounded direct execution costs.</p></div><a className="link-inline" href="#how">Follow the process <Icon name="arrow" /></a></div><div className="lower-grid"><Allocation /><article className="panel home-steps"><ol>{[['Receive', 'Only verified creator fees enter the allocation.'], ['Purchase', 'Ten eligible assets get equal purchase budgets.'], ['Credit', 'Actual acquired units are shared by eligible snapshot balance.']].map(([title, text], i) => <li key={title}><span>{String(i + 1).padStart(2, '0')}</span><div><h3>{title}</h3><p>{text}</p></div></li>)}</ol><a className="link-inline" href="#transparency">Developer accounting & complete rules <Icon name="arrow" /></a></article></div></section>
+    <section id="the-ten" className="orbit-markets" aria-labelledby="ten-title"><div className="orbit-section-heading"><div><div className="eyebrow">THE CURRENT LINEUP</div><h2 id="ten-title">Ten worth watching<span>.</span></h2></div><a href="#basket" className="text-link">All markets <Icon name="arrow" /></a></div><div className="orbit-source"><span className={stale ? 'source-stale' : ''}><i className="dot" />{sourceLabel}{loading && !!data ? ' · refreshing' : ''}</span><span>{data?.discovery.fetchedAt && <time dateTime={data.discovery.fetchedAt} title={dateTime(data.discovery.fetchedAt)}>{new Date(data.discovery.fetchedAt).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', timeZone: 'UTC' })} UTC</time>}<span className="refresh-label"> · Refreshes every 45s</span></span></div>
+      {observations.length ? <MarketList assets={observations} inspect={inspect} /> : <div className="orbit-no-data" role="status"><Flame /><h3>{validEmpty ? 'No ranked markets yet.' : loading ? 'Finding the sparks…' : 'Waiting for Ember.'}</h3><p>{validEmpty ? 'Ember returned a current catalogue with no ranked assets.' : loading ? 'Reading the current market ranking.' : 'A current market ranking is unavailable. Try again shortly.'}</p>{!loading && <button className="btn small" onClick={retry}>Refresh markets <Icon name="refresh" /></button>}</div>}
+      <div className="orbit-market-foot"><span>{stale ? 'Last available ranking. ' : data?.discovery.status === 'warming' ? 'Incomplete catalogue. ' : ''}Observed market cap · eligibility checked separately.</span><a href="#basket">{data ? `${data.selection.selectedCount}/10 selected` : 'Selection pending'} <Icon name="arrow" /></a></div>
+    </section>
+    <section className="orbit-flow" aria-labelledby="flow-title"><div className="orbit-flow-intro"><span className="eyebrow">A SIMPLE SPLIT</span><h2 id="flow-title">Small sparks.<br />Shared upside.</h2><a className="text-link" href="#how">How it works <Icon name="arrow" /></a></div><div className="split-visual"><div className="split-track" role="img" aria-label="Proposed split after direct costs: 80 percent holder rewards, 10 percent buyback and burn, 10 percent operations and developer">{Array.from({ length: 10 }, (_, i) => <span key={i} className={i < 8 ? 'split-reward' : i === 8 ? 'split-burn' : 'split-ops'} />)}</div><div className="split-labels"><div><strong>80<span>%</span></strong><span><i className="dot" />Holder rewards</span></div><div><strong>10<span>%</span></strong><span><i className="dot" />Buyback & burn</span></div><div><strong>10<span>%</span></strong><span><i className="dot" />Ops & dev</span></div></div><p>After direct costs. <a href="#transparency">See the full accounting <Icon name="external" /></a></p></div></section>
     {detail && <AssetDialog asset={detail.asset} data={detail.snapshot} onClose={() => setDetail(undefined)} />}
-  </>;
+  </div>;
 }

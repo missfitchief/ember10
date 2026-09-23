@@ -2,9 +2,9 @@
 
 A React frontend, Node API, independent Node worker and PostgreSQL ledger. The default is **prelaunch, paused, no signing and no broadcast**. The current prospective policy is EMBER10; legacy EMBER5 records are preserved. No project mint was created and no mainnet funds were used.
 
-Public pilot URL: **https://ember5-pilot.vercel.app**. This update replaces the hosted synthetic fallback with a real, read-only Ember catalogue integration and an EMBER10 frontend. Deployment verification is recorded separately in the review evidence; local source alone is not proof of publication. The hosted service does not run settlement.
+Public pilot URL: **https://ember5-pilot.vercel.app**. The Orbit frontend presents the current observed Ember ten with an original animated constellation, responsive market rows and read-only reward records. Deployment verification is recorded separately in the review evidence; local source alone is not proof of publication. The hosted service does not run settlement.
 
-Backend corrections are documented in [BACKEND-CORRECTIONS.md](docs/BACKEND-CORRECTIONS.md), with [test, source and independent review evidence](docs/evidence/backend/README.md). They preserve the frontend and default-disabled execution. This backend review branch has not been deployed; provider evidence gaps and the residual dependency advisory remain explicit.
+Backend corrections are documented in [BACKEND-CORRECTIONS.md](docs/BACKEND-CORRECTIONS.md), with [test, source and independent review evidence](docs/evidence/backend/README.md). [Orbit integration](docs/ORBIT-INTEGRATION.md) retains those corrections and reconciles the frontend with their exact accounting units and states. The financial worker remains undeployed and execution is disabled by default; provider evidence gaps and the residual dependency advisory remain explicit.
 
 ## Run locally
 
