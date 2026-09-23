@@ -2,6 +2,8 @@ import { Store, Lease, Tx } from '../db/store.js';
 import { allocate, budget, economical } from './money.js';
 import { Asset, canonical, ensure, fresh, hash, Policy, Price, SOL, policyBasketSize } from './model.js';
 import { Basket, Snapshot } from './selection.js';
+import { revalidateBasket, selectBasket } from './selection.js';
+import { finalizeDeveloperPayout } from './developer.js';
 export interface TransferEvidence {instruction:string;asset:string;source:string;destination:string;amount:string}
 export interface Receipt {signature:string;instruction:string;asset:string;amount:string;destination:string;source:string;slot:number;finalized:boolean;error:unknown;pool?:string;publishedPool?:string;kind:'creator_fee'|'deposit'|'seed';attributionVerified:boolean;rawEvidence:unknown}
 export interface Plan {inputAsset:string;outputAsset?:string;from:string;to?:string;owner?:string;minOutput?:string;maxFee:string;costAccount:string;transfers?:{owner:string;destination:string;amount:string;entitlements:string[]}[];decimals?:number;[key:string]:unknown}
@@ -34,16 +36,21 @@ export class Engine {
  }
  async plan(args:{id:string;policy:Policy;basket:Basket;snapshot:Snapshot;funding:bigint;cost:bigint;price:Price;minReserve:bigint;maxRound:bigint;maxDay:bigint;treasury:string;ourMint:string;routeUnchanged:boolean;lease:Lease;now?:number}){
   ensure(this.mode!=='prelaunch','prelaunch cannot create financial commitments');
-  const {policy,basket,snapshot}=args;const size=policyBasketSize(policy);
+  const {policy,snapshot}=args;let basket=args.basket;const size=policyBasketSize(policy);
   ensure(this.mode!=='live'||policy.version===2,'new live commitments require EMBER10 policy version 2');
+  ensure(this.mode!=='live'||BigInt(policy.minBasketMicroUsd)>=50000000n,'new EMBER10 basket minimum is USD 50');
+  ensure(this.mode!=='live'||policy.basketBps===8000&&policy.buybackBps===1000&&policy.operationsBps===1000,'EMBER10 allocation must remain 80/10/10');
   ensure(basket.ready&&basket.selected.length===size&&basket.selected.every(x=>x.weightBps===10000/size),'policy-sized equal-weight eligible basket required');
   ensure(basket.policyHash===hash(policy)&&snapshot.policyHash===hash(policy),'policy/snapshot mismatch');
   ensure(snapshot.owners.some(x=>x.eligible),'no eligible holders');ensure(args.routeUnchanged,'funding module or recipient changed');
   const now=args.now??Date.now();
   ensure(fresh(snapshot.capturedAt,now,policy.maxDataAgeSeconds),'holder snapshot stale');
-  ensure(now-basket.createdAt<=86400000+180000,'basket stale');
+  ensure(fresh(basket.createdAt,now,policy.maxDataAgeSeconds),'basket stale');
   ensure(args.funding<=args.maxRound,'maximum round spend exceeded');const b=budget(args.funding,args.cost,policy,args.price,now);
   ensure(basket.selected.every(x=>x.routeViable&&BigInt(x.routeBudget)>=b.leg),'route not verified for intended budget');
+  const refreshed=selectBasket(basket.universe,policy,args.ourMint,true,now);
+  ensure(refreshed.ready&&hash(refreshed.selected.map(x=>[x.mint,x.weightBps]))===hash(basket.selected.map(x=>[x.mint,x.weightBps])),'basket eligibility or ranking changed');
+  basket=this.mode==='live'?revalidateBasket(basket,basket.universe,policy,args.ourMint,true,b.leg,now):refreshed;
   return this.db.tx(async t=>{await this.db.fence(t,args.lease);await this.db.lock(t);
    if((await t.query('SELECT id FROM epochs WHERE id=$1',[args.id])).rowCount)return args.id;
    ensure(!(await t.query('SELECT paused FROM control')).rows[0].paused,'new commitments paused');
@@ -100,6 +107,7 @@ export class Engine {
     await this.db.move(t,'delivered:'+i.id,i.asset,i.expected.from,'external:delivered',BigInt(i.amount),out,i.epoch_id);
     if(i.kind==='payout'){await t.query('UPDATE entitlements e SET paid=e.paid+b.amount FROM batch_items b WHERE b.batch_id=$1 AND b.entitlement_id=e.id AND b.active',[i.id]);await t.query('UPDATE batch_items SET active=false WHERE batch_id=$1',[i.id]);}
    }
+   await finalizeDeveloperPayout(this.db,t,i,out);
    await t.query('INSERT INTO chain_receipts(signature,slot,intent_id,evidence) VALUES($1,$2,$3,$4) ON CONFLICT DO NOTHING',[out.signature,out.slot,i.id,canonical(out)]);
    await t.query("UPDATE attempts SET status='finalized',evidence=$2 WHERE signature=$1",[out.signature,canonical(out)]);
    await t.query("UPDATE intents SET status='finalized',result=$2,reason=null,updated_at=now() WHERE id=$1",[i.id,canonical(out)]);

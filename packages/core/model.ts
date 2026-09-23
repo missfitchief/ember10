@@ -19,7 +19,7 @@ export function ensure(ok: unknown, message: string): asserts ok { if(!ok) throw
 export interface Asset {mint:string;symbol:string;decimals:number;program:string}
 export const defaultPolicy = {
  version:2, basketBps:8000, buybackBps:1000, operationsBps:1000,
- holderUnits:'100000', minBasketMicroUsd:'25000000', maxCostBps:1000,
+ holderUnits:'100000', minBasketMicroUsd:'50000000', maxCostBps:1000,
  minLiquidityMicroUsd:'10000000000', minVolumeMicroUsd:'5000000000', minOwners:50, minAgeSeconds:86400,
  existingAtaMicroUsd:'1000000', newAtaMicroUsd:'5000000', maxPriceAgeSeconds:120,
  maxDataAgeSeconds:180, slippageBps:100, impactBps:200, evaluationSeconds:3600,

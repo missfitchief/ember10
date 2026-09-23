@@ -25,7 +25,7 @@ export async function ingestTreasury(engine:Engine,rpc:Connection,ember:EmberCli
  if(signatures.length)await db.pool.query("INSERT INTO cursors(name,value) VALUES('treasury-signatures',$1) ON CONFLICT(name) DO UPDATE SET value=excluded.value,updated_at=now()",[canonical({signature:signatures[0].signature,oldestBoundary:until})]);
  return {scanned:signatures.length,coverage:'RPC finalized signature history; published-window gaps quarantine inbound fee-sender transfers'};
 }
-export async function fundingRoute(ember:EmberClient,pool:string){const observed=await ember.read('/markets');const catalogue=catalogueSchema.parse(observed.value);const market=catalogue.markets.find(m=>m.pool===pool);ensure(market,'our pool missing from catalogue');const fees=await ember.fees(pool);const state=fees.value as Record<string,unknown>;
+export async function fundingRoute(ember:EmberClient,pool:string,force=false){const observed=await ember.read('/markets',force?0:45000);const catalogue=catalogueSchema.parse(observed.value);const market=catalogue.markets.find(m=>m.pool===pool);ensure(market,'our pool missing from catalogue');const fees=force?await ember.read('/fees/pool/'+pool,0):await ember.fees(pool);const state=fees.value as Record<string,unknown>;
  return {pool:market.pool,mint:market.mint,module:market.mode,creator:market.creator,quoteMint:market.quoteMint,dammPool:market.dammPool??null,feeBps:market.feeBps,feeSource:state.feeSource,taxBps:state.taxBps,creatorSideBps:state.creatorSideBps};}
 export async function ingestTokenDeposits(engine:Engine,rpc:Connection,treasury:string){
  const accounts=await rpc.getTokenAccountsByOwner(new PublicKey(treasury),{programId:TOKEN_PROGRAM_ID},'finalized');

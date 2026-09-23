@@ -6,28 +6,31 @@ import { Store } from '../../packages/db/store.js';
 import { Config } from '../../packages/core/config.js';
 import { canonical } from '../../packages/core/model.js';
 import * as q from './queries.js';
-import {overview} from './overview.js';
-import {parsedTransfers} from '../../packages/integrations/solana.js';
+import {backendOverview} from './backend-overview.js';
+import {clientKey,takeRateLimit} from './proxy.js';
+import {parsedTransfers,SolanaChain} from '../../packages/integrations/solana.js';
+import {recoverIntent} from '../worker/recovery.js';
+import {DeveloperAccounting} from '../../packages/core/developer.js';
+import {developerPolicy} from '../../packages/core/developer-config.js';
 import {Engine} from '../../packages/core/engine.js';
 import {ensure} from '../../packages/core/model.js';
 export function createServer(db:Store,c:Config){
- const app=Fastify({logger:false,bodyLimit:8192,trustProxy:false});const hits=new Map<string,{n:number;until:number}>();
+ const app=Fastify({logger:false,bodyLimit:8192,trustProxy:false});
  app.addHook('onRequest',async(req,reply)=>{reply.header('x-content-type-options','nosniff').header('referrer-policy','no-referrer');
-  const now=Date.now();if(hits.size>10000)for(const [key,v]of hits)if(v.until<now)hits.delete(key);
-  const v=hits.get(req.ip);if(v&&v.until>now){v.n++;if(v.n>120)return reply.code(429).send({error:'rate_limited'});}else hits.set(req.ip,{n:1,until:now+60000});
+  if(!await takeRateLimit(db,clientKey(req.ip,req.headers,req.method,req.url,c.EMBER10_PROXY_SECRET)))return reply.header('retry-after','60').code(429).send({error:'rate_limited'});
   if(req.url.startsWith('/operator/')){const supplied=req.headers.authorization??'';const expected=c.OPERATOR_TOKEN?'Bearer '+c.OPERATOR_TOKEN:'';
    if(!expected||!timingSafeEqual(createHash('sha256').update(supplied).digest(),createHash('sha256').update(expected).digest()))return reply.code(401).send({error:'operator_auth_required'});
   }
  });
  app.setErrorHandler((error,req,reply)=>{const e=error as Error;const bad=e instanceof z.ZodError||e.message==='invalid address';return reply.code(bad?400:e.message==='epoch not found'?404:503).send({error:bad?'invalid_request':e.message==='epoch not found'?'not_found':'service_unavailable',message:bad?'Check the address and request parameters.':'This data is currently unavailable. No estimated values have been substituted.'});});
- app.get('/api/overview',async(req,reply)=>{if(c.MODE==='demo'||c.MODE==='test')return reply.code(404).send({error:'not_available_in_demo'});const p=z.object({q:z.string().max(100).optional(),view:z.enum(['all','selection','excluded']).default('all'),offset:z.coerce.number().int().min(0).max(999999).default(0),limit:z.coerce.number().int().min(1).max(100).default(100)}).parse(req.query);return overview(undefined,{query:p.q,offset:p.offset,limit:p.limit,view:p.view});});
+ app.get('/api/overview',async(req,reply)=>{if(c.MODE==='demo'||c.MODE==='test')return reply.code(404).send({error:'not_available_in_demo'});const p=z.object({q:z.string().max(100).optional(),view:z.enum(['all','selection','excluded']).default('all'),offset:z.coerce.number().int().min(0).max(999999).default(0),limit:z.coerce.number().int().min(1).max(100).default(100)}).parse(req.query);return backendOverview(db,c,{query:p.q,offset:p.offset,limit:p.limit,view:p.view});});
  const page=z.object({limit:z.coerce.number().int().min(1).max(100).default(20),cursor:z.string().max(200).optional()});
  app.get('/api/status',()=>q.status(db,c));app.get('/api/project',()=>q.project(db,c));app.get('/api/basket',()=>q.basket(db));
  app.get('/api/epochs',req=>{const p=page.parse(req.query);return q.epochs(db,p.limit,p.cursor);});
  app.get<{Params:{id:string}}>('/api/epochs/:id',req=>q.exportEpoch(db,z.string().max(200).parse(req.params.id)));
  app.get<{Params:{id:string};Querystring:{format?:string}}>('/api/epochs/:id/export',async(req,reply)=>{const value=await q.exportEpoch(db,req.params.id);if(req.query.format==='csv')return reply.header('content-type','text/csv').header('content-disposition','attachment; filename="epoch-allocations.csv"').send(q.csv(value.entitlements));return value;});
  app.get<{Params:{address:string}}>('/api/wallets/:address/rewards',req=>{try{new PublicKey(req.params.address);}catch{throw Error('invalid address');}return q.wallet(db,req.params.address);});
- app.get('/api/transparency',()=>q.transparency(db));
+ app.get('/api/transparency',async()=>({...await q.transparency(db),developerAccounting:['prelaunch','live'].includes(c.MODE)?await new DeveloperAccounting(db,c.MODE).summary(developerPolicy(c)):null}));
  app.post('/operator/pause',async req=>{const body=z.object({reason:z.string().min(1).max(200)}).parse(req.body);await db.tx(async t=>{await db.lock(t);await t.query('UPDATE control SET paused=true,reason=$1',[body.reason]);await t.query('INSERT INTO operator_audit(actor,action,body) VALUES($1,$2,$3)',['authenticated-operator','pause',canonical(body)]);});return {paused:true};});
  app.post('/operator/resume',async()=>{if(c.MASTER_PAUSE||c.MODE==='prelaunch'||c.MODE==='live'&&!c.APPROVAL_FILE)throw Error('master pause/configuration blocks resume');await db.tx(async t=>{await db.lock(t);if((await t.query('SELECT id FROM incidents WHERE resolved_at IS NULL')).rowCount)throw Error('unresolved incidents');await t.query("UPDATE control SET paused=false,reason='Waiting for fresh verified funding and selection'");await t.query("INSERT INTO operator_audit(actor,action,body) VALUES('authenticated-operator','resume','{}')");});return {paused:false};});
  app.get('/operator/funding',async()=>({balances:await db.balances(),receipts:(await db.pool.query('SELECT id,classification,asset,amount::text FROM incoming_transfers ORDER BY id')).rows}));
@@ -40,5 +43,25 @@ export function createServer(db:Store,c:Config){
  app.get('/operator/snapshots',async()=>({snapshots:(await db.pool.query("SELECT id,body FROM documents WHERE kind='snapshot' ORDER BY created_at DESC LIMIT 10")).rows}));
  app.get('/operator/plan',async()=>({spending:false,status:await q.status(db,c),basket:await q.basket(db),availableCreatorLamports:(await db.balance('SOL','revenue')).toString(),requirements:['ten verified members under policy version 2','complete holder snapshot','fresh prices and real-amount routes','unchanged funding route','reserve and daily caps']}));
  app.post('/operator/reconcile',async()=>{await db.pool.query("INSERT INTO jobs(id,kind,body) VALUES('operator-reconcile','reconcile','{}') ON CONFLICT(id) DO UPDATE SET state='ready',available_at=now()");await db.pool.query("INSERT INTO operator_audit(actor,action,body) VALUES('authenticated-operator','reconcile','{}')");return {queued:true};});
+ app.post('/operator/recovery',async req=>{
+  ensure(c.MODE==='live'&&c.TREASURY,'live inspection configuration required');
+  const body=z.object({requestId:z.string().min(1).max(100),intentId:z.string().min(1).max(200),signature:z.string().regex(/^[1-9A-HJ-NP-Za-km-z]{80,90}$/),reason:z.string().min(5).max(200),evidenceReference:z.string().min(5).max(300)}).strict().parse(req.body);
+  const chain=new SolanaChain({...c,BROADCAST_ENABLED:false,MASTER_PAUSE:true},{publicKey:new PublicKey(c.TREASURY),sign:async()=>{throw Error('recovery has no signer');}});await chain.verifyCluster();
+  return recoverIntent(new Engine(db,c.MODE),chain,{...body,actor:'authenticated-operator'},async()=>{ensure(!!c.OPERATOR_TOKEN,'operator authentication missing');});
+ });
+ app.post('/operator/expenses',async req=>{
+  ensure(c.MODE==='live','operating expenses require the authoritative live ledger');
+  const body=z.object({id:z.string().min(1).max(120),amountLamports:z.string().regex(/^[1-9][0-9]*$/),costAllowanceLamports:z.string().regex(/^(0|[1-9][0-9]*)$/).default('0'),payee:z.string().min(32).max(44),description:z.string().min(5).max(300),evidenceReference:z.string().min(5).max(300)}).strict().parse(req.body);
+  const id=await new DeveloperAccounting(db,c.MODE).recordExpense({...body,amountLamports:BigInt(body.amountLamports),costAllowanceLamports:BigInt(body.costAllowanceLamports),evidence:{reference:body.evidenceReference},actor:'authenticated-operator'});return {id,recorded:true,paid:false};
+ });
+ app.post('/operator/expenses/settlement',async req=>{
+  ensure(c.MODE==='live'&&c.TREASURY,'configured live treasury required');
+  const body=z.object({expenseId:z.string().min(1).max(120),signature:z.string().regex(/^[1-9A-HJ-NP-Za-km-z]{80,90}$/),instruction:z.string().regex(/^[0-9]+(?:\.[0-9]+)?$/)}).strict().parse(req.body);
+  const connection=new Connection(c.RPC_URL,'finalized'),record=await parsedTransfers(connection,body.signature);ensure(record&&!record.tx.meta?.err,'finalized successful expense evidence required');
+  const outgoing=record.transfers.filter(t=>t.source===c.TREASURY);ensure(outgoing.length===1&&outgoing[0].asset==='SOL'&&outgoing[0].instruction===body.instruction,'one exact native expense transfer required');
+  const tr=outgoing[0],meta=record.tx.meta!;ensure(record.tx.transaction.message.accountKeys[0].pubkey.toBase58()===c.TREASURY,'treasury must be expense fee payer');
+  ensure(Number.isSafeInteger(meta.fee)&&Number.isSafeInteger(meta.preBalances[0])&&Number.isSafeInteger(meta.postBalances[0])&&BigInt(meta.preBalances[0])-BigInt(meta.postBalances[0])===BigInt(tr.amount)+BigInt(meta.fee),'unexplained treasury debit in expense transaction');
+  const id=await new DeveloperAccounting(db,c.MODE).recordExpensePayment({expenseId:body.expenseId,signature:body.signature,instruction:body.instruction,amountLamports:BigInt(tr.amount),feeLamports:BigInt(meta.fee),source:tr.source,destination:tr.destination,slot:record.tx.slot,finalized:true,error:null,evidence:{signature:body.signature,slot:record.tx.slot,transfer:tr,fee:meta.fee},actor:'authenticated-operator'},c.TREASURY);return {id,finalized:true};
+ });
  return app;
 }

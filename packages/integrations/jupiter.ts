@@ -31,8 +31,9 @@ export function validateSwapInstruction(ix:TransactionInstruction,i:Intent,payer
  return BigInt(outAmount)*BigInt(10000-slippageBps)/10000n;
 }
 /** No remote setup/cleanup/tip instructions are accepted. Wrapping and ATAs are constructed locally. */
-export async function safeJupiterBuild(connection:Connection,jupiter:JupiterClient,payer:PublicKey,i:Intent,approvedPrograms:string[],approvedMints:string[],limits={slippageBps:100,impactBps:200}){
- ensure(approvedMints.includes(i.expected.outputAsset!),'output mint is outside approved pilot');
+export async function safeJupiterBuild(connection:Connection,jupiter:JupiterClient,payer:PublicKey,i:Intent,approvedPrograms:string[],admission:string[]|import('../core/admission.js').MintAdmission,limits={slippageBps:100,impactBps:200}){
+ if(Array.isArray(admission))ensure(admission.includes(i.expected.outputAsset!),'output mint is outside approved pilot');
+ else ensure(admission.version==='ember-provenance-v1'&&admission.mint===i.expected.outputAsset&&admission.expiresAt>Date.now()&&!!admission.policyHash&&!!admission.evidenceHash,'fresh funded provenance admission required');
  const started=Date.now(),quote=await jupiter.build(i.expected.outputAsset!,i.amount,payer.toBase58(),limits.slippageBps);
  ensure(quote.inputMint===WSOL&&quote.outputMint===i.expected.outputAsset&&quote.inAmount===i.amount,'quote identity mismatch');
  ensure(new Decimal(quote.priceImpactPct).abs().lte(new Decimal(limits.impactBps).div(10000))&&quote.slippageBps<=limits.slippageBps,'quote exceeds approved impact/slippage limits');

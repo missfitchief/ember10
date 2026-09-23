@@ -42,7 +42,7 @@ export async function parsedTransfers(connection:Connection,signature:string){
 export class SolanaChain implements Chain {
  mode:'test'|'live';connection:Connection;secondary?:Connection;
  constructor(public config:Config,public signer:Signer,public simulatedMarket?:{signer:Keypair;outputFor:(i:Intent)=>bigint},public swapBuilder?:(i:Intent)=>Promise<VersionedTransaction>){
-  ensure(config.MODE==='test'||config.MODE==='live','prelaunch/demo have no signer');ensure(config.BROADCAST_ENABLED,'broadcast disabled');this.mode=config.MODE;
+  ensure(config.MODE==='test'||config.MODE==='live','prelaunch/demo have no signer');this.mode=config.MODE;
   this.connection=new Connection(config.RPC_URL,'finalized');if(config.SECONDARY_RPC_URL)this.secondary=new Connection(config.SECONDARY_RPC_URL,'finalized');
   ensure(!simulatedMarket||config.MODE==='test','simulated swaps forbidden live');
  }
@@ -53,6 +53,7 @@ export class SolanaChain implements Chain {
   const account=await getAccount(this.connection,ata,'finalized',TOKEN_PROGRAM_ID);return {exists:true,valid:account.owner.toBase58()===owner&&account.mint.toBase58()===asset&&!account.isFrozen,rent:0n};}
  async prepare(i:Intent,authorizeSigning?:()=>Promise<void>):Promise<Signed>{
   ensure(!this.config.MASTER_PAUSE,'master pause prevents new signing');
+  ensure(this.config.BROADCAST_ENABLED,'broadcast disabled; inspection only');
   ensure(this.mode!=='live'||authorizeSigning,'live preparation requires a fresh signing authorization');
   await this.verifyCluster();const payer=this.signer.publicKey;ensure(!this.config.TREASURY||payer.toBase58()===this.config.TREASURY,'signer/treasury mismatch');
   const ix:TransactionInstruction[]=[];let tx:VersionedTransaction;
@@ -67,7 +68,7 @@ export class SolanaChain implements Chain {
    const mint=new PublicKey(i.asset),metadata=await getMint(this.connection,mint,'finalized');ix.push(createBurnCheckedInstruction(getAssociatedTokenAddressSync(mint,payer),mint,payer,BigInt(i.amount),metadata.decimals));
   }else{
    for(const p of i.expected.transfers??[]){ensure(p.destination===this.destination(p.owner,i.asset),'noncanonical destination');
-    if(i.asset===SOL){ensure(i.kind==='operations'&&p.owner===this.config.OPERATIONS,'unapproved SOL recipient');ix.push(SystemProgram.transfer({fromPubkey:payer,toPubkey:new PublicKey(p.owner),lamports:BigInt(p.amount)}));}
+    if(i.asset===SOL){const developer=i.expected.purpose==='developer_payout';ensure(i.kind==='operations'&&(developer?this.config.DEV_PAYOUT_ENABLED&&p.owner===this.config.DEVELOPER_PAYOUT_WALLET:p.owner===this.config.OPERATIONS),'unapproved SOL recipient');ix.push(SystemProgram.transfer({fromPubkey:payer,toPubkey:new PublicKey(p.owner),lamports:BigInt(p.amount)}));}
     else {const mint=new PublicKey(i.asset),owner=new PublicKey(p.owner),status=await this.destinationStatus(p.owner,i.asset);ensure(status.valid,'recipient ATA is invalid or frozen');
      const metadata=await getMint(this.connection,mint,'finalized');ensure(metadata.decimals===i.expected.decimals,'mint decimals changed');ensure(metadata.mintAuthority===null&&metadata.freezeAuthority===null,'unsupported active authority');
      const destination=status.exists?new PublicKey(p.destination):addAta(owner,mint);const source=getAssociatedTokenAddressSync(mint,payer);ensure(source.toBase58()===i.expected.sourceTokenAccount,'source account mismatch');
@@ -90,7 +91,7 @@ export class SolanaChain implements Chain {
   ensure(height!==undefined||typeof i.expected.lastValidHeight==='number','missing expiry metadata');
   const bytes=Buffer.from(tx.serialize());return {signature:bs58.encode(tx.signatures[0]),bytes,blockhash,lastValidHeight:height??Number(i.expected.lastValidHeight),messageHash:hash(Buffer.from(tx.message.serialize()).toString('base64')),approvedPlan:i.expected};
  }
- async broadcast(s:Signed){await this.verifyCluster();ensure((await this.connection.isBlockhashValid(s.blockhash,{commitment:'finalized'})).value,'blockhash expired; reconcile only');ensure(await this.connection.getBlockHeight('finalized')<=s.lastValidHeight,'expired block height');
+ async broadcast(s:Signed){ensure(this.config.BROADCAST_ENABLED&&!this.config.MASTER_PAUSE,'broadcast paused; inspection only');await this.verifyCluster();ensure((await this.connection.isBlockhashValid(s.blockhash,{commitment:'finalized'})).value,'blockhash expired; reconcile only');ensure(await this.connection.getBlockHeight('finalized')<=s.lastValidHeight,'expired block height');
   const signature=await this.connection.sendRawTransaction(s.bytes,{skipPreflight:false,maxRetries:0,preflightCommitment:'finalized'});ensure(signature===s.signature,'RPC returned different signature');}
  async inspect(i:Intent,s:Signed):Promise<Outcome>{
   let status;try{status=(await this.connection.getSignatureStatuses([s.signature],{searchTransactionHistory:true})).value[0];}catch{return {status:'unknown',signature:s.signature};}

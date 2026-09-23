@@ -15,6 +15,10 @@ export const configSchema=z.object({
  BROADCAST_ENABLED:bool, MASTER_PAUSE:z.enum(['true','false']).default('true').transform(x=>x==='true'),
  APPROVAL_FILE:z.string().optional(), MAX_ROUND_LAMPORTS:raw.default('1000000000'), MAX_DAY_LAMPORTS:raw.default('5000000000'),
  MIN_RESERVE_LAMPORTS:raw.default('100000000'), MAX_TX_FEE_LAMPORTS:raw.default('100000'),
+ DEVELOPER_PAYOUT_WALLET:optionalAddress, DEV_PAYOUT_ENABLED:bool,
+ DEV_MIN_PAYOUT_LAMPORTS:raw.default('10000000'), DEV_RETAINED_RESERVE_LAMPORTS:raw.default('100000000'),
+ DEV_PAYOUT_MAX_COST_LAMPORTS:raw.default('100000'), DEV_PAYOUT_HOUR_UTC:z.coerce.number().int().min(0).max(23).default(0),
+ EMBER10_PROXY_SECRET:z.string().min(32).optional(),
  API_PORT:z.coerce.number().int().min(1024).max(65535).default(4310), HOST:z.string().default('127.0.0.1'),
  CENSUS_COMPLETE_CONTRACT:z.enum(['true','false']).default('false').transform(x=>x==='true')
 }).superRefine((c,ctx)=>{
@@ -22,6 +26,8 @@ export const configSchema=z.object({
  if(c.MODE==='demo'&&c.BROADCAST_ENABLED)fail('demo can never broadcast');
  if(c.MODE==='prelaunch'&&c.BROADCAST_ENABLED)fail('prelaunch can never broadcast');
  if(c.MODE==='test'&&c.CLUSTER==='mainnet-beta')fail('test keys cannot use mainnet');
+ if(c.DEV_PAYOUT_ENABLED&&(!c.DEVELOPER_PAYOUT_WALLET||c.MODE!=='live'))fail('developer payouts require a live approved destination');
+ if(c.DEVELOPER_PAYOUT_WALLET===c.TREASURY&&c.DEVELOPER_PAYOUT_WALLET)fail('developer destination must differ from treasury');
  if(c.MODE==='live'){
   if(c.CLUSTER!=='mainnet-beta')fail('live requires mainnet identity');
   if(!c.OUR_MINT||!c.OUR_POOL||!c.TREASURY||!c.OPERATIONS||!c.SECONDARY_RPC_URL||!c.JUPITER_API_KEY)fail('live configuration incomplete');

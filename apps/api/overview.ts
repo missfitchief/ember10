@@ -3,7 +3,7 @@ import type { PublicOverview } from '../../packages/shared/public.js';
 
 export const publicPolicy: PublicOverview['policy'] = {
   version: 'ember10-v2', basketSize: 10, assetWeightBps: 1000, rewardsBps: 8000, buybackBps: 1000, operationsBps: 1000,
-  holderUnits: '100000', rankingBasis: 'Verified circulating market cap (required for selection)',
+  holderUnits: '100000', minBasketMicroUsd: '50000000', rankingBasis: 'Verified circulating market cap (required for selection)',
   eligibilityRules: ['Verified Ember origin and graduated pool', 'At least 24 hours old', 'Verified liquidity ≥ $10,000 and 24h volume ≥ $5,000', 'Complete census of at least 50 owners', 'Supported SPL token with revoked mint and freeze authorities', 'Verified route for intended purchase budget', 'Comparable circulating market cap and fresh complete data', 'Project token and unsupported asset categories excluded']
 };
 const service = new MarketDataService();
