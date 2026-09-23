@@ -188,3 +188,11 @@ it('developer expenses approved during external authorization block the final lo
  expect(prepared).not.toHaveBeenCalled();expect((await db.pool.query('SELECT id FROM attempts')).rowCount).toBe(0);expect((await db.pool.query('SELECT status FROM intents WHERE id=$1',[id])).rows[0].status).toBe('waiting_for_route');
  expect((await accounting.summary(p)).pendingTransfers).toBe('399900000');
 });
+it('the actual local overview route and hosted adapter expose the same recorded selection and funded epoch',async()=>{
+ await seed();const service=await commit();await db.doc('observation',service.current());
+ const raw=JSON.parse(readFileSync(new URL('./fixtures/ember-catalogue-2026-09-23.json',import.meta.url),'utf8')),configs=JSON.parse(readFileSync(new URL('./fixtures/ember-configs-2026-09-23.json',import.meta.url),'utf8')),app=createServer(db,loadConfig({MODE:'prelaunch'}));
+ vi.stubGlobal('fetch',vi.fn(async(input:string|URL|Request)=>{const url=new URL(String(input));if(url.hostname==='ledger.example'){const response=await app.inject({method:'GET',url:url.pathname+url.search});return new Response(response.body,{status:response.statusCode,headers:{'content-type':'application/json'}});}return Response.json(url.pathname.endsWith('/configs')?configs:raw);}));
+ const local=await app.inject({method:'GET',url:'/api/overview?limit=5'});expect(local.statusCode).toBe(200);
+ const remote=await hostedRead(new Request('https://edge.example/api/overview?limit=5'),'https://ledger.example');expect(remote.status).toBe(200);
+ const value=await remote.json();expect(value.selection.selectedCount).toBe(10);expect(value.fundedBasket.epochId).toBe('first');expect(value.accounting).toMatchObject({opsAllocation:'98000000',unit:'lamports'});expect(value.markets).toHaveLength(5);expect(value.selection).toEqual(local.json().selection);await app.close();
+});
