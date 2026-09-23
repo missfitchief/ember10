@@ -1,0 +1,38 @@
+{
+  "at": "2026-09-23T20:32:53.004Z",
+  "sourceRevision": "b224b1ccd9cdaa26bf06c59ff17ac53e4a85b0c3",
+  "applicationRevision": "ed67a05f7b676108a98dcaf29460d2fdc60fecc6",
+  "applicationTestConfigDrift": [],
+  "typecheck": "passed",
+  "completeSuite": {
+    "rerun": false,
+    "reason": "Application and test code unchanged from the 258-test,20-file verified revision",
+    "evidence": "../r2/tests.json"
+  },
+  "publicRecheck": {
+    "passed": true,
+    "assets": 8,
+    "logos": 10,
+    "evidence": "public-proof.json"
+  },
+  "financialReproduction": {
+    "passed": true,
+    "meaning": "Current forecast defect reproduced; not remediation or funded settlement",
+    "executedRevision": "b224b1ccd9cdaa26bf06c59ff17ac53e4a85b0c3",
+    "workingTreeDirty": false,
+    "harnessSha256": "0ce26cbc3886c543ec1628b4c2f0f19308797dba4bacfb4590641fbfbd1a1614",
+    "evidence": "harness-recheck.json"
+  },
+  "packetLinks": {
+    "checked": 58,
+    "broken": 0
+  },
+  "findingIds": {
+    "total": 56,
+    "unique": 56,
+    "inherited": 37,
+    "r2": 19
+  },
+  "review": "packet-review.md",
+  "externalAudit": "pending"
+}

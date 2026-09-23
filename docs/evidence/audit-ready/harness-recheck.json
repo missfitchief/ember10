@@ -1,0 +1,432 @@
+{
+  "auditedBaseRevision": "4f9fba2fd95d6fd8057c27d56cfad0297b9f06ce",
+  "executedRevision": "b224b1ccd9cdaa26bf06c59ff17ac53e4a85b0c3",
+  "workingTreeDirty": false,
+  "harnessSha256": "0ce26cbc3886c543ec1628b4c2f0f19308797dba4bacfb4590641fbfbd1a1614",
+  "kind": "local_read_only_adapter_harness",
+  "signed": 0,
+  "broadcast": 0,
+  "networkRequests": 0,
+  "fixtureCaveat": "Legacy route instruction and RPC responses are mocked; this does not establish current Jupiter live compatibility.",
+  "oldLow": {
+    "forecast": "23632080",
+    "actualFee": "5000",
+    "completed": 10,
+    "remaining": "3189280",
+    "rows": [
+      {
+        "transaction": 1,
+        "kind": "buyback",
+        "before": "23632080",
+        "requiredCash": "4178560",
+        "netDebit": "2044280",
+        "status": "build_passed"
+      },
+      {
+        "transaction": 2,
+        "kind": "swap",
+        "before": "21587800",
+        "requiredCash": "4178560",
+        "netDebit": "2044280",
+        "status": "build_passed"
+      },
+      {
+        "transaction": 3,
+        "kind": "swap",
+        "before": "19543520",
+        "requiredCash": "4178560",
+        "netDebit": "2044280",
+        "status": "build_passed"
+      },
+      {
+        "transaction": 4,
+        "kind": "swap",
+        "before": "17499240",
+        "requiredCash": "4178560",
+        "netDebit": "2044280",
+        "status": "build_passed"
+      },
+      {
+        "transaction": 5,
+        "kind": "swap",
+        "before": "15454960",
+        "requiredCash": "4178560",
+        "netDebit": "2044280",
+        "status": "build_passed"
+      },
+      {
+        "transaction": 6,
+        "kind": "swap",
+        "before": "13410680",
+        "requiredCash": "4178560",
+        "netDebit": "2044280",
+        "status": "build_passed"
+      },
+      {
+        "transaction": 7,
+        "kind": "swap",
+        "before": "11366400",
+        "requiredCash": "4178560",
+        "netDebit": "2044280",
+        "status": "build_passed"
+      },
+      {
+        "transaction": 8,
+        "kind": "swap",
+        "before": "9322120",
+        "requiredCash": "4178560",
+        "netDebit": "2044280",
+        "status": "build_passed"
+      },
+      {
+        "transaction": 9,
+        "kind": "swap",
+        "before": "7277840",
+        "requiredCash": "4178560",
+        "netDebit": "2044280",
+        "status": "build_passed"
+      },
+      {
+        "transaction": 10,
+        "kind": "swap",
+        "before": "5233560",
+        "requiredCash": "4178560",
+        "netDebit": "2044280",
+        "status": "build_passed"
+      },
+      {
+        "transaction": 11,
+        "kind": "swap",
+        "before": "3189280",
+        "requiredCash": "4178560",
+        "shortfall": "989280",
+        "status": "build_rejected",
+        "reason": "swap rent/fee allowance insufficient"
+      }
+    ]
+  },
+  "oldMax": {
+    "forecast": "23632080",
+    "actualFee": "100000",
+    "completed": 10,
+    "remaining": "2239280",
+    "rows": [
+      {
+        "transaction": 1,
+        "kind": "buyback",
+        "before": "23632080",
+        "requiredCash": "4178560",
+        "netDebit": "2139280",
+        "status": "build_passed"
+      },
+      {
+        "transaction": 2,
+        "kind": "swap",
+        "before": "21492800",
+        "requiredCash": "4178560",
+        "netDebit": "2139280",
+        "status": "build_passed"
+      },
+      {
+        "transaction": 3,
+        "kind": "swap",
+        "before": "19353520",
+        "requiredCash": "4178560",
+        "netDebit": "2139280",
+        "status": "build_passed"
+      },
+      {
+        "transaction": 4,
+        "kind": "swap",
+        "before": "17214240",
+        "requiredCash": "4178560",
+        "netDebit": "2139280",
+        "status": "build_passed"
+      },
+      {
+        "transaction": 5,
+        "kind": "swap",
+        "before": "15074960",
+        "requiredCash": "4178560",
+        "netDebit": "2139280",
+        "status": "build_passed"
+      },
+      {
+        "transaction": 6,
+        "kind": "swap",
+        "before": "12935680",
+        "requiredCash": "4178560",
+        "netDebit": "2139280",
+        "status": "build_passed"
+      },
+      {
+        "transaction": 7,
+        "kind": "swap",
+        "before": "10796400",
+        "requiredCash": "4178560",
+        "netDebit": "2139280",
+        "status": "build_passed"
+      },
+      {
+        "transaction": 8,
+        "kind": "swap",
+        "before": "8657120",
+        "requiredCash": "4178560",
+        "netDebit": "2139280",
+        "status": "build_passed"
+      },
+      {
+        "transaction": 9,
+        "kind": "swap",
+        "before": "6517840",
+        "requiredCash": "4178560",
+        "netDebit": "2139280",
+        "status": "build_passed"
+      },
+      {
+        "transaction": 10,
+        "kind": "swap",
+        "before": "4378560",
+        "requiredCash": "4178560",
+        "netDebit": "2139280",
+        "status": "build_passed"
+      },
+      {
+        "transaction": 11,
+        "kind": "swap",
+        "before": "2239280",
+        "requiredCash": "4178560",
+        "shortfall": "1939280",
+        "status": "build_rejected",
+        "reason": "swap rent/fee allowance insufficient"
+      }
+    ]
+  },
+  "newLow": {
+    "forecast": "25671360",
+    "actualFee": "5000",
+    "completed": 11,
+    "burnAllowancePassed": true,
+    "afterBurn": "3179280",
+    "rows": [
+      {
+        "transaction": 1,
+        "kind": "buyback",
+        "before": "25671360",
+        "requiredCash": "4178560",
+        "netDebit": "2044280",
+        "status": "build_passed"
+      },
+      {
+        "transaction": 2,
+        "kind": "swap",
+        "before": "23627080",
+        "requiredCash": "4178560",
+        "netDebit": "2044280",
+        "status": "build_passed"
+      },
+      {
+        "transaction": 3,
+        "kind": "swap",
+        "before": "21582800",
+        "requiredCash": "4178560",
+        "netDebit": "2044280",
+        "status": "build_passed"
+      },
+      {
+        "transaction": 4,
+        "kind": "swap",
+        "before": "19538520",
+        "requiredCash": "4178560",
+        "netDebit": "2044280",
+        "status": "build_passed"
+      },
+      {
+        "transaction": 5,
+        "kind": "swap",
+        "before": "17494240",
+        "requiredCash": "4178560",
+        "netDebit": "2044280",
+        "status": "build_passed"
+      },
+      {
+        "transaction": 6,
+        "kind": "swap",
+        "before": "15449960",
+        "requiredCash": "4178560",
+        "netDebit": "2044280",
+        "status": "build_passed"
+      },
+      {
+        "transaction": 7,
+        "kind": "swap",
+        "before": "13405680",
+        "requiredCash": "4178560",
+        "netDebit": "2044280",
+        "status": "build_passed"
+      },
+      {
+        "transaction": 8,
+        "kind": "swap",
+        "before": "11361400",
+        "requiredCash": "4178560",
+        "netDebit": "2044280",
+        "status": "build_passed"
+      },
+      {
+        "transaction": 9,
+        "kind": "swap",
+        "before": "9317120",
+        "requiredCash": "4178560",
+        "netDebit": "2044280",
+        "status": "build_passed"
+      },
+      {
+        "transaction": 10,
+        "kind": "swap",
+        "before": "7272840",
+        "requiredCash": "4178560",
+        "netDebit": "2044280",
+        "status": "build_passed"
+      },
+      {
+        "transaction": 11,
+        "kind": "swap",
+        "before": "5228560",
+        "requiredCash": "4178560",
+        "netDebit": "2044280",
+        "status": "build_passed"
+      }
+    ]
+  },
+  "newMax": {
+    "forecast": "25671360",
+    "actualFee": "100000",
+    "completed": 11,
+    "burnAllowancePassed": true,
+    "afterBurn": "2039280",
+    "rows": [
+      {
+        "transaction": 1,
+        "kind": "buyback",
+        "before": "25671360",
+        "requiredCash": "4178560",
+        "netDebit": "2139280",
+        "status": "build_passed"
+      },
+      {
+        "transaction": 2,
+        "kind": "swap",
+        "before": "23532080",
+        "requiredCash": "4178560",
+        "netDebit": "2139280",
+        "status": "build_passed"
+      },
+      {
+        "transaction": 3,
+        "kind": "swap",
+        "before": "21392800",
+        "requiredCash": "4178560",
+        "netDebit": "2139280",
+        "status": "build_passed"
+      },
+      {
+        "transaction": 4,
+        "kind": "swap",
+        "before": "19253520",
+        "requiredCash": "4178560",
+        "netDebit": "2139280",
+        "status": "build_passed"
+      },
+      {
+        "transaction": 5,
+        "kind": "swap",
+        "before": "17114240",
+        "requiredCash": "4178560",
+        "netDebit": "2139280",
+        "status": "build_passed"
+      },
+      {
+        "transaction": 6,
+        "kind": "swap",
+        "before": "14974960",
+        "requiredCash": "4178560",
+        "netDebit": "2139280",
+        "status": "build_passed"
+      },
+      {
+        "transaction": 7,
+        "kind": "swap",
+        "before": "12835680",
+        "requiredCash": "4178560",
+        "netDebit": "2139280",
+        "status": "build_passed"
+      },
+      {
+        "transaction": 8,
+        "kind": "swap",
+        "before": "10696400",
+        "requiredCash": "4178560",
+        "netDebit": "2139280",
+        "status": "build_passed"
+      },
+      {
+        "transaction": 9,
+        "kind": "swap",
+        "before": "8557120",
+        "requiredCash": "4178560",
+        "netDebit": "2139280",
+        "status": "build_passed"
+      },
+      {
+        "transaction": 10,
+        "kind": "swap",
+        "before": "6417840",
+        "requiredCash": "4178560",
+        "netDebit": "2139280",
+        "status": "build_passed"
+      },
+      {
+        "transaction": 11,
+        "kind": "swap",
+        "before": "4278560",
+        "requiredCash": "4178560",
+        "netDebit": "2139280",
+        "status": "build_passed"
+      }
+    ]
+  },
+  "unknownDiscriminators": [
+    {
+      "hex": "d19853937cfed8e9",
+      "decoded": null
+    },
+    {
+      "hex": "bb64facc31c4af14",
+      "decoded": null
+    }
+  ],
+  "payoutCensus": {
+    "rows": 100,
+    "fullWindowRejectedByStrictSchema": true,
+    "keepRows": [
+      {
+        "kind": "claim",
+        "amount": 0,
+        "claimed": 0.525022996,
+        "quoteMint": "So11111111111111111111111111111111111111112"
+      },
+      {
+        "kind": "claim",
+        "amount": 0,
+        "claimed": 0.00276656,
+        "quoteMint": "XsCPL9dNWBMvFtTmwcCA5v3xWPSMEBCszbQdiLLq6aN"
+      }
+    ],
+    "keepPayoutWSOL": 0,
+    "missingSignature": [
+      "perp",
+      "sweep"
+    ]
+  }
+}

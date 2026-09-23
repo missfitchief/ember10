@@ -30,6 +30,8 @@ Do not infer funded readiness from 258 passing tests. Five high dependency entri
 
 ## Current evidence
 
+[Packet checks](evidence/audit-ready/checks.json), [separate packet review](evidence/audit-ready/packet-review.md) and [fresh financial failure reproduction](evidence/audit-ready/harness-recheck.json) document this audit-preparation update.
+
 - [Complete test report](evidence/r2/tests.json), [validation metadata](evidence/r2/validation.json), [dependency scan](evidence/r2/dependency-audit.json).
 - [Latest public recheck](evidence/audit-ready/public-proof.json), [candidate proof](evidence/r2/candidate-verification.json), [publication proof](evidence/r2/public-verification.json), [API/logo checks](evidence/r2/public-api-checks.json).
 - [Public browser checks](evidence/r2/public-browser.json), [local checks](evidence/r2/local-browser.json), [fixture interaction checks](evidence/r2/frontend-browser.json).

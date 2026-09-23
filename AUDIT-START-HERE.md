@@ -9,6 +9,7 @@ This is the complete source repository, including tests, migrations and recorded
 - [R2 correction and open financial blockers](docs/AUDIT-R2.md).
 - [Latest publication recheck](docs/evidence/audit-ready/public-proof.json): eight asset hashes and ten actual catalogue logos.
 - [Desktop/mobile and before/after screenshots](docs/evidence/r2/).
+- [Packet verification](docs/evidence/audit-ready/checks.json) and [separate packet review](docs/evidence/audit-ready/packet-review.md).
 
 The last complete test run passed 258 tests in 20 files against isolated PostgreSQL schemas. Its date, source and limits are recorded; preparing this package does not imply a newer full test run. Real funded settlement was not performed. Signing, broadcast and the financial worker remain disabled on the public host.
 
