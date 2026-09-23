@@ -25,6 +25,7 @@ export function ledgerResult(v:PublicRecord):Ledger|null {
 /** Only an explicit service response establishes that this host has no connected ledger. */
 export function ledgerConnection(v: PublicRecord): { availability: 'available' | 'unavailable'; ledger: Ledger | null; message: string } {
   if (v.mode === 'demo' || v.mode === 'test' || v.testOnly === true) throw Error('Test accounting is not presented as a connected reward ledger.');
+  if (v.status != null && !['available', 'unavailable'].includes(String(v.status))) throw Error('The reward service reported an unsupported accounting status.');
   if (v.status === 'unavailable') return { availability: 'unavailable', ledger: null, message: typeof v.message === 'string' ? v.message : 'Verified reward records are not connected yet.' };
   const ledger = ledgerResult(v);
   if (!ledger) throw Error('The reward service returned an unreadable accounting record.');

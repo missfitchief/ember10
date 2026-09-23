@@ -223,6 +223,9 @@ describe('Frontend audit regressions', () => {
   it('requires an explicit reward-service response to establish a known unavailable connection', () => {
     expect(ledgerConnection({status:'unavailable',message:'No verified ledger'})).toEqual({availability:'unavailable',ledger:null,message:'No verified ledger'});
     expect(ledgerConnection({assets:[],accrued:[]})).toMatchObject({availability:'available'});
+    expect(ledgerConnection({status:'available',assets:[],accrued:[]})).toMatchObject({availability:'available'});
+    expect(()=>ledgerConnection({status:'warming',assets:[],accrued:[]})).toThrow('unsupported accounting status');
+    expect(()=>ledgerConnection({status:'',assets:[],accrued:[]})).toThrow('unsupported accounting status');
     expect(()=>ledgerConnection({})).toThrow('unreadable');
     expect(()=>ledgerConnection({mode:'demo',status:'unavailable'})).toThrow('Test accounting');
   });
