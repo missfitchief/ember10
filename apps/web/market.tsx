@@ -55,13 +55,12 @@ export function MarketPanel({ data, loading, error, retry }: { data?: PublicOver
     cache.current.set(key, snapshot);
   }
   useEffect(() => { setLimit(20); }, [requestKey, view]);
+  // Only a new query or view starts a page request. Parent polls are handled below.
   useEffect(() => {
     const version = ++requestVersion.current;
     const controller = new AbortController();
     if (view === 'funded' || defaultRanking) {
-      setPage(previous => defaultRanking && previous?.key===requestKey && previous.snapshot && previous.snapshot.markets.length>(data?.markets.length??0)
-        ? {...previous,busy:false,notice:'A newer observation may be available. Your expanded list is retained until you refresh it.'}
-        : { key: requestKey, snapshot: data, busy: false, error: '', notice: '' });
+      setPage({ key: requestKey, snapshot: data, busy: false, error: '', notice: '' });
       return () => { controller.abort(); ++requestVersion.current; };
     }
     setPage({ key: requestKey, snapshot: cache.current.get(requestKey), busy: true, error: '', notice: '' });
@@ -75,7 +74,18 @@ export function MarketPanel({ data, loading, error, retry }: { data?: PublicOver
       });
     }, 300);
     return () => { clearTimeout(timer); controller.abort(); ++requestVersion.current; };
-  }, [query, view, data]);
+  }, [requestKey, view]);
+
+  useEffect(() => {
+    if (view === 'funded') return;
+    setPage(previous => {
+      if (previous?.key !== requestKey || !previous.snapshot) return defaultRanking ? { key: requestKey, snapshot: data, busy: false, error: '', notice: '' } : previous;
+      const snapshot = previous.snapshot;
+      if (defaultRanking && snapshot.markets.length <= (data?.markets.length ?? 0)) return { key: requestKey, snapshot: data, busy: false, error: '', notice: '' };
+      const changed = snapshot.discovery.fetchedAt !== data?.discovery.fetchedAt || snapshot.discovery.evidenceHash !== data?.discovery.evidenceHash || snapshot.discovery.status !== data?.discovery.status || snapshot.revision !== data?.revision;
+      return changed ? { ...previous, notice: 'A newer observation may be available. Your current list is retained until you refresh it.' } : previous;
+    });
+  }, [data]);
 
   async function more() {
     if (limit < rows.length) { setLimit(n => n + 30); return; }
@@ -112,7 +122,7 @@ export function MarketPanel({ data, loading, error, retry }: { data?: PublicOver
     setPage({ key: requestKey, snapshot: current, busy: true, error: '', notice: '' });
     api<PublicOverview>(path()).then(assertOverview).then(snapshot => {
       if (version !== requestVersion.current) return;
-      remember(requestKey, snapshot); setPage({ key: requestKey, snapshot, busy: false, error: '', notice: '' });
+      remember(requestKey, snapshot); setLimit(20); setPage({ key: requestKey, snapshot, busy: false, error: '', notice: '' });
     }).catch(e => { if (version === requestVersion.current) setPage({ key: requestKey, snapshot: current, busy: false, error: (e as Error).message, notice: '' }); });
   };
   return <section className="market-panel" aria-label="Market and reward basket">

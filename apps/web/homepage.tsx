@@ -29,7 +29,7 @@ function Constellation({ assets, inspect, loading }: { assets: PublicMarket[]; i
   }, []);
   const still = paused || reduced || !inView || !visible;
   return <div className={`constellation ${still ? 'is-still' : ''}`} ref={scene}>
-    <div className="orbit-stage" aria-label="Ten leading observed Ember markets">
+    <div className="orbit-stage" role="group" aria-label="Ten leading observed Ember markets">
       <div className="orbit-aura" aria-hidden="true" />
       <div className="orbit-ring ring-one" aria-hidden="true" /><div className="orbit-ring ring-two" aria-hidden="true" />
       <svg className="orbit-wires" viewBox="0 0 1000 420" preserveAspectRatio="none" aria-hidden="true">
@@ -43,7 +43,7 @@ function Constellation({ assets, inspect, loading }: { assets: PublicMarket[]; i
         const asset = assets[i];
         const style = { '--x': `${x}%`, '--y': `${y}%`, '--drift': `${5.8 + (i % 4) * .6}s`, '--delay': `${i * -.79}s` } as React.CSSProperties;
         return <div className={`orbit-position position-${i} ${active === i ? 'is-active' : ''}`} key={asset?.mint ?? `slot-${i}`} style={style}>
-          {asset ? <button className="orbit-token" onClick={() => inspect(asset)} onMouseEnter={() => setActive(i)} onMouseLeave={() => setActive(undefined)} onFocus={() => setActive(i)} onBlur={() => setActive(undefined)} aria-label={`Inspect ${asset.symbol}, rank ${asset.rank}, mint ${asset.mint}`}><span className="orbit-rank">{String(asset.rank).padStart(2, '0')}</span><Avatar asset={asset} loading="eager" /><span className="orbit-token-text"><strong>{asset.symbol}</strong><small>{money(asset.marketCapUsd)}</small></span><span className="orbit-peek" aria-hidden="true"><Icon name="external" /></span></button> : <div className="orbit-token orbit-placeholder" aria-label={`Market slot ${i + 1}: ${loading ? 'loading' : 'unavailable'}`}><span className="placeholder-coin">{String(i + 1).padStart(2, '0')}</span><span className="orbit-token-text"><strong>{loading ? 'Loading' : 'Awaiting data'}</strong><small>Ember market</small></span></div>}
+          {asset ? <button className="orbit-token" onClick={() => inspect(asset)} onMouseEnter={() => setActive(i)} onMouseLeave={() => setActive(undefined)} onFocus={() => setActive(i)} onBlur={() => setActive(undefined)} aria-label={`Inspect ${asset.symbol}, rank ${asset.rank}, mint ${asset.mint}`}><span className="orbit-rank">{String(asset.rank).padStart(2, '0')}</span><Avatar asset={asset} loading="eager" /><span className="orbit-token-text"><strong>{asset.symbol}</strong><small>{money(asset.marketCapUsd)}</small></span><span className="orbit-peek" aria-hidden="true"><Icon name="external" /></span></button> : <div className="orbit-token orbit-placeholder" role="group" aria-label={`Market slot ${i + 1}: ${loading ? 'loading' : 'unavailable'}`}><span className="placeholder-coin">{String(i + 1).padStart(2, '0')}</span><span className="orbit-token-text"><strong>{loading ? 'Loading' : 'Awaiting data'}</strong><small>Ember market</small></span></div>}
         </div>;
       })}
     </div>

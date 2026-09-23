@@ -86,7 +86,8 @@ export function marketRequestState(snapshot: PublicOverview | undefined, pending
 }
 export function filterMarkets(rows: PublicMarket[], query: string, selectionOnly: boolean) {
   const q = query.trim().toLowerCase();
-  return rows.filter(row => (!selectionOnly || row.selected) && (!q || `${row.symbol} ${row.name} ${row.mint}`.toLowerCase().includes(q)));
+  // Keep the same field order as the server, including queries spanning two fields.
+  return rows.filter(row => (!selectionOnly || row.selected) && (!q || `${row.mint} ${row.name} ${row.symbol}`.toLowerCase().includes(q)));
 }
 
 /** Pages can only be combined when they describe the same fetched ranking and request. */
@@ -103,12 +104,25 @@ export function mergeMarketPages(previous: PublicOverview, next: PublicOverview)
   return { ...next, markets: [...previous.markets, ...next.markets] };
 }
 
+// The hosted service has a 25s total deadline; allow its cold retry and response time.
+export const PUBLIC_REQUEST_TIMEOUT_MS = 28_000;
 export async function api<T>(path: string, signal?: AbortSignal): Promise<T> {
-  const response = await fetch(`/api/${path}`, { headers: { accept:'application/json' }, signal });
-  const body = await response.json().catch(() => null);
-  if (!response.ok) throw Error(body?.message || body?.reason || 'The service is unavailable. Please try again.');
-  if (!body || typeof body !== 'object') throw Error('The service returned an unreadable response.');
-  return body as T;
+  const controller = new AbortController();
+  let timedOut = false;
+  const abort = () => controller.abort(signal?.reason);
+  if (signal?.aborted) abort(); else signal?.addEventListener('abort', abort, { once: true });
+  const timeout = setTimeout(() => { timedOut = true; controller.abort(); }, PUBLIC_REQUEST_TIMEOUT_MS);
+  try {
+    const response = await fetch(`/api/${path}`, { headers: { accept:'application/json' }, signal: controller.signal });
+    const body = await response.json().catch(() => null);
+    if (timedOut) throw Error('Request timed out');
+    if (!response.ok) throw Error(body?.message || body?.reason || 'The service is unavailable. Please try again.');
+    if (!body || typeof body !== 'object') throw Error('The service returned an unreadable response.');
+    return body as T;
+  } catch (error) {
+    if (timedOut) throw Error('The service took too long to respond. Please retry.');
+    throw error;
+  } finally { clearTimeout(timeout); signal?.removeEventListener('abort', abort); }
 }
 export function assertOverview(data: PublicOverview) {
   if (data.schemaVersion !== 1 || data.project?.dataMode !== 'real' || !Array.isArray(data.markets) || !data.discovery || !data.selection || !data.fundedBasket || !data.accounting) throw Error('The public data contract is unavailable. No replacement assets are shown.');

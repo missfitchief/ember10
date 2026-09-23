@@ -24,11 +24,10 @@ function App() {
     if (request.current) return;
     const controller = new AbortController();
     request.current = controller;
-    const timeout = setTimeout(() => controller.abort(), 15000);
     setLoading(true);
     try { const overview = assertOverview(await api<PublicOverview>('overview', controller.signal)); if (mounted.current) { setData(overview); setError(''); } }
     catch (e) { if (mounted.current) { setError(controller.signal.aborted ? 'The source took too long to respond. Please retry.' : (e as Error).message); setData(current => current ? { ...current, discovery: { ...current.discovery, status: 'stale', message: 'Refresh failed. Showing the previous real observation.' }, selection: { ...current.selection, commitmentsAllowed: false } } : undefined); } }
-    finally { clearTimeout(timeout); request.current = null; if (mounted.current) setLoading(false); }
+    finally { request.current = null; if (mounted.current) setLoading(false); }
   }
   useEffect(() => { mounted.current = true; void reload(); const interval = setInterval(reload, 45000); return () => { mounted.current = false; clearInterval(interval); request.current?.abort(); }; }, []);
   useEffect(() => {
@@ -46,7 +45,7 @@ function App() {
   });
   return <>
     <a className="skip" href="#main" onClick={event=>{event.preventDefault();const main=document.getElementById('main');main?.focus({preventScroll:true});main?.scrollIntoView({behavior:'instant'});}}>Skip to content</a>
-    <header className="site-header"><div className="header-inner"><Brand /><nav className="desktop-navigation" aria-label="Main navigation">{navigation()}</nav><div className="header-actions"><span className="pill gold"><i className="dot" />{phaseLabel(data)}</span><a className="btn small desktop-action" href="#wallet" aria-current={route === 'wallet' ? 'page' : undefined}>My rewards <Icon name="arrow" /></a><div className="mobile-menu"><button ref={menuButton} aria-label={menu ? 'Close navigation menu' : 'Open navigation menu'} aria-expanded={menu} aria-controls="mobile-menu-links" className="menu-button" onClick={() => setMenu(!menu)}><Icon name={menu ? 'close' : 'menu'} /></button>{menu && <nav id="mobile-menu-links" aria-label="Mobile navigation">{navigation(true)}</nav>}</div></div></div></header>
+    <header className="site-header"><div className="header-inner"><Brand /><nav className="desktop-navigation" aria-label="Main navigation">{navigation()}</nav><div className="header-actions"><span className="pill gold"><i className="dot" />{phaseLabel(data)}</span><a className="btn small desktop-action" href="#wallet" aria-current={route === 'wallet' ? 'page' : undefined}>My rewards <Icon name="arrow" /></a><div className="mobile-menu"><button ref={menuButton} aria-label={menu ? 'Close navigation menu' : 'Open navigation menu'} aria-expanded={menu} aria-controls="mobile-menu-links" className="menu-button" onClick={() => setMenu(!menu)}><Icon name={menu ? 'close' : 'menu'} /></button><nav id="mobile-menu-links" aria-label="Mobile navigation" hidden={!menu}>{navigation(true)}</nav></div></div></div></header>
     <div className="sr" role="status" aria-live="polite" aria-atomic="true">{announcement}</div>
     <main id="main" tabIndex={-1}>
       {error && <div className="connection-error" role="alert"><span><strong>{data ? 'Refresh unavailable.' : 'Connection unavailable.'}</strong> {data ? 'Showing the last real observation with its original fetch time.' : error}</span><button className="btn small" onClick={() => void reload()}>Retry</button></div>}
