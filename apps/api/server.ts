@@ -6,6 +6,7 @@ import { Store } from '../../packages/db/store.js';
 import { Config } from '../../packages/core/config.js';
 import { canonical } from '../../packages/core/model.js';
 import * as q from './queries.js';
+import {overview} from './overview.js';
 import {parsedTransfers} from '../../packages/integrations/solana.js';
 import {Engine} from '../../packages/core/engine.js';
 import {ensure} from '../../packages/core/model.js';
@@ -19,6 +20,7 @@ export function createServer(db:Store,c:Config){
   }
  });
  app.setErrorHandler((error,req,reply)=>{const e=error as Error;const bad=e instanceof z.ZodError||e.message==='invalid address';return reply.code(bad?400:e.message==='epoch not found'?404:503).send({error:bad?'invalid_request':e.message==='epoch not found'?'not_found':'service_unavailable',message:bad?'Check the address and request parameters.':'This data is currently unavailable. No estimated values have been substituted.'});});
+ app.get('/api/overview',async(req,reply)=>{if(c.MODE==='demo'||c.MODE==='test')return reply.code(404).send({error:'not_available_in_demo'});const p=z.object({q:z.string().max(100).optional(),view:z.enum(['all','selection','excluded']).default('all'),offset:z.coerce.number().int().min(0).max(999999).default(0),limit:z.coerce.number().int().min(1).max(100).default(100)}).parse(req.query);return overview(undefined,{query:p.q,offset:p.offset,limit:p.limit,view:p.view});});
  const page=z.object({limit:z.coerce.number().int().min(1).max(100).default(20),cursor:z.string().max(200).optional()});
  app.get('/api/status',()=>q.status(db,c));app.get('/api/project',()=>q.project(db,c));app.get('/api/basket',()=>q.basket(db));
  app.get('/api/epochs',req=>{const p=page.parse(req.query);return q.epochs(db,p.limit,p.cursor);});
@@ -36,7 +38,7 @@ export function createServer(db:Store,c:Config){
  });
  app.get('/operator/selection',()=>q.basket(db));
  app.get('/operator/snapshots',async()=>({snapshots:(await db.pool.query("SELECT id,body FROM documents WHERE kind='snapshot' ORDER BY created_at DESC LIMIT 10")).rows}));
- app.get('/operator/plan',async()=>({spending:false,status:await q.status(db,c),basket:await q.basket(db),availableCreatorLamports:(await db.balance('SOL','revenue')).toString(),requirements:['five verified members','complete holder snapshot','fresh prices and real-amount routes','unchanged funding route','reserve and daily caps']}));
+ app.get('/operator/plan',async()=>({spending:false,status:await q.status(db,c),basket:await q.basket(db),availableCreatorLamports:(await db.balance('SOL','revenue')).toString(),requirements:['ten verified members under policy version 2','complete holder snapshot','fresh prices and real-amount routes','unchanged funding route','reserve and daily caps']}));
  app.post('/operator/reconcile',async()=>{await db.pool.query("INSERT INTO jobs(id,kind,body) VALUES('operator-reconcile','reconcile','{}') ON CONFLICT(id) DO UPDATE SET state='ready',available_at=now()");await db.pool.query("INSERT INTO operator_audit(actor,action,body) VALUES('authenticated-operator','reconcile','{}')");return {queued:true};});
  return app;
 }

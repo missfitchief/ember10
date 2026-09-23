@@ -44,7 +44,8 @@ const db=new Store(process.env.TEST_DATABASE_URL??'postgresql://ember5:local-dev
 const engine=new Engine(db,'test'),chain=new SolanaChain(cfg,new FileTestSigner(keeper,cluster),{signer:funding,outputFor:i=>BigInt(i.amount)*5n});
 const leased=await db.lease('test-chain-exercise',7200);ensure(leased,'another worker holds the lease');const lease=leased;
 await db.pool.query("UPDATE control SET paused=false,reason='Test-chain settlement exercise'");
-const policy={...defaultPolicy,exclusions:[{owner:funding.publicKey.toBase58(),reason:'test market inventory'},{owner:keeper.publicKey.toBase58(),reason:'test treasury'}]};
+// This existing six-mint chain exercise is an explicit legacy v1 regression.
+const policy={...defaultPolicy,version:1,exclusions:[{owner:funding.publicKey.toBase58(),reason:'test market inventory'},{owner:keeper.publicKey.toBase58(),reason:'test treasury'}]};
 await engine.ingest({signature:'test-opening-capital:'+state.openingSlot,instruction:'opening-balance',asset:SOL,amount:state.openingBalance,source:pool,destination:keeper.publicKey.toBase58(),slot:state.openingSlot,finalized:true,error:null,kind:'seed',attributionVerified:true,rawEvidence:{testOnly:true,openingCapitalSnapshot:true,setupReceipts:state.setupReceipts}}, {treasury:keeper.publicKey.toBase58()});
 if(!state.fundingSignature){state.fundingSignature=await sendAndConfirmTransaction(connection,new Transaction().add(SystemProgram.transfer({fromPubkey:funding.publicKey,toPubkey:keeper.publicKey,lamports:300000000n})),[funding],{commitment:'finalized'});await save();}
 const observed=await parsedTransfers(connection,state.fundingSignature);ensure(observed&&!observed.tx.meta?.err,'missing finalized funding');const transfer=observed.transfers.find(t=>t.destination===keeper.publicKey.toBase58())!;

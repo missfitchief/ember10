@@ -8,7 +8,7 @@ import {runIntent} from '../apps/worker/runner.js';
 import {createServer} from '../apps/api/server.js';
 import {loadConfig} from '../packages/core/config.js';
 import {exportEpoch} from '../apps/api/queries.js';
-import {SOL} from '../packages/core/model.js';
+import {SOL,defaultPolicy,hash} from '../packages/core/model.js';
 import {selectBasket,snapshot} from '../packages/core/selection.js';
 import {testAddress} from '../packages/integrations/demo.js';
 import {spawn} from 'node:child_process';
@@ -71,4 +71,18 @@ describe('durable engine on PostgreSQL',()=>{
  it('reconciliation deficit and funding route changes pause commitments, preserving liabilities',async()=>{await seed();await plan();await settle((await db.pool.query("SELECT id FROM intents WHERE kind='swap' LIMIT 1")).rows[0].id);const credits=(await db.pool.query('SELECT count(*)::int AS n FROM entitlements')).rows[0].n;
   await engine.reconcile([{asset:SOL,amount:'1',slot:500001}]);expect((await db.pool.query('SELECT paused FROM control')).rows[0].paused).toBe(true);expect(await engine.fundingRoute({mode:'keep',recipient:f.treasury},{mode:'holders',recipient:f.sender})).toBe(false);expect((await db.pool.query('SELECT count(*)::int AS n FROM entitlements')).rows[0].n).toBe(credits);});
  it('demo/live namespaces cannot mix and public clients cannot reach operator controls',async()=>{await expect(db.bindMode('live')).rejects.toThrow('mode mismatch');const app=createServer(db,loadConfig({}));const p=await app.inject({method:'GET',url:'/api/project'});expect(p.json().mint).toBeNull();expect((await app.inject({method:'POST',url:'/operator/resume'})).statusCode).toBe(401);expect((await app.inject({method:'GET',url:'/api/wallets/not-a-wallet/rewards'})).statusCode).toBe(400);expect((await app.inject({method:'GET',url:'/api/epochs?limit=1000'})).statusCode).toBe(400);expect((await app.inject({method:'POST',url:'/api/payout'})).statusCode).toBe(404);await app.close();});
+ it('funds ten equal v2 legs and keeps a funded epoch immutable after discovery changes',async()=>{
+  const now=Date.now(),policy={...defaultPolicy,exclusions:f.policy.exclusions};
+  const candidates=Array.from({length:12},(_,i)=>({...f.candidates[0],mint:testAddress('v2-reward-'+i),pool:testAddress('v2-pool-'+i),rankValue:String(100000-i),at:now}));
+  f={...f,policy,candidates,basket:selectBasket(candidates,policy,f.mint,true,now),snapshot:snapshot({...f.snapshot,policy,capturedAt:now})};
+  await seed();await plan('v2-epoch');
+  const initial=await exportEpoch(db,'v2-epoch'),basketHash=hash(initial.basket);
+  const legs=(await db.pool.query("SELECT id,amount::text FROM intents WHERE kind='swap' ORDER BY id")).rows;
+  expect(legs).toHaveLength(10);expect(new Set(legs.map(x=>x.amount))).toEqual(new Set(['78400000']));
+  await db.doc('basket',selectBasket(candidates.map((c,i)=>({...c,rankValue:String(i*100000)})),policy,f.mint,true,now));
+  expect(hash((await exportEpoch(db,'v2-epoch')).basket)).toBe(basketHash);
+  for(const i of legs)await settle(i.id);
+  const final=await exportEpoch(db,'v2-epoch');expect(final.epoch.status).toBe('settled');expect(final.entitlements).toHaveLength(30);
+  expect(hash(final.basket)).toBe(basketHash);expect((final.basket as typeof f.basket).selected.every(x=>x.weightBps===1000)).toBe(true);
+ });
 });

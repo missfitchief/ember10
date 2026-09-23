@@ -1,4 +1,4 @@
-import { ensure, Policy, Price, usdValue } from './model.js';
+import { ensure, Policy, Price, usdValue, policyBasketSize } from './model.js';
 export function allocate(quantity:bigint, owners:{owner:string;balance:string}[]): {owner:string;amount:string}[]{
  ensure(quantity>=0n,'negative acquisition'); const unique=new Set(owners.map(o=>o.owner)); ensure(unique.size===owners.length,'duplicate owner');
  ensure(owners.every(o=>BigInt(o.balance)>0n),'invalid balance');
@@ -16,7 +16,8 @@ export function budget(total:bigint,cost:bigint,policy:Policy,price:Price,now=Da
  ensure(cost*10000n<=total*BigInt(policy.maxCostBps),'cost forecast exceeds cap; accumulate funds');
  const net=total-cost,basket=net*BigInt(policy.basketBps)/10000n,buyback=net*BigInt(policy.buybackBps)/10000n,operations=net*BigInt(policy.operationsBps)/10000n;
  ensure(usdValue(basket,9,price,now,policy.maxPriceAgeSeconds)>=BigInt(policy.minBasketMicroUsd),'waiting for minimum basket funding');
- return {total,cost,net,basket,buyback,operations,leg:basket/5n,remainder:net-basket-buyback-operations+basket%5n};
+ const size=BigInt(policyBasketSize(policy));
+ return {total,cost,net,basket,buyback,operations,leg:basket/size,remainder:net-basket-buyback-operations+basket%size};
 }
 export function economical(amount:bigint,decimals:number,price:Price|undefined,hasAta:boolean,costMicroUsd:bigint|undefined,policy:Policy,now=Date.now()){
  if(!price||(!hasAta&&costMicroUsd===undefined))return false;

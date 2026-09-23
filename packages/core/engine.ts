@@ -1,6 +1,6 @@
 import { Store, Lease, Tx } from '../db/store.js';
 import { allocate, budget, economical } from './money.js';
-import { Asset, canonical, ensure, fresh, hash, Policy, Price, SOL } from './model.js';
+import { Asset, canonical, ensure, fresh, hash, Policy, Price, SOL, policyBasketSize } from './model.js';
 import { Basket, Snapshot } from './selection.js';
 export interface TransferEvidence {instruction:string;asset:string;source:string;destination:string;amount:string}
 export interface Receipt {signature:string;instruction:string;asset:string;amount:string;destination:string;source:string;slot:number;finalized:boolean;error:unknown;pool?:string;publishedPool?:string;kind:'creator_fee'|'deposit'|'seed';attributionVerified:boolean;rawEvidence:unknown}
@@ -34,7 +34,9 @@ export class Engine {
  }
  async plan(args:{id:string;policy:Policy;basket:Basket;snapshot:Snapshot;funding:bigint;cost:bigint;price:Price;minReserve:bigint;maxRound:bigint;maxDay:bigint;treasury:string;ourMint:string;routeUnchanged:boolean;lease:Lease;now?:number}){
   ensure(this.mode!=='prelaunch','prelaunch cannot create financial commitments');
-  const {policy,basket,snapshot}=args;ensure(basket.ready&&basket.selected.length===5,'five eligible assets required');
+  const {policy,basket,snapshot}=args;const size=policyBasketSize(policy);
+  ensure(this.mode!=='live'||policy.version===2,'new live commitments require EMBER10 policy version 2');
+  ensure(basket.ready&&basket.selected.length===size&&basket.selected.every(x=>x.weightBps===10000/size),'policy-sized equal-weight eligible basket required');
   ensure(basket.policyHash===hash(policy)&&snapshot.policyHash===hash(policy),'policy/snapshot mismatch');
   ensure(snapshot.owners.some(x=>x.eligible),'no eligible holders');ensure(args.routeUnchanged,'funding module or recipient changed');
   const now=args.now??Date.now();
@@ -107,7 +109,9 @@ export class Engine {
  }
  async refreshEpoch(t:Tx,id:string){
   const legs=(await t.query("SELECT status FROM intents WHERE epoch_id=$1 AND kind='swap'",[id])).rows;
-  const all=legs.length===5&&legs.every(x=>x.status==='finalized'),any=legs.some(x=>x.status==='finalized');
+  const epoch=(await t.query('SELECT policy_id FROM epochs WHERE id=$1',[id])).rows[0];
+  const policy=await this.db.document<Policy>(epoch.policy_id,t);
+  const all=legs.length===policyBasketSize(policy)&&legs.every(x=>x.status==='finalized'),any=legs.some(x=>x.status==='finalized');
   await t.query('UPDATE epochs SET status=$2,reason=$3 WHERE id=$1',[id,all?'settled':any?'partial':'purchasing',all?'Accounting complete; unpaid entitlements remain payable':any?'Some purchases await execution; existing credits preserved':null]);
  }
  async schedulePayout(args:{asset:Asset;chain:Chain;price?:Price;ata:Map<string,{exists:boolean;valid:boolean;costMicroUsd?:bigint}>;policy:Policy;costAccount:string;lease:Lease;maxRecipients?:number;sourceTokenAccount:string}){

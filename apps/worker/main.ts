@@ -12,7 +12,7 @@ import {JupiterClient,safeJupiterBuild} from '../../packages/integrations/jupite
 import {ingestTreasury,ingestTokenDeposits,fundingRoute} from '../../packages/integrations/ingestion.js';
 import {verifiedUniverse} from '../../packages/integrations/provenance.js';
 import {selectBasket,Basket} from '../../packages/core/selection.js';
-import {canonical,ensure,hash,SOL,WSOL,Asset,defaultPolicy} from '../../packages/core/model.js';
+import {canonical,ensure,hash,SOL,WSOL,Asset,defaultPolicy,policyBasketSize} from '../../packages/core/model.js';
 import {tick} from './runner.js';
 const c=loadConfig(),db=new Store(c.DATABASE_URL);await db.bindMode(c.MODE);const engine=new Engine(db,c.MODE,BigInt(c.MIN_RESERVE_LAMPORTS),BigInt(c.MAX_TX_FEE_LAMPORTS)),ember=new EmberClient(),owner=randomUUID();
 let chain:DemoChain|SolanaChain|undefined,jupiter:JupiterClient|undefined,approval:Approval|undefined;
@@ -20,7 +20,7 @@ if(c.MODE==='demo'){chain=new DemoChain(db);await chain.init();}
 if(c.MODE==='live'&&c.BROADCAST_ENABLED){approval=await loadApproval(c);jupiter=new JupiterClient(c.JUPITER_API_KEY!);const signer=new RemoteSigner(new PublicKey(c.TREASURY!),c.SIGNER_URL!,c.SIGNER_TOKEN??'');const connection=new Connection(c.RPC_URL,'finalized');chain=new SolanaChain(c,signer,undefined,i=>safeJupiterBuild(connection,jupiter!,signer.publicKey,i,approval!.approvedPrograms,approval!.approvedMints,approval!.policy));await chain.verifyCluster();}
 let stop=false,lastDiscovery=0,lastEvaluation=0,lastTokenIngestion=0;
 for(const s of ['SIGINT','SIGTERM'] as const)process.on(s,()=>{stop=true;});
-console.log(`EMBER5 ${c.MODE} worker running. New commitments ${c.MASTER_PAUSE?'disabled by master pause':'subject to persisted controls'}.`);
+console.log(`EMBER10 ${c.MODE} worker running. New commitments ${c.MASTER_PAUSE?'disabled by master pause':'subject to persisted controls'}.`);
 while(!stop){try{
  if(c.MODE==='live'&&chain){try{approval=await loadApproval(c);}catch(e){if(!(await db.pool.query('SELECT paused FROM control')).rows[0].paused)await db.incident('pilot approval invalid',{reason:(e as Error).message});}}
  // Always recover already signed work first, even during a pause.
@@ -42,8 +42,9 @@ while(!stop){try{
      const snap=await fullSnapshot(chain.connection,a.ourMint,a.policy,c.CENSUS_COMPLETE_CONTRACT);
      const rent=BigInt(await chain.connection.getMinimumBalanceForRentExemption(165,'finalized'));
      // Conservative upper bound; if it exceeds 10%, accumulate rather than subsidizing silently.
-     const forecast=7n*BigInt(c.MAX_TX_FEE_LAMPORTS)+BigInt(snap.owners.filter(o=>o.eligible).length)*5n*(rent+BigInt(c.MAX_TX_FEE_LAMPORTS));
-     const universe=await verifiedUniverse(chain.connection,ember,jupiter,a,funding*8000n/10000n/5n,c.CENSUS_COMPLETE_CONTRACT);
+     const size=BigInt(policyBasketSize(a.policy));
+     const forecast=(size+2n)*BigInt(c.MAX_TX_FEE_LAMPORTS)+BigInt(snap.owners.filter(o=>o.eligible).length)*size*(rent+BigInt(c.MAX_TX_FEE_LAMPORTS));
+     const universe=await verifiedUniverse(chain.connection,ember,jupiter,a,funding*BigInt(a.policy.basketBps)/10000n/size,c.CENSUS_COMPLETE_CONTRACT);
      const today=new Date().toISOString().slice(0,10);let basket=(await db.pool.query("SELECT body FROM documents WHERE kind='basket' AND body->>'day'=$1 ORDER BY created_at LIMIT 1",[today])).rows[0]?.body as Basket|undefined;
      if(!basket){basket=selectBasket(universe.candidates,a.policy,a.ourMint,universe.complete);if(basket.ready)await db.doc('basket',basket);}
      ensure(basket.selected.every(x=>a.approvedMints.includes(x.mint)),'selected basket outside approved assets');

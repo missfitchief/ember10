@@ -1,4 +1,4 @@
-import { Asset, ensure, fresh, hash, Policy, SPL } from './model.js';
+import { Asset, ensure, fresh, hash, Policy, SPL, policyBasketSize } from './model.js';
 export interface Candidate extends Asset {
  pool:string; config:string; provenanceVerified:boolean; poolVerified:boolean; graduated:boolean; createdAt:number;
  liquidityMicroUsd:string; volumeMicroUsd:string; holders:number; censusComplete:boolean;
@@ -25,8 +25,9 @@ export function selectBasket(candidates:Candidate[],policy:Policy,self:string|un
  if(c.rankBasis!==policy.rankingBasis||!c.supplyBasis||!c.source)reasons.push('incomparable ranking basis');
  return {...c,reasons};});
  const eligible=universe.filter(c=>!c.reasons.length).sort((a,b)=>BigInt(a.rankValue)===BigInt(b.rankValue)?(a.mint<b.mint?-1:1):(BigInt(a.rankValue)>BigInt(b.rankValue)?-1:1));
- const selected=eligible.slice(0,5).map(c=>({...c,weightBps:2000}));
- return {createdAt:now,day:new Date(now).toISOString().slice(0,10),policyHash:hash(policy),rankingBasis:policy.rankingBasis,universe,selected,eligibleCount:eligible.length,ready:selected.length===5};
+ const size=policyBasketSize(policy);
+ const selected=eligible.slice(0,size).map(c=>({...c,weightBps:10000/size}));
+ return {createdAt:now,day:new Date(now).toISOString().slice(0,10),policyHash:hash(policy),rankingBasis:policy.rankingBasis,universe,selected,eligibleCount:eligible.length,ready:selected.length===size};
 }
 export type Basket=ReturnType<typeof selectBasket>;
 export interface TokenAccount {address:string;mint:string;program:string;owner:string;amount:string;state:'initialized'|'frozen'|'uninitialized'}

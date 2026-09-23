@@ -1,5 +1,6 @@
 import bs58 from 'bs58';
-import archive from '../../deploy/hosted-demo.json' with { type: 'json' };
+import { overview, projectIdentity, publicPolicy, revision } from './overview.js';
+import type { PublicWalletRewards } from '../../packages/shared/public.js';
 
 const headers = { 'cache-control': 'no-store', 'x-content-type-options': 'nosniff' };
 const json = (body: unknown, status = 200) => Response.json(body, { status, headers });
@@ -7,7 +8,7 @@ const validAddress = (address: string) => {
   try { return address.length >= 32 && address.length <= 44 && bs58.decode(address).length === 32; }
   catch { return false; }
 };
-const isPublicRoute = (route: string) => /^(status|project|basket|transparency|epochs)$/.test(route)
+const isPublicRoute = (route: string) => /^(overview|status|project|basket|transparency|epochs)$/.test(route)
   || /^epochs\/[a-zA-Z0-9_:.-]{1,200}(\/export)?$/.test(route)
   || /^wallets\/[1-9A-HJ-NP-Za-km-z]{32,44}\/rewards$/.test(route);
 
@@ -36,13 +37,6 @@ async function backendRead(route: string, params: URLSearchParams, origin: strin
   } });
 }
 
-function wallet(address: string) {
-  return archive.wallets.find(wallet => wallet.address === address) ?? {
-    address, eligibility: null, snapshotSlot: archive.epoch.snapshot.slot,
-    entitlements: [], deliveries: [], reason: 'Address did not hold project tokens at the recorded demo snapshot'
-  };
-}
-
 export async function hostedRead(request: Request, backendOrigin = process.env.EMBER5_API_ORIGIN): Promise<Response> {
   if (!['GET', 'HEAD'].includes(request.method)) return json({ error: 'read_only', message: 'This host cannot start financial operations.' }, 405);
   const url = new URL(request.url);
@@ -51,25 +45,28 @@ export async function hostedRead(request: Request, backendOrigin = process.env.E
   if (!isPublicRoute(route)) return json({ error: 'not_found' }, 404);
   const limit = url.searchParams.get('limit') ?? '20';
   if (!/^[0-9]+$/.test(limit) || Number(limit) < 1 || Number(limit) > 100 || (url.searchParams.get('cursor')?.length ?? 0) > 200) return json({ error: 'invalid_request' }, 400);
-  if (backendOrigin) {
-    try { return await backendRead(route, url.searchParams, backendOrigin); }
-    catch { return json({ error: 'service_unavailable', message: 'The configured reward API is unavailable. No demo values have been substituted.' }, 503); }
+  if (route === 'overview') {
+    const offset = url.searchParams.get('offset') ?? '0', query = url.searchParams.get('q') ?? '';
+    const view = url.searchParams.get('view') ?? 'all';
+    if (!/^[0-9]{1,6}$/.test(offset) || query.length > 100 || !['all', 'selection', 'excluded'].includes(view)) return json({ error: 'invalid_request' }, 400);
+    return json(await overview(undefined, { query, offset: Number(offset), limit: Number(url.searchParams.get('limit') ?? '100'), view: view as 'all' | 'selection' | 'excluded' }));
   }
-  if (archive.status.mode !== 'demo' || archive.status.broadcastEnabled || !archive.epoch.testOnly) return json({ error: 'invalid_demo_archive' }, 503);
-  if (route === 'status') return json({ ...archive.status, asOf: archive.capturedAt });
-  if (route === 'project') return json(archive.project);
-  if (route === 'basket') return json({ ...archive.basket, historicalDemo: true, stale: false });
-  if (route === 'transparency') return json(archive.transparency);
-  if (route === 'epochs') return json({ items: archive.epochs.items.filter(e => !url.searchParams.get('cursor') || e.id < url.searchParams.get('cursor')!).slice(0, Number(limit)), nextCursor: null });
-  if (route.startsWith('wallets/')) return json(wallet(route.split('/')[1]));
-  if (route === `epochs/${archive.epoch.epoch.id}` || route === `epochs/${archive.epoch.epoch.id}/export`) {
-    if (url.searchParams.get('format') === 'csv') {
-      const keys = ['asset', 'owner', 'amount', 'paid', 'unpaid'] as const;
-      const cell = (value: string) => '"' + value.replace(/^[=+@-]/, "'$&").replaceAll('"', '""') + '"';
-      const text = [keys.join(','), ...archive.epoch.entitlements.map(row => keys.map(key => cell(row[key])).join(','))].join('\n');
-      return new Response(text, { headers: { ...headers, 'content-type': 'text/csv', 'content-disposition': 'attachment; filename="demo-allocations.csv"' } });
-    }
-    return json(archive.epoch);
+  if (backendOrigin) {
+    try {
+      const state = await backendRead('status', new URLSearchParams(), backendOrigin);
+      const status = await state.json();
+      if (!state.ok || !['prelaunch', 'live'].includes(status.mode) || status.hostedSnapshot || status.testOnly) throw new Error('Non-production ledger');
+      return route === 'status' ? json({ ...status, revision: revision() }) : await backendRead(route, url.searchParams, backendOrigin);
+    } catch { return json({ error: 'service_unavailable', message: 'The configured reward API is unavailable or not a production ledger. No demo values have been substituted.' }, 503); }
+  }
+  if (route === 'status') return json({ mode: 'prelaunch', phase: 'prelaunch', dataMode: 'real', hostedSnapshot: false, broadcastEnabled: false, workerActive: false, paused: true, revision: revision(), waitingReason: 'Contract not deployed; settlement not configured.' });
+  if (route === 'project') return json({ ...projectIdentity(), policy: publicPolicy, pool: null, treasury: null, operations: null });
+  if (route === 'basket') { const value = await overview(); return json({ ...value.selection, selected: [], universe: value.markets, ready: false, discovery: value.discovery, fundedBasket: value.fundedBasket }); }
+  if (route === 'transparency') return json({ status: 'unavailable', receivedLamports: null, assets: [], accrued: [], finalizedPayoutTransactions: null, burns: [], balances: [], reconciliation: null, incidents: [], accountingHealth: 'unavailable', message: 'No verified project ledger is connected.' });
+  if (route === 'epochs') return json({ status: 'unavailable', items: [], nextCursor: null, message: 'No verified project ledger is connected.' });
+  if (route.startsWith('wallets/')) {
+    const wallet: PublicWalletRewards = { address: route.split('/')[1], status: 'unavailable', eligibility: null, entitlements: [], deliveries: [], reason: 'No verified project holder snapshot or rewards ledger is connected. This does not mean that the address has zero rewards.' };
+    return json(wallet);
   }
   return json({ error: 'not_found' }, 404);
 }

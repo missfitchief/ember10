@@ -18,7 +18,7 @@ export const json=(v: unknown)=>JSON.parse(canonical(v));
 export function ensure(ok: unknown, message: string): asserts ok { if(!ok) throw new Error(message); }
 export interface Asset {mint:string;symbol:string;decimals:number;program:string}
 export const defaultPolicy = {
- version:1, basketBps:8000, buybackBps:1000, operationsBps:1000,
+ version:2, basketBps:8000, buybackBps:1000, operationsBps:1000,
  holderUnits:'100000', minBasketMicroUsd:'25000000', maxCostBps:1000,
  minLiquidityMicroUsd:'10000000000', minVolumeMicroUsd:'5000000000', minOwners:50, minAgeSeconds:86400,
  existingAtaMicroUsd:'1000000', newAtaMicroUsd:'5000000', maxPriceAgeSeconds:120,
@@ -31,4 +31,10 @@ export function fresh(at:number, now:number, seconds:number){return at<=now && n
 export function usdValue(units:bigint, decimals:number, price:Price, now=Date.now(), maxAge=120){
  ensure(fresh(price.at,now,maxAge),'price unavailable or stale'); ensure(price.source && BigInt(price.microUsd)>0n,'invalid price');
  return units*BigInt(price.microUsd)/(10n**BigInt(decimals));
+}
+
+/** Version 1 remains readable for immutable five-asset historical epochs. */
+export function policyBasketSize(policy: { version: number }) {
+ ensure(policy.version === 1 || policy.version === 2, 'unsupported policy version');
+ return policy.version === 1 ? 5 : 10;
 }
