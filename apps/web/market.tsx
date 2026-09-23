@@ -44,8 +44,10 @@ export function MarketPanel({ data, loading, error, retry }: { data?: PublicOver
   // The app already owns a valid observation. Read it on the first render, before any effect.
   const current = view === 'funded' ? data : matchingPage?.snapshot ?? (defaultRanking ? data : cache.current.get(requestKey));
   const pending = view !== 'funded' && (defaultRanking ? loading || !!matchingPage?.busy : !matchingPage || matchingPage.busy);
-  const requestError = matchingPage?.error || (defaultRanking ? error : '');
-  const state = marketRequestState(current, pending, requestError);
+  const requestError = matchingPage?.error || error;
+  const retainedSourceHealth = current && current !== data && data?.discovery.status !== 'ready' ? data?.discovery.status : undefined;
+  const sourceFailed = retainedSourceHealth === 'stale' || retainedSourceHealth === 'unavailable';
+  const state = marketRequestState(current, pending, requestError || (sourceFailed ? 'Latest source check failed' : ''));
   const model = current ? marketView(current) : null;
   const counts = current ? marketCounts(current) : null;
   const rows = current ? filterMarkets(current.markets, query, view === 'selection') : [];
@@ -135,6 +137,7 @@ export function MarketPanel({ data, loading, error, retry }: { data?: PublicOver
         {pending && <div className="search-feedback" role="status">Refreshing these observations…</div>}
         {view === 'selection' && current && <div className="selection-summary"><strong>{model?.selectedLabel}</strong><p>{current.selection.reason}</p><span className="muted">Policy {current.selection.policyVersion}. Market rank alone does not establish eligibility.</span></div>}
         {state === 'stale' && <div className="inline-notice" role="status">Stale observation. Last successful fetch: {dateTime(current?.discovery.lastSuccessfulAt ?? current?.discovery.fetchedAt)}. New purchase commitments remain blocked.</div>}
+        {retainedSourceHealth === 'warming' && <div className="inline-notice" role="status">The latest source check is warming or incomplete. Your retained list keeps its original observation time; new purchase commitments remain blocked.</div>}
         {current?.discovery.status === 'warming' && <div className="inline-notice" role="status">The catalogue is warming or incomplete. Rows are observations; new purchase commitments remain blocked.</div>}
         {counts && state !== 'unavailable' && <div className="market-counts"><span><strong>{counts.catalogue.toLocaleString()}</strong> catalogue mints</span><span><strong>{counts.ranked.toLocaleString()}</strong> ranked by market cap</span>{counts.filtered && <span><strong>{counts.matches.toLocaleString()}</strong> {view === 'selection' ? 'selection matches' : 'search matches'}</span>}<p>Unranked and excluded assets stay searchable for inspection. Search never changes selection or funded membership.</p></div>}
         {!rows.length ? <Empty title={state === 'unavailable' ? 'Market data is unavailable.' : query ? 'No matching token.' : view === 'selection' ? 'No eligible selection yet.' : state === 'warming' ? 'Waiting for market observations.' : 'No market observations reported.'} text={state === 'unavailable' ? current?.discovery.message ?? 'The source has not supplied a valid observation.' : query ? 'No catalogue mint matches this search. Try a name, symbol or full mint address.' : view === 'selection' ? current?.selection.reason ?? 'No assets passed the selection policy in this observation.' : current?.discovery.message ?? 'The source returned a valid empty result.'}>{view === 'selection' && <button className="btn" onClick={() => setView('ranking')}>Inspect market observations <Icon name="arrow"/></button>}{state === 'unavailable' && <button className="btn" onClick={retryRequest}>Try again</button>}</Empty> : <>

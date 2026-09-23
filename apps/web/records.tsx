@@ -14,7 +14,7 @@ export function EpochHistory({epochs,cluster,epochError,epochStatus,epochLoading
 type LedgerState = { epochLoading?:boolean; statusLoading?:boolean; epochError?:string; epochStatus?:string; nextCursor?:string|null; ledger: Ledger | null; epochs: Epoch[]; availability: LedgerAvailability; message: string; error: string; loading: boolean; cluster?: string; nextEvaluation?: string | null };
 let lastLedger: LedgerState = { ledger: null, epochs: [], availability: 'checking', message: '', error: '', loading: true, epochLoading: true, statusLoading: true };
 export function useLedger() {
-  const [state, setState] = useState<LedgerState>(() => ({ ...lastLedger, loading: true, epochLoading: true, statusLoading: true }));
+  const [state, setState] = useState<LedgerState>(() => ({ ...lastLedger, cluster: undefined, nextEvaluation: undefined, loading: true, epochLoading: true, statusLoading: true }));
   const [attempt, setAttempt] = useState(0);
   const moreController=useRef<AbortController|null>(null);
   const [moreBusy,setMoreBusy]=useState(false);
@@ -25,7 +25,7 @@ export function useLedger() {
       if (controller.signal.aborted) return;
       setState(previous => { const next = patch(previous); lastLedger = next; return next; });
     };
-    update(previous => ({ ...previous, loading: true, epochLoading: true, statusLoading: true, error: '', epochError: '' }));
+    update(previous => ({ ...previous, cluster: undefined, nextEvaluation: undefined, loading: true, epochLoading: true, statusLoading: true, error: '', epochError: '' }));
     // Each record is usable as soon as it arrives. A slow status/epoch response cannot
     // hide a successfully checked ledger, and all requests have the shared API deadline.
     api<PublicRecord>('transparency', controller.signal).then(value => {

@@ -14,8 +14,8 @@ const markets = Array.from({ length: 250 }, (_, i) => ({
   sourceTimestamp: null, createdAt: null, rank: i + 1, eligibility: 'unknown', reasons: [], selected: i < 10,
   weightBps: null, sourceUrl: 'https://embercurve.fun/markets',
 }));
-let poll = 0, searches = 0, selections = 0, stalledStatus = false;
-const source = { refreshSeconds: 45, read: async () => ({ status: 'ready', observed: {
+let poll = 0, searches = 0, selections = 0, stalledStatus = false, sourceStatus = 'ready';
+const source = { refreshSeconds: 45, read: async () => ({ status: sourceStatus, observed: {
   fetchedAt: new Date(Date.UTC(2026, 8, 23, 12, poll)).toISOString(), normalized: {
     markets, evidenceHash: `fixture-${poll}`, coverage: { status: 'unverified', rawRows: 250, uniqueMints: 250, rankedMints: 250, duplicateRows: 0, invalidRows: 0, warming: false, complete: true, note: 'Browser test fixture' },
   },
@@ -76,6 +76,18 @@ try {
   await waitFor(() => page.getByRole('button', { name: 'Refresh list' }).isVisible(), 'retained-page notice');
   assert.equal(await rowCount(), 140, 'searched expansion survives parent poll');
   assert.equal(searches, beforeSearches, 'parent poll does not refetch search offset zero');
+  const originalTime = await page.locator('.source-time').innerText();
+  for (const health of ['stale', 'unavailable']) {
+    const beforeHealthPoll = poll;
+    sourceStatus = health;
+    await page.clock.fastForward(45_000);
+    await waitFor(() => poll > beforeHealthPoll, 'source health poll');
+    await waitFor(() => page.getByText(/^Stale observation\. Last successful fetch:/).isVisible(), 'retained source failure warning');
+    assert.equal(await rowCount(), 140, 'outage retains expanded rows');
+    assert.equal(await page.locator('.source-time').innerText(), originalTime, 'outage retains original provenance');
+  }
+  sourceStatus = 'ready';
+  await page.clock.fastForward(45_000);
   await page.getByRole('button', { name: 'Refresh list' }).click();
   await waitFor(async () => await rowCount() === 20, 'explicit refresh resets search');
   await page.getByPlaceholder('Find a token or mint').fill('0 TEST0');
@@ -110,7 +122,7 @@ try {
   assert.equal(await menu.evaluate(node => node === document.activeElement), true);
   assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false);
   assert.deepEqual(errors, []);
-  const evidence = { passed: true, assertions: ['140 default rows survive parent poll', '140 searched rows survive parent poll without offset-zero refetch', 'Explicit refresh resets searched list to 20 rows', 'Server/client multiword results agree', 'Eligibility view retained across parent poll', 'Ledger and epochs render while status stalls', 'Stalled status reaches bounded unavailable state', 'Mobile navigation target exists when closed; Escape returns focus', '320px no horizontal overflow', 'No page errors'], publicData: 'Intercepted browser-only fixtures; no financial operations or live-status claims' };
+  const evidence = { passed: true, assertions: ['140 default rows survive parent poll', '140 searched rows survive parent poll without offset-zero refetch', 'Retained searches show stale and unavailable source health without changing provenance', 'Explicit refresh resets searched list to 20 rows', 'Server/client multiword results agree', 'Eligibility view retained across parent poll', 'Ledger and epochs render while status stalls', 'Stalled status reaches bounded unavailable state', 'Mobile navigation target exists when closed; Escape returns focus', '320px no horizontal overflow', 'No page errors'], publicData: 'Intercepted browser-only fixtures; no financial operations or live-status claims' };
   if (process.env.EVIDENCE_DIR) { await mkdir(process.env.EVIDENCE_DIR, { recursive: true }); await writeFile(process.env.EVIDENCE_DIR + '/frontend-browser.json', JSON.stringify(evidence, null, 2)); }
   console.log(JSON.stringify(evidence, null, 2));
 } finally { await browser.close(); }
