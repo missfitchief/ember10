@@ -13,3 +13,4 @@ dist
 
 .vercel
 docs
+deploy/hosted-demo.json
