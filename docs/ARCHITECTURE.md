@@ -50,3 +50,9 @@ Each database has an immutable mode marker. Reusing a demo database in live mode
 Host `dist/web` as static content and proxy `/api` to the Node API. Keep `/operator` on a private interface. Run the worker independently on a persistent Node host with access to PostgreSQL, RPC and the signer. `compose.yaml` is a local reference deployment and was not run here. The remote signer must independently enforce its own treasury/budget policy; it accepts a base64 message and returns a 64-byte signature, never a secret key.
 
 The service is custodial with respect to the reward treasury. Operators and infrastructure are trusted. This implementation is neither trustless nor an audited security boundary against a malicious treasury operator.
+
+## EMBER10 hosted discovery boundary
+
+The serverless dashboard has a separate read-only observation path: Ember catalogue/config responses ? bounded schema validation ? mint normalization and source-defined suspect exclusions ? numeric reported-USD ranking ? public page projection. Cached market observations are not a ledger. Unknown provenance, circulating supply and route checks do not become eligible assets. The immutable funded basket continues to belong to a PostgreSQL epoch, independently of any moving market ranking.
+
+Normal production routing does not import the archived demo. The old demonstration files remain available only to explicit local demonstration/test tooling and historical review.
