@@ -111,17 +111,19 @@ export class MarketDataService {
   private lastAttempt = -Infinity;
   private pending: Promise<void> | null = null;
   private failed = false;
+  private failures = 0;
   readonly refreshSeconds: number;
   constructor(private fetcher: typeof fetch = (...args) => fetch(...args), private clock = Date.now, refreshSeconds = 45) { this.refreshSeconds = Math.max(30, Math.min(60, refreshSeconds)); }
   async read(ownMint: string | null = null) {
     const now = this.clock();
-    if (now - this.lastAttempt >= this.refreshSeconds * 1000) {
+    const delay = Math.min(300_000,this.refreshSeconds * 1000 * 2 ** Math.min(this.failures,3));
+    if (!this.pending && now - this.lastAttempt >= delay) {
       this.lastAttempt = now;
       this.pending = (async () => { try {
         const [raw, configs] = await Promise.all([fetchJson(MARKET_SOURCE, this.fetcher), fetchJson(CONFIG_SOURCE, this.fetcher).catch(() => null)]);
         const fetchedAt = new Date(this.clock()).toISOString();
-        this.lastGood = { normalized: normalizeCatalogue(raw, configs, ownMint, fetchedAt), fetchedAt }; this.failed = false;
-      } catch { this.failed = true; } finally { this.pending = null; } })();
+        this.lastGood = { normalized: normalizeCatalogue(raw, configs, ownMint, fetchedAt), fetchedAt }; this.failed = false; this.failures = 0;
+      } catch { this.failed = true; this.failures++; } finally { this.pending = null; } })();
     }
     if (this.pending) await this.pending;
     const observed = this.lastGood;
