@@ -4,7 +4,8 @@ const cid = '(?:Qm[1-9A-HJ-NP-Za-km-z]{44}|b[a-z2-7]{20,120})';
 const emberPath = new RegExp(`^/img/(${cid})$`);
 const ipfsPath = new RegExp(`^/ipfs/(${cid})$`);
 
-export function tokenImageSource(value: string | null): { url: string; cid: string | null } | null {
+export type TokenImageSource = { url: string; cid: string | null };
+export function tokenImageSource(value: string | null): TokenImageSource | null {
   if (!value || value.length > 300) return null;
   try {
     const url = new URL(value);
@@ -25,5 +26,7 @@ export function tokenImageSource(value: string | null): { url: string; cid: stri
 
 export function tokenImageUrl(value: string | null): string | null {
   const source = tokenImageSource(value);
-  return source ? `/api/token-image?source=${encodeURIComponent(source.url)}` : null;
+  // Change the URL when authorization/cache policy changes, so existing browsers
+  // do not reuse the old year-long immutable proxy response.
+  return source ? `/api/token-image?source=${encodeURIComponent(source.url)}&v=2` : null;
 }

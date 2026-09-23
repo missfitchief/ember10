@@ -116,6 +116,8 @@ export class MarketDataService {
   private failures = 0;
   readonly refreshSeconds: number;
   constructor(private fetcher: typeof fetch = (...args) => fetch(...args), private clock = Date.now, refreshSeconds = 45) { this.refreshSeconds = Math.max(30, Math.min(60, refreshSeconds)); }
+  /** Last validated observation, including when a refresh is failing. Never starts a fetch. */
+  snapshot(): Readonly<Observation> | null { return this.lastGood; }
   async read(ownMint: string | null = null) {
     const now = this.clock();
     const delay = Math.min(300_000,this.refreshSeconds * 1000 * 2 ** Math.min(this.failures,3));

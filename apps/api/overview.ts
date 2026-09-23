@@ -1,4 +1,5 @@
-import { MarketDataService, MARKET_BASIS, MARKET_SOURCE, validMint } from '../../packages/integrations/market-data.js';
+import { MARKET_BASIS, MARKET_SOURCE, validMint } from '../../packages/integrations/market-data.js';
+import { publicMarketSource } from './catalogue.js';
 import type { PublicOverview } from '../../packages/shared/public.js';
 
 export const publicPolicy: PublicOverview['policy'] = {
@@ -6,14 +7,13 @@ export const publicPolicy: PublicOverview['policy'] = {
   holderUnits: '100000', minBasketMicroUsd: '50000000', rankingBasis: 'Verified circulating market cap (required for selection)',
   eligibilityRules: ['Verified Ember origin and graduated pool', 'At least 24 hours old', 'Verified liquidity ≥ $10,000 and 24h volume ≥ $5,000', 'Complete census of at least 50 owners', 'Supported SPL token with revoked mint and freeze authorities', 'Verified route for intended purchase budget', 'Comparable circulating market cap and fresh complete data', 'Project token and unsupported asset categories excluded']
 };
-const service = new MarketDataService();
 export const projectIdentity = (): PublicOverview['project'] => {
   const value = process.env.OUR_MINT;
   const mint = value && validMint(value) ? value : null;
   return { name: 'EMBER10', phase: 'prelaunch', dataMode: 'real', mint, mintStatus: mint ? 'configured_unverified' : 'not_deployed', buyUrl: null };
 };
 export const revision = () => process.env.EMBER10_REVISION ?? process.env.VERCEL_GIT_COMMIT_SHA ?? null;
-export async function overview(source = service, page: { query?: string; offset?: number; limit?: number; view?: 'all' | 'selection' | 'excluded' } = {}): Promise<PublicOverview> {
+export async function overview(source = publicMarketSource, page: { query?: string; offset?: number; limit?: number; view?: 'all' | 'selection' | 'excluded' } = {}): Promise<PublicOverview> {
   const project = projectIdentity(), { observed, status } = await source.read(project.mint);
   const query = (page.query ?? '').trim().slice(0, 100), offset = Math.max(0, page.offset ?? 0), limit = Math.max(1, Math.min(100, page.limit ?? 100));
   const view = page.view ?? 'all';
