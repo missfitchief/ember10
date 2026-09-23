@@ -45,10 +45,18 @@ The demo acquires 784,000,000 raw units of each six-decimal reward asset. Three 
 
 Creating a batch moves its exact liabilities into `reserved:<batch>` and exclusively links each contributing entitlement. Atomic on-chain failure pays none; a finalized network fee is still booked. A finalized successful batch must match the exact mint, source, destination and amount for every instruction before paid balances change. A batch can aggregate several epochs without losing component attribution.
 
-`settled` means five purchase legs have been accounted for. It never means all owners were paid. UI and exports show unpaid units separately. Transaction counts count signatures, not entitlement rows. Acquisition value and delivery value are never summed as two rewards.
+`settled` means every purchase leg in the epoch's saved policy has been accounted for (five for legacy version 1; ten for new version 2). It never means all owners were paid. UI and exports show unpaid units separately. Transaction counts count signatures, not entitlement rows. Acquisition value and delivery value are never summed as two rewards.
 
 ## Costs and burn
 
 Direct cost forecasts are bounded at 10% of round funding. A minimum unencumbered SOL reserve is preserved; the signing path checks current rent and fee allowance before signing. Unsupported/frozen accounts or failed simulation leave reservations in place. Actual network/rent costs are posted separately. Historical USD payment value is only meaningful when a settlement-time valuation exists; otherwise the application displays raw units and unavailable valuation.
 
 Buyback acquires our mint into its own `burn-units:<intent>` account. A distinct checked-burn intent can burn only that acquired quantity. Failed burn does not create a new buyback or consume unrelated holdings. Operations have their own reserved budget and deterministic transfer intent, with a fixed approved recipient.
+
+## Prospective EMBER10 policy
+
+Version 2 preserves 80% reward purchases, 10% buyback/burn and 10% OPS/DEV after bounded direct costs. Its basket contains ten assets, with equal 1,000-basis-point purchase weights. Each leg is floor(basket budget / 10); remainder stays in the rounding partition. This is 8% of net new creator revenue per purchase budget, not 10% of all revenue.
+
+The worked five-leg example above is explicitly historical version 1. Its stored policy, basket, snapshots, entitlements and liabilities are not rewritten by the upgrade. Settlement reads the epoch's saved policy dimension. New live commitments require version 2.
+
+OPS/DEV rules have not changed in this update. The public dashboard does not derive a withdrawable payout from the headline allocation. Approved expenses, retained reserve, pending transfers and finalized developer payments are separate presentation fields; an unavailable authoritative breakdown remains unreported. The hosted prelaunch app has no configured receiving wallet or payment capability.
