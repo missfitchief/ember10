@@ -1,0 +1,47 @@
+{
+  "at": "2026-09-23T17:24:27.944Z",
+  "revision": "facda1edd5507f74d8f9c3bf0a367f0c0103bcbc",
+  "scope": "Actual SolanaChain.broadcast with all RPC methods locally replaced; no signer/network/funds",
+  "passed": true,
+  "result": {
+    "reconciling": true
+  },
+  "lateExpenses": 1,
+  "finalAuthorizationInvoked": 1,
+  "lockedChecks": 1,
+  "signerCalls": 0,
+  "wireSends": 0,
+  "attempts": 1,
+  "intent": {
+    "status": "unknown"
+  },
+  "summary": {
+    "status": "available",
+    "hasRecords": true,
+    "asset": "SOL",
+    "units": "lamports",
+    "allocation": "1000000",
+    "approvedExpenses": "50000",
+    "paidExpenses": "0",
+    "operatingExpenseCosts": "0",
+    "outstandingPayables": "50000",
+    "retainedReserve": "100000",
+    "requiredReserve": "100000",
+    "reserveShortfall": "0",
+    "availableOperations": "0",
+    "legacyOperationsReservations": "0",
+    "operationsWalletFunding": "0",
+    "withdrawableRemainder": "0",
+    "pendingTransfers": "880000",
+    "reservedPayoutCosts": "20000",
+    "payoutCostAllowance": "20000",
+    "finalizedDevPayments": "0",
+    "finalizedPayoutCosts": "0",
+    "enabled": true,
+    "destination": "8Na7cKFT1u4rPUcwejRfqS9Yv3NDbsdXg5g2bf1r23k1",
+    "payoutHourUtc": 0,
+    "minimumPayout": "10000",
+    "lastScheduledDay": "2026-09-23",
+    "message": "Ledger lamports only. OPS/DEV allocation is not developer profit; approved payables, required reserve, existing reservations and payout cost take precedence. Daily scheduling does not promise payment."
+  }
+}

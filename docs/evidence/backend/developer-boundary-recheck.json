@@ -1,0 +1,148 @@
+{
+  "at": "2026-09-23T17:24:41.685Z",
+  "revision": "facda1edd5507f74d8f9c3bf0a367f0c0103bcbc",
+  "scope": "Actual controlledExecutionTick/runIntent with isolated PostgreSQL and controlled adapter; no real signer/network/funds",
+  "cases": [
+    {
+      "stage": "before_prepare",
+      "passed": true,
+      "result": {
+        "processed": 1
+      },
+      "conditionsPassed": 1,
+      "lockedChecks": 1,
+      "routeReads": 2,
+      "prepared": 0,
+      "signed": 0,
+      "broadcast": 0,
+      "attempts": 0,
+      "intent": {
+        "status": "waiting_for_route",
+        "reason": "new operating obligations or required reserve block developer signing"
+      },
+      "summary": {
+        "status": "available",
+        "hasRecords": true,
+        "asset": "SOL",
+        "units": "lamports",
+        "allocation": "1000000",
+        "approvedExpenses": "50000",
+        "paidExpenses": "0",
+        "operatingExpenseCosts": "0",
+        "outstandingPayables": "50000",
+        "retainedReserve": "100000",
+        "requiredReserve": "100000",
+        "reserveShortfall": "0",
+        "availableOperations": "0",
+        "legacyOperationsReservations": "0",
+        "operationsWalletFunding": "0",
+        "withdrawableRemainder": "0",
+        "pendingTransfers": "880000",
+        "reservedPayoutCosts": "20000",
+        "payoutCostAllowance": "20000",
+        "finalizedDevPayments": "0",
+        "finalizedPayoutCosts": "0",
+        "enabled": true,
+        "destination": "8Na7cKFT1u4rPUcwejRfqS9Yv3NDbsdXg5g2bf1r23k1",
+        "payoutHourUtc": 0,
+        "minimumPayout": "10000",
+        "lastScheduledDay": "2026-09-23",
+        "message": "Ledger lamports only. OPS/DEV allocation is not developer profit; approved payables, required reserve, existing reservations and payout cost take precedence. Daily scheduling does not promise payment."
+      }
+    },
+    {
+      "stage": "signing",
+      "passed": true,
+      "result": {
+        "processed": 1
+      },
+      "conditionsPassed": 2,
+      "lockedChecks": 2,
+      "routeReads": 3,
+      "prepared": 1,
+      "signed": 0,
+      "broadcast": 0,
+      "attempts": 0,
+      "intent": {
+        "status": "waiting_for_route",
+        "reason": "new operating obligations or required reserve block developer signing"
+      },
+      "summary": {
+        "status": "available",
+        "hasRecords": true,
+        "asset": "SOL",
+        "units": "lamports",
+        "allocation": "1000000",
+        "approvedExpenses": "50000",
+        "paidExpenses": "0",
+        "operatingExpenseCosts": "0",
+        "outstandingPayables": "50000",
+        "retainedReserve": "100000",
+        "requiredReserve": "100000",
+        "reserveShortfall": "0",
+        "availableOperations": "0",
+        "legacyOperationsReservations": "0",
+        "operationsWalletFunding": "0",
+        "withdrawableRemainder": "0",
+        "pendingTransfers": "880000",
+        "reservedPayoutCosts": "20000",
+        "payoutCostAllowance": "20000",
+        "finalizedDevPayments": "0",
+        "finalizedPayoutCosts": "0",
+        "enabled": true,
+        "destination": "8Na7cKFT1u4rPUcwejRfqS9Yv3NDbsdXg5g2bf1r23k1",
+        "payoutHourUtc": 0,
+        "minimumPayout": "10000",
+        "lastScheduledDay": "2026-09-23",
+        "message": "Ledger lamports only. OPS/DEV allocation is not developer profit; approved payables, required reserve, existing reservations and payout cost take precedence. Daily scheduling does not promise payment."
+      }
+    },
+    {
+      "stage": "rebroadcast",
+      "passed": true,
+      "result": {
+        "reconciling": true
+      },
+      "conditionsPassed": 1,
+      "lockedChecks": 1,
+      "routeReads": 2,
+      "prepared": 0,
+      "signed": 0,
+      "broadcast": 0,
+      "attempts": 1,
+      "intent": {
+        "status": "unknown",
+        "reason": null
+      },
+      "summary": {
+        "status": "available",
+        "hasRecords": true,
+        "asset": "SOL",
+        "units": "lamports",
+        "allocation": "1000000",
+        "approvedExpenses": "50000",
+        "paidExpenses": "0",
+        "operatingExpenseCosts": "0",
+        "outstandingPayables": "50000",
+        "retainedReserve": "100000",
+        "requiredReserve": "100000",
+        "reserveShortfall": "0",
+        "availableOperations": "0",
+        "legacyOperationsReservations": "0",
+        "operationsWalletFunding": "0",
+        "withdrawableRemainder": "0",
+        "pendingTransfers": "880000",
+        "reservedPayoutCosts": "20000",
+        "payoutCostAllowance": "20000",
+        "finalizedDevPayments": "0",
+        "finalizedPayoutCosts": "0",
+        "enabled": true,
+        "destination": "8Na7cKFT1u4rPUcwejRfqS9Yv3NDbsdXg5g2bf1r23k1",
+        "payoutHourUtc": 0,
+        "minimumPayout": "10000",
+        "lastScheduledDay": "2026-09-23",
+        "message": "Ledger lamports only. OPS/DEV allocation is not developer profit; approved payables, required reserve, existing reservations and payout cost take precedence. Daily scheduling does not promise payment."
+      }
+    }
+  ]
+}

@@ -1,0 +1,176 @@
+{
+  "at": "2026-09-23T17:11:38.690Z",
+  "authentication": "keyless read-only public lookup",
+  "catalogueSourceHash": "822463625649e097b78d27b3f35fc664800ff89bdffd6b1939787d42016e3b66",
+  "requests": [
+    {
+      "at": "2026-09-23T17:10:35.747Z",
+      "mintCount": 100,
+      "status": 200
+    },
+    {
+      "at": "2026-09-23T17:10:37.631Z",
+      "mintCount": 100,
+      "status": 200
+    },
+    {
+      "at": "2026-09-23T17:10:39.740Z",
+      "mintCount": 100,
+      "status": 200
+    },
+    {
+      "at": "2026-09-23T17:10:41.831Z",
+      "mintCount": 100,
+      "status": 200
+    },
+    {
+      "at": "2026-09-23T17:10:43.930Z",
+      "mintCount": 100,
+      "status": 200
+    },
+    {
+      "at": "2026-09-23T17:10:46.058Z",
+      "mintCount": 100,
+      "status": 200
+    },
+    {
+      "at": "2026-09-23T17:10:48.164Z",
+      "mintCount": 100,
+      "status": 200
+    },
+    {
+      "at": "2026-09-23T17:10:50.280Z",
+      "mintCount": 100,
+      "status": 200
+    },
+    {
+      "at": "2026-09-23T17:10:52.315Z",
+      "mintCount": 100,
+      "status": 200
+    },
+    {
+      "at": "2026-09-23T17:10:54.420Z",
+      "mintCount": 100,
+      "status": 200
+    },
+    {
+      "at": "2026-09-23T17:10:56.515Z",
+      "mintCount": 100,
+      "status": 200
+    },
+    {
+      "at": "2026-09-23T17:10:58.719Z",
+      "mintCount": 100,
+      "status": 200
+    },
+    {
+      "at": "2026-09-23T17:11:00.745Z",
+      "mintCount": 100,
+      "status": 200
+    },
+    {
+      "at": "2026-09-23T17:11:03.144Z",
+      "mintCount": 100,
+      "status": 200
+    },
+    {
+      "at": "2026-09-23T17:11:05.128Z",
+      "mintCount": 100,
+      "status": 200
+    },
+    {
+      "at": "2026-09-23T17:11:07.027Z",
+      "mintCount": 100,
+      "status": 200
+    },
+    {
+      "at": "2026-09-23T17:11:09.138Z",
+      "mintCount": 100,
+      "status": 200
+    },
+    {
+      "at": "2026-09-23T17:11:11.226Z",
+      "mintCount": 100,
+      "status": 200
+    },
+    {
+      "at": "2026-09-23T17:11:13.330Z",
+      "mintCount": 100,
+      "status": 200
+    },
+    {
+      "at": "2026-09-23T17:11:15.437Z",
+      "mintCount": 100,
+      "status": 200
+    },
+    {
+      "at": "2026-09-23T17:11:17.534Z",
+      "mintCount": 100,
+      "status": 200
+    },
+    {
+      "at": "2026-09-23T17:11:19.624Z",
+      "mintCount": 100,
+      "status": 200
+    },
+    {
+      "at": "2026-09-23T17:11:21.720Z",
+      "mintCount": 100,
+      "status": 200
+    },
+    {
+      "at": "2026-09-23T17:11:23.832Z",
+      "mintCount": 100,
+      "status": 200
+    },
+    {
+      "at": "2026-09-23T17:11:25.928Z",
+      "mintCount": 100,
+      "status": 200
+    },
+    {
+      "at": "2026-09-23T17:11:28.037Z",
+      "mintCount": 100,
+      "status": 200
+    },
+    {
+      "at": "2026-09-23T17:11:30.137Z",
+      "mintCount": 100,
+      "status": 200
+    },
+    {
+      "at": "2026-09-23T17:11:32.235Z",
+      "mintCount": 100,
+      "status": 200
+    },
+    {
+      "at": "2026-09-23T17:11:34.312Z",
+      "mintCount": 100,
+      "status": 200
+    },
+    {
+      "at": "2026-09-23T17:11:36.442Z",
+      "mintCount": 100,
+      "status": 200
+    },
+    {
+      "at": "2026-09-23T17:11:38.525Z",
+      "mintCount": 73,
+      "status": 200
+    }
+  ],
+  "requestedCount": 3073,
+  "returnedCount": 3073,
+  "coverage": "complete",
+  "eligibilityComplete": false,
+  "evidenceHash": "61bd8edefa3c037b717b1e6f13da1813e4f8b05b7ebbe54103c2eec68cf2905b",
+  "freshRows": 24,
+  "staleRows": 3049,
+  "unavailableTimestampRows": 0,
+  "blockers": [
+    "Jupiter circulating-supply methodology is not documented by the reviewed Tokens V2 schema.",
+    "Jupiter stats24h does not specify a complete USD volume window or its exact start and end timestamps.",
+    "Jupiter tags do not establish complete ordinary-token, stablecoin and LP category classification."
+  ],
+  "limitations": "No approval changed, no signer used, no funded or eligible selection claimed. This probe does not establish the undocumented provider contracts."
+}

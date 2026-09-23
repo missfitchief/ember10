@@ -4,6 +4,8 @@ A React frontend, Node API, independent Node worker and PostgreSQL ledger. The d
 
 Public pilot URL: **https://ember5-pilot.vercel.app**. This update replaces the hosted synthetic fallback with a real, read-only Ember catalogue integration and an EMBER10 frontend. Deployment verification is recorded separately in the review evidence; local source alone is not proof of publication. The hosted service does not run settlement.
 
+Backend corrections are documented in [BACKEND-CORRECTIONS.md](docs/BACKEND-CORRECTIONS.md), with [test, source and independent review evidence](docs/evidence/backend/README.md). They preserve the frontend and default-disabled execution. This backend review branch has not been deployed; provider evidence gaps and the residual dependency advisory remain explicit.
+
 ## Run locally
 
 Requires Node 22.12+ (validated on Node 24.17.0). In PowerShell use `npm.cmd` if execution policy blocks `npm.ps1`.

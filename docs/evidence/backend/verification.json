@@ -1,0 +1,152 @@
+{
+  "validatedCodeRevision": "facda1edd5507f74d8f9c3bf0a367f0c0103bcbc",
+  "auditBase": "61d265ada62703093c575603f5540e202b64f3c2",
+  "startingRevision": "db041a0cd3f986c36504e07288ab7d2b705841b6",
+  "checkedAt": "2026-09-23T17:26:11.740Z",
+  "commands": {
+    "tests": "npm.cmd test -- --reporter=json --outputFile=../../outputs/EMBER10-backend-review/integrated-tests.json",
+    "build": "npm.cmd run build",
+    "dependencyAudit": "npm audit --omit=dev --json"
+  },
+  "testResult": {
+    "exitCode": 0,
+    "passed": 208,
+    "failed": 0,
+    "pending": 0,
+    "files": 13,
+    "suites": 25,
+    "startedAt": "2026-09-23T17:24:32.062Z",
+    "finishedAt": "2026-09-23T17:25:17.362Z",
+    "perFile": [
+      {
+        "file": "automatic-selection.test.ts",
+        "passed": 33,
+        "status": "passed"
+      },
+      {
+        "file": "backend-orchestration.test.ts",
+        "passed": 38,
+        "status": "passed"
+      },
+      {
+        "file": "core.test.ts",
+        "passed": 11,
+        "status": "passed"
+      },
+      {
+        "file": "dependency-compatibility.test.ts",
+        "passed": 3,
+        "status": "passed"
+      },
+      {
+        "file": "developer-accounting.test.ts",
+        "passed": 18,
+        "status": "passed"
+      },
+      {
+        "file": "engine.test.ts",
+        "passed": 26,
+        "status": "passed"
+      },
+      {
+        "file": "execution-regressions.test.ts",
+        "passed": 25,
+        "status": "passed"
+      },
+      {
+        "file": "hosted.test.ts",
+        "passed": 5,
+        "status": "passed"
+      },
+      {
+        "file": "integrations.test.ts",
+        "passed": 7,
+        "status": "passed"
+      },
+      {
+        "file": "jupiter-tokens.test.ts",
+        "passed": 9,
+        "status": "passed"
+      },
+      {
+        "file": "market-data.test.ts",
+        "passed": 8,
+        "status": "passed"
+      },
+      {
+        "file": "reconciliation-watermark.test.ts",
+        "passed": 3,
+        "status": "passed"
+      },
+      {
+        "file": "ui-view-model.test.ts",
+        "passed": 22,
+        "status": "passed"
+      }
+    ]
+  },
+  "build": {
+    "exitCode": 0,
+    "typecheck": "passed",
+    "viteModules": 24,
+    "frontendSourceChanged": false
+  },
+  "dependencyAudit": {
+    "exitCode": 1,
+    "remaining": {
+      "info": 0,
+      "low": 0,
+      "moderate": 0,
+      "high": 5,
+      "critical": 0,
+      "total": 5
+    }
+  },
+  "provider": {
+    "requested": 3073,
+    "returned": 3073,
+    "httpRequests": 31,
+    "fresh": 24,
+    "stale": 3049,
+    "evidenceHash": "61bd8edefa3c037b717b1e6f13da1813e4f8b05b7ebbe54103c2eec68cf2905b",
+    "startedAt": "2026-09-23T17:10:35.747Z",
+    "finishedAt": "2026-09-23T17:11:38.525Z",
+    "eligibilityComplete": false,
+    "blockers": [
+      "Jupiter circulating-supply methodology is not documented by the reviewed Tokens V2 schema.",
+      "Jupiter stats24h does not specify a complete USD volume window or its exact start and end timestamps.",
+      "Jupiter tags do not establish complete ordinary-token, stablecoin and LP category classification."
+    ]
+  },
+  "publicCheck": {
+    "url": "https://ember5-pilot.vercel.app/api/status",
+    "checkedAt": "2026-09-23T17:26:11.740Z",
+    "status": {
+      "mode": "prelaunch",
+      "phase": "prelaunch",
+      "dataMode": "real",
+      "hostedSnapshot": false,
+      "broadcastEnabled": false,
+      "workerActive": false,
+      "paused": true,
+      "revision": "db041a0cd3f986c36504e07288ab7d2b705841b6",
+      "waitingReason": "Contract not deployed; settlement not configured."
+    }
+  },
+  "boundaries": {
+    "originalTestsChanged": false,
+    "chainTransferTested": false,
+    "financialWorkerDeployed": false,
+    "signerEnabled": false,
+    "mainnetFundsUsed": false,
+    "tokenCreated": false,
+    "productionDatabaseMigrated": false,
+    "missingAuditProbesNotClaimedPassed": true
+  },
+  "missingInputs": [
+    "EMBER10-BACKEND-AUDIT.md",
+    "audit-regressions.test.ts",
+    "two referenced audit test reports"
+  ],
+  "findingMapping": "Provisional B01-B11 mapping follows the pasted request order; original audit unavailable."
+}

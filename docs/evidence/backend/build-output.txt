@@ -1,0 +1,20 @@
+
+> ember10-pilot@0.2.0 build
+> npm run typecheck && vite build --config apps/web/vite.config.ts
+
+
+> ember10-pilot@0.2.0 typecheck
+> tsc --noEmit
+
+vite v8.3.0 building client environment for production...
+transforming...
+✓ 24 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/web/index.html                                         2.44 kB │ gzip:  0.88 kB
+dist/web/assets/figtree-latin-D_ZTVpCC.woff2               20.15 kB
+dist/web/assets/bricolage-grotesque-latin-Cre6nC2_.woff2   76.88 kB
+dist/web/assets/index-DPoHAwK-.css                         42.46 kB │ gzip:  9.15 kB
+dist/web/assets/index-DwOzS4fQ.js                         318.50 kB │ gzip: 99.16 kB
+
+✓ built in 202ms
