@@ -3,11 +3,13 @@ import type { Approval } from '../../packages/core/approval.js';
 import type { Chain, Engine, Intent } from '../../packages/core/engine.js';
 import { ensure, hash } from '../../packages/core/model.js';
 import { tick } from './runner.js';
+import type { Tx } from '../../packages/db/store.js';
 
 export interface ExecutionControl {
  approval: () => Promise<Approval>;
  fundingRoute: (approval: Approval) => Promise<unknown>;
  conditions: (intent: Intent, approval: Approval) => Promise<void>;
+ conditionsLocked?: (intent: Intent, tx: Tx) => Promise<void>;
 }
 /** Shared by the actual worker and orchestration tests. Inspection never depends on active signing approval. */
 export function executionAuthorizer(engine: Engine, c: Config, control: ExecutionControl) {
@@ -34,5 +36,5 @@ export async function controlledExecutionTick(engine: Engine, chain: Chain, owne
   await engine.db.doc('observation', { type: 'worker_readiness', at: Date.now(), allowed: false });
   return { recoveryOnly: true };
  }
- return tick(engine, chain, owner, { authorizeNewSigning: authorize });
+ return tick(engine, chain, owner, { authorizeNewSigning: authorize, authorizeNewSigningLocked:control.conditionsLocked });
 }

@@ -99,6 +99,7 @@ export class Engine {
   }
   await this.db.tx(async t=>{await this.db.fence(t,lease);await this.db.lock(t);
    const current=(await t.query('SELECT status FROM intents WHERE id=$1 FOR UPDATE',[i.id])).rows[0];if(current.status==='finalized')return;
+   ensure(!(await t.query('SELECT id FROM operating_expense_payments WHERE signature=$1',[out.signature])).rowCount,'signature already accounted as an operating expense; preserve intent for review');
    const original=(await t.query('SELECT approved_message_hash FROM attempts WHERE intent_id=$1 AND signature=$2',[i.id,out.signature])).rows[0];ensure(original,'unrecognized transaction signature');
    if(legacyNativeCost)ensure(out.nativeCostEvidence?.messageHash===original.approved_message_hash,'rent evidence does not match original signed message');
    await this.db.move(t,'network:'+out.signature,SOL,i.expected.costAccount,'external:network',fee+rent,{fee:fee.toString(),rent:rent.toString(),signature:out.signature},i.epoch_id);

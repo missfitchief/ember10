@@ -32,7 +32,7 @@ const controls:ExecutionControl={approval:()=>loadApproval(c),fundingRoute:a=>fu
  if(i.kind==='swap'){const observation=await currentSelection(a).read(BigInt(i.amount));await db.doc('observation',observation);ensure(observation.status==='ready'&&observation.complete,'fresh execution universe unavailable');const member=observation.candidates.find(x=>x.mint===i.expected.outputAsset);ensure(member,'funded member no longer verifiable');const check=selectBasket([member],a.policy,a.ourMint,true).universe[0];ensure(!check.reasons.length&&check.routeBudget===i.amount,'funded member execution safety checks failed');}
  if(i.kind==='buyback'||i.kind==='burn')ensure((i.expected.outputAsset??i.asset)===a.ourMint,'project asset identity changed');
  if(i.expected.purpose==='developer_payout')await db.tx(async t=>{await db.lock(t);await assertDeveloperPayoutAuthorized(db,t,i,developerPolicy(c));});
-}};
+},conditionsLocked:async(i,t)=>{await assertDeveloperPayoutAuthorized(db,t,i,developerPolicy(c));}};
 const authorize=executionAuthorizer(engine,c,controls);
 let stop=false,lastDiscovery=0,lastEvaluation=0,lastTokenIngestion=0;
 for(const s of ['SIGINT','SIGTERM'] as const)process.on(s,()=>{stop=true;});

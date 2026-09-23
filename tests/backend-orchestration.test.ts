@@ -16,7 +16,7 @@ import {loadConfig} from '../packages/core/config.js';
 import {assertProspectiveApproval,type Approval} from '../packages/core/approval.js';
 import {backendOverview} from '../apps/api/backend-overview.js';
 import {MarketDataService} from '../packages/integrations/market-data.js';
-import {DeveloperAccounting} from '../packages/core/developer.js';
+import {DeveloperAccounting,assertDeveloperPayoutAuthorized} from '../packages/core/developer.js';
 import {developerPolicy} from '../packages/core/developer-config.js';
 import {createServer} from '../apps/api/server.js';
 import {hostedRead} from '../apps/api/hosted.js';
@@ -167,4 +167,24 @@ it('public accounting never labels an in-flight or stale reconciliation as recon
  await db.doc('reconciliation',{at:new Date().toISOString(),reports:[{state:'in_flight'}]});expect((await transparency(db)).accountingHealth).toBe('pending');
  await db.doc('reconciliation',{at:new Date().toISOString(),reports:[{state:'stale_observation'}]});expect((await transparency(db)).accountingHealth).toBe('stale');
  await db.doc('reconciliation',{at:new Date().toISOString(),reports:[{state:'balanced'}]});expect((await transparency(db)).accountingHealth).toBe('reconciled');
+});
+it('self and circular capital transfers cannot create reserve without an actual treasury gain',async()=>{
+ const c={...realConfig(),OPERATOR_TOKEN:'test-operator-token'.repeat(3)},app=createServer(db,c),headers={authorization:'Bearer '+c.OPERATOR_TOKEN},signature='C'.repeat(88);
+ vi.spyOn(Connection.prototype,'getGenesisHash').mockResolvedValue(MAINNET_GENESIS);
+ const transaction=(source:string,pre:number,post:number)=>({slot:500001,meta:{err:null,fee:1000,preBalances:[1000,pre],postBalances:[0,post],innerInstructions:[]},transaction:{signatures:[signature],message:{accountKeys:[{pubkey:new PublicKey(f.sender)},{pubkey:new PublicKey(f.treasury)}],instructions:[{program:'system',parsed:{type:'transfer',info:{source,destination:f.treasury,lamports:10000000}}}]}}});
+ const parsed=vi.spyOn(Connection.prototype,'getParsedTransaction').mockResolvedValue(transaction(f.treasury,10000000,10000000) as never);
+ expect((await app.inject({method:'POST',url:'/operator/capital',headers,payload:{signature}})).statusCode).toBe(503);
+ parsed.mockResolvedValue(transaction(f.sender,10000000,10000000) as never);expect((await app.inject({method:'POST',url:'/operator/capital',headers,payload:{signature}})).statusCode).toBe(503);expect(await db.balance(SOL,'reserve')).toBe(0n);
+ parsed.mockResolvedValue(transaction(f.sender,10000000,20000000) as never);expect((await app.inject({method:'POST',url:'/operator/capital',headers,payload:{signature}})).statusCode).toBe(200);expect(await db.balance(SOL,'reserve')).toBe(10000000n);await app.close();
+});
+it('developer expenses approved during external authorization block the final locked signing decision',async()=>{
+ await db.tx(async t=>{await db.lock(t);await db.move(t,'fee',SOL,'external:fee','revenue',500000000n);await db.move(t,'ops',SOL,'revenue','operations:race',500000000n);});
+ const accounting=new DeveloperAccounting(db,'demo'),p={...developerPolicy(loadConfig({})),enabled:true,treasury:f.treasury,destination:testAddress('developer')},id=(await accounting.schedule({policy:p,lease}))!,a=approval();let lookups=0;
+ const prepared=vi.spyOn(chain,'prepare');await controlledExecutionTick(engine,chain,'integration-test',realConfig(),{
+  approval:async()=>a,conditions:async i=>db.tx(async t=>{await db.lock(t);await assertDeveloperPayoutAuthorized(db,t,i,p);}),
+  fundingRoute:async()=>{if(++lookups===2)await accounting.recordExpense({id:'concurrent-bill',amountLamports:200000000n,payee:f.sender,description:'Expense recorded during provider lookup',evidence:{testOnly:true},actor:'test'});return a.expectedFundingRoute;},
+  conditionsLocked:(i,t)=>assertDeveloperPayoutAuthorized(db,t,i,p)
+ });
+ expect(prepared).not.toHaveBeenCalled();expect((await db.pool.query('SELECT id FROM attempts')).rowCount).toBe(0);expect((await db.pool.query('SELECT status FROM intents WHERE id=$1',[id])).rows[0].status).toBe('waiting_for_route');
+ expect((await accounting.summary(p)).pendingTransfers).toBe('399900000');
 });
