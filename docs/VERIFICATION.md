@@ -1,6 +1,6 @@
 # Current verification — 23 September 2026
 
-Application revision: `ed67a05f7b676108a98dcaf29460d2fdc60fecc6`. The external-audit documentation commit is a separate source snapshot; it does not imply a new runtime deployment.
+Application revision: `ed67a05f7b676108a98dcaf29460d2fdc60fecc6`. The external-audit preparation commit is a separate source snapshot containing documentation, evidence and reviewer tooling; it does not imply a new runtime deployment.
 
 | Check | Result | Evidence |
 |---|---|---|
@@ -12,6 +12,8 @@ Application revision: `ed67a05f7b676108a98dcaf29460d2fdc60fecc6`. The external-a
 | Paging and failures | Expanded default/search lists retain 140 rows through polling and source outages; explicit refresh resets them; independent records load despite a stalled status | [interaction checks](evidence/r2/frontend-browser.json), [local checks](evidence/r2/local-browser.json) |
 | External re-audit of this correction | Pending; internal specialist reviews included | [review brief](EXTERNAL-AUDIT.md) |
 | Real funded settlement / production DB migration | Not performed | Signing, broadcast and worker remain disabled on the public host |
+
+For the complete reviewer command sequence, browser tooling and fixture/live-test distinction, use [AUDIT-REPRODUCE.md](AUDIT-REPRODUCE.md). The [latest public recheck](evidence/audit-ready/public-proof.json) refreshes publication evidence only; it is not a new full test run.
 
 ## Reproduce
 

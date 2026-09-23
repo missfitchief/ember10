@@ -8,7 +8,7 @@ Backend corrections are documented in [BACKEND-CORRECTIONS.md](docs/BACKEND-CORR
 
 ## External audit
 
-Start with [the external audit brief](docs/EXTERNAL-AUDIT.md), [current verification](docs/VERIFICATION.md) and [Round 2 findings](docs/AUDIT-R2.md). All source, migration and test files are included in the repository snapshot. The exact public runtime and documentation-only package revision are recorded separately in `docs/deployment.json` and the package manifest. Financial operation is blocked by the confirmed R2 findings. Known open findings are not represented as resolved.
+Start with [AUDIT-START-HERE.md](AUDIT-START-HERE.md) and [the external audit brief](docs/EXTERNAL-AUDIT.md), [current verification](docs/VERIFICATION.md) and [Round 2 findings](docs/AUDIT-R2.md). All source, migration and test files are included in the repository snapshot. The exact public runtime and documentation/reviewer-tooling package revision are recorded separately in `docs/deployment.json` and the package manifest. Financial operation is blocked by the confirmed R2 findings. Known open findings are not represented as resolved.
 
 ## Run locally
 
@@ -69,7 +69,7 @@ The frontend can be hosted independently as static files from `dist/web`. The fi
 
 ## EMBER10 update workflow
 
-The existing application is maintained in one local Git repository with separate `data-01` and `ui-01` worktrees. The `integration/ember10` branch is the canonical integration branch. Shared progress and independent review are recorded in the adjacent `EMBER10-review` directory. No two-PC transfers are required.
+The existing application is maintained in one local Git repository with separate `data-01` and `ui-01` worktrees. The `integration/ember10` branch is the canonical integration branch. Current shared handoff and independent review are committed in `docs/AUDIT-R2.md` and `docs/evidence/r2`; adjacent review directories contain historical work products. No two-PC transfers are required.
 
 The display contract is `packages/shared/public.ts`. Current market observations, eligible selection, funded epochs and settlement are separate records. A new ten-asset policy uses ten equal 1,000-basis-point purchase budgets and keeps 80/10/10 unchanged. Legacy version-one five-asset epochs, hashes and liabilities are not rewritten.
 

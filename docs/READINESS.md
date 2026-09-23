@@ -5,7 +5,7 @@
 | Area | Status |
 |---|---|
 | Public UI | Implemented; desktop and mobile inspected, real prelaunch discovery, empty/error/unavailable states checked; ordinary UI refuses demo financial records |
-| Vercel deployment | EMBER10 real-source prelaunch correction prepared for existing URL; exact publication result is recorded in deployment evidence; no financial worker or signing |
+| Vercel deployment | Published and verified on the existing URL at ed67a05; see deployment.json and the latest public proof. No financial worker or signing |
 | API and operator boundary | Implemented; address/limit validation, rate limiting, bearer authentication and public write rejection tested |
 | Core accounting | Existing PostgreSQL tests pass, but R2 identifies open reconciliation, attribution and recovery defects; not financially ready |
 | Durable worker | Not deployed; open R2 forecast, expiry, WSOL and commitment-lifecycle blockers prevent a funded pilot |

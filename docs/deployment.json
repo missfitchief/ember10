@@ -4,12 +4,12 @@
   "deployedApplicationRevision": "ed67a05f7b676108a98dcaf29460d2fdc60fecc6",
   "deploymentId": "dpl_3j6Aw9JEFf6EuX8iTAVHVNkpnit8",
   "candidateUrl": "https://ember5-pilot-5v33nhxc2-plavi.vercel.app",
-  "verifiedAt": "2026-09-23T20:23:59.562Z",
-  "verificationEvidence": "evidence/r2/public-verification.json",
+  "verifiedAt": "2026-09-23T20:27:58.053Z",
+  "verificationEvidence": "evidence/audit-ready/public-proof.json",
   "verifiedAssetCount": 8,
   "verifiedLogoCount": 10,
   "financialWorkerDeployed": false,
   "productionDatabaseMigrationApplied": false,
-  "packageRevisionRule": "The external audit package adds documentation/evidence only; its commit may differ from the deployed application revision.",
+  "packageRevisionRule": "Audit preparation adds documentation, evidence and reviewer tooling; application/test/config bytes remain unchanged from the deployed application revision.",
   "serverArtifactAttestation": false
 }

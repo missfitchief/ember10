@@ -49,7 +49,7 @@ Creating a batch moves its exact liabilities into `reserved:<batch>` and exclusi
 
 ## Costs and burn
 
-Direct cost forecasts are bounded at 10% of round funding. A minimum unencumbered SOL reserve is preserved; the signing path checks current rent and fee allowance before signing. Unsupported/frozen accounts or failed simulation leave reservations in place. Actual network/rent costs are posted separately. Historical USD payment value is only meaningful when a settlement-time valuation exists; otherwise the application displays raw units and unavailable valuation.
+R2 F-3 remains open: the current epoch cost forecast lacks one temporary WSOL rent and fails the eleventh all-new-ATA build in the included reproduction. Do not fund an epoch using that forecast. Direct cost forecasts are bounded at 10% of round funding. A minimum unencumbered SOL reserve is preserved; the signing path checks current rent and fee allowance before signing. Unsupported/frozen accounts or failed simulation leave reservations in place. Actual network/rent costs are posted separately. Historical USD payment value is only meaningful when a settlement-time valuation exists; otherwise the application displays raw units and unavailable valuation.
 
 Buyback acquires our mint into its own `burn-units:<intent>` account. A distinct checked-burn intent can burn only that acquired quantity. Failed burn does not create a new buyback or consume unrelated holdings. Operations have their own reserved budget and deterministic transfer intent, with a fixed approved recipient.
 

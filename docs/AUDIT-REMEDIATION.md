@@ -1,6 +1,6 @@
 > Historical first-round claims below are superseded where noted by [Round 2](AUDIT-R2.md). In particular, S1-06 is **open**: the forecast is one WSOL float short; do not fund an epoch.
 
-# Audit remediation — 23 September 2026
+# Historical first-round remediation — 23 September 2026
 
 The supplied audit inspected `db041a0`. This correction starts from `4d36e54`, retaining the newer backend, Orbit frontend and same-origin token logos. One PC, one integrating worktree, no transfer packages. This is a read-only prelaunch release, **not closure of the financial-service audit**.
 

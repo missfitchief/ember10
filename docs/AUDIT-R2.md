@@ -33,7 +33,7 @@ P-5's server identity limitation remains: an environment revision plus byte-iden
 | F-13 | Open: operator pause can race after authorization and before sign/send. |
 | F-14 | Open: status-observation I/O, zero-value storage, generic errors, Retry-After parsing, ingestion lease scope, capital attribution, policy-version and database-role/platform safeguards. |
 
-The independent money-path review and executable eleven-build harness are in `evidence/r2/`. Their mock instructions/RPC prove the forecast failure, not live Jupiter compatibility or finalized settlement. F-7 through F-14 retain the supplied auditor's findings and were not independently re-executed in this remediation round. The five high dependency entries also remain disclosed.
+The independent money-path review and recorded results are in `evidence/r2/`; the executable [eleven-build harness](../scripts/audit/f3-eleven-builds.mts) is in `scripts/audit/`. Their mock instructions/RPC prove the forecast failure, not live Jupiter compatibility or finalized settlement. F-7 through F-14 retain the supplied auditor's findings and were not independently re-executed in this remediation round. The five high dependency entries also remain disclosed.
 
 ## One-PC ownership and integration
 

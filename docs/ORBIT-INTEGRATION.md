@@ -9,7 +9,7 @@ The supplied frontend patch was applied with `git apply --check` to the existing
 - Warm ivory layout, original flame mark and ten floating market nodes, responsive down to 320 px.
 - A compact ten-row homepage, concise 80/10/10 explanation, full secondary market/rewards/wallet/transparency pages and matching favicon/social artwork.
 - Current source-ranked observations are deduplicated by mint, preserving duplicate symbols. Animation is illustrative and clearly distinct from funded holdings.
-- 45-second non-overlapping polling with a 15-second timeout, unchanged source timestamps on failure and truthful unavailable/empty/stale states. No static market snapshot is used as a production fallback.
+- 45-second non-overlapping polling, now using the 28-second public request deadline after R2, unchanged source timestamps on failure and truthful unavailable/empty/stale states. No static market snapshot is used as a production fallback.
 - Motion pause, visibility/intersection pause, keyboard dialogs, focus restoration and emulated reduced-motion behavior.
 
 ## Independent review fixes

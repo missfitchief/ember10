@@ -1,6 +1,8 @@
 import assert from 'node:assert/strict';
 import {createRequire} from 'node:module';
-import {readFileSync,writeFileSync} from 'node:fs';
+import {readFileSync,writeFileSync,existsSync} from 'node:fs';
+import {execFileSync} from 'node:child_process';
+import {createHash} from 'node:crypto';
 import {fileURLToPath} from 'node:url';
 import {epochCostForecast} from '../../apps/worker/forecast.js';
 import {safeJupiterBuild} from '../../packages/integrations/jupiter.js';
@@ -54,6 +56,11 @@ const ember=new EmberClient();ember.read=async()=>({at:Date.now(),value:{payouts
 await assert.rejects(()=>ember.payouts(),error=>error instanceof Error&&error.name==='ZodError');
 const unknownDiscriminators=['d19853937cfed8e9','bb64facc31c4af14'].map(hex=>({hex,decoded:program.coder.instruction.decode(Buffer.from(hex,'hex'))}));
 assert(unknownDiscriminators.every(row=>row.decoded===null));
-const result={revision:'4f9fba2fd95d6fd8057c27d56cfad0297b9f06ce',kind:'local_read_only_adapter_harness',signed:0,broadcast:0,networkRequests:0,fixtureCaveat:'Legacy route instruction and RPC responses are mocked; this does not establish current Jupiter live compatibility.',oldLow,oldMax,newLow,newMax,unknownDiscriminators,payoutCensus:{rows:payouts.length,fullWindowRejectedByStrictSchema:true,keepRows:payouts.filter((p:any)=>p.mode==='keep').map((p:any)=>({kind:p.kind,amount:p.amount,claimed:p.claimed,quoteMint:p.quoteMint})),keepPayoutWSOL:payouts.filter((p:any)=>p.kind==='payout'&&p.mode==='keep'&&p.quoteMint===WSOL).length,missingSignature:payouts.filter((p:any)=>typeof p.signature!=='string').map((p:any)=>p.kind)}};
+const root=new URL('../../',import.meta.url);
+const gitAvailable=existsSync(new URL('.git',root));
+const executedRevision=gitAvailable?execFileSync('git',['rev-parse','HEAD'],{cwd:root,encoding:'utf8'}).trim():null;
+const workingTreeDirty=gitAvailable?!!execFileSync('git',['status','--porcelain'],{cwd:root,encoding:'utf8'}).trim():null;
+const harnessSha256=createHash('sha256').update(readFileSync(new URL(import.meta.url))).digest('hex');
+const result={auditedBaseRevision:'4f9fba2fd95d6fd8057c27d56cfad0297b9f06ce',executedRevision,workingTreeDirty,harnessSha256,kind:'local_read_only_adapter_harness',signed:0,broadcast:0,networkRequests:0,fixtureCaveat:'Legacy route instruction and RPC responses are mocked; this does not establish current Jupiter live compatibility.',oldLow,oldMax,newLow,newMax,unknownDiscriminators,payoutCensus:{rows:payouts.length,fullWindowRejectedByStrictSchema:true,keepRows:payouts.filter((p:any)=>p.mode==='keep').map((p:any)=>({kind:p.kind,amount:p.amount,claimed:p.claimed,quoteMint:p.quoteMint})),keepPayoutWSOL:payouts.filter((p:any)=>p.kind==='payout'&&p.mode==='keep'&&p.quoteMint===WSOL).length,missingSignature:payouts.filter((p:any)=>typeof p.signature!=='string').map((p:any)=>p.kind)}};
 writeFileSync(process.argv[2] ?? new URL('../../f3-eleven-builds-results.json',import.meta.url),JSON.stringify(result,null,2)+'\n');
 console.log(JSON.stringify({passed:true,oldLow:{completed:oldLow.completed,remaining:oldLow.remaining,shortfall:oldLow.rows.at(-1)?.shortfall},oldMax:{completed:oldMax.completed,remaining:oldMax.remaining,shortfall:oldMax.rows.at(-1)?.shortfall},newLow:{completed:newLow.completed,afterBurn:newLow.afterBurn},newMax:{completed:newMax.completed,afterBurn:newMax.afterBurn},payoutCensus:result.payoutCensus,output:process.argv[2] ?? fileURLToPath(new URL('../../f3-eleven-builds-results.json',import.meta.url))},null,2));

@@ -44,7 +44,7 @@ If the archival source finds execution, configure the working archival provider 
 
 ## Provider outage, unsafe member or fee-route change
 
-Stale/unknown prices postpone payouts and funding; raw credits survive. Missing/full-census-contract failures stop snapshots. Unknown route/program instructions, failed simulation, frozen ATAs or missing rent estimates postpone the affected intent. A member becoming unsafe does not redistribute its budget to the other four. Module, creator recipient, migration target or fee-state changes pause new commitments and retain all existing credits.
+Stale/unknown prices postpone payouts and funding; raw credits survive. Missing/full-census-contract failures stop snapshots. Unknown route/program instructions, failed simulation, frozen ATAs or missing rent estimates postpone the affected intent. A member becoming unsafe does not redistribute its budget to the other members. Module, creator recipient, migration target or fee-state changes pause new commitments and retain all existing credits.
 
 Discovery preserves last successful observations with timestamps and stale status. If the current public catalogue cannot supply a verified ranking basis, connect the complete reviewed metrics feed; do not rename FDV as market cap. A supported explicit FDV policy must be published as a new version and displayed as such.
 
@@ -66,9 +66,11 @@ Use PostgreSQL `pg_dump --format=custom` for a consistent logical backup, plus m
 
 ## Deployment and public launch
 
-Run the API and worker on a persistent Node host with PostgreSQL, independent of a static frontend host. The local Compose example is not a tested public deployment. Configure TLS, private operator routing, least-privilege database credentials, backup retention, signer policy and alerts before live use. No deployment, domain registration, token creation, mainnet funding or public launch was authorized/performed in this build.
+Run the API and worker on a persistent Node host with PostgreSQL, independent of a static frontend host. The local Compose example is not a tested public deployment. Configure TLS, private operator routing, least-privilege database credentials, backup retention, signer policy and alerts before live use. The read-only prelaunch frontend is published on Vercel. No financial-service deployment, domain registration, project token creation, mainnet funding or funded launch was performed. Open R2 financial findings block a funded pilot.
 
 ## Current audit handoff
+
+Policy publication is currently limited by the schema to versions 1 and 2; instructions describing later increasing versions are a design requirement, not an implemented path. See [R2 findings](AUDIT-R2.md).
 
 See [external audit](EXTERNAL-AUDIT.md) before operational use. New migration 008 has only been exercised in isolated tests; deploy the API and worker together after a backup and normal migration while paused. Vercel publication does not migrate a financial database.
 

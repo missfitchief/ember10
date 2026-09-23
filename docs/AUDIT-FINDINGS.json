@@ -1,0 +1,857 @@
+{
+  "schemaVersion": 2,
+  "applicationRevision": "ed67a05f7b676108a98dcaf29460d2fdc60fecc6",
+  "externalReaudit": "pending",
+  "financialExecutionEnabled": false,
+  "totalFindings": 56,
+  "inheritedFindings": 37,
+  "r2Findings": 19,
+  "precedence": "This register supersedes current-use interpretations of the frozen first-round register. Prior external dispositions apply to 4f9fba2, not automatically to this corrected snapshot.",
+  "findings": [
+    {
+      "id": "S1-01",
+      "group": "inherited",
+      "summary": "EXECUTED  apps/api/server.ts:18  Operator auth bypass via encoded path",
+      "priorExternalReview": {
+        "revision": "4f9fba2",
+        "report": "evidence/r2/supplied-audit.md",
+        "disposition": "fixed"
+      },
+      "currentStatus": "previously_confirmed_recheck_current_snapshot",
+      "relatedFindings": [],
+      "note": "Retain the supplied R2 disposition for its reviewed revision. Recheck the current complete snapshot; compound subfindings may remain.",
+      "reviewTargets": [
+        "tests/audit-s1.test.ts",
+        "docs/AUDIT-REMEDIATION.md"
+      ]
+    },
+    {
+      "id": "S1-02",
+      "group": "inherited",
+      "summary": "EXECUTED  packages/integrations/solana.ts:26  fullSnapshot can never succeed against a real RPC",
+      "priorExternalReview": {
+        "revision": "4f9fba2",
+        "report": "evidence/r2/supplied-audit.md",
+        "disposition": "fixed"
+      },
+      "currentStatus": "previously_confirmed_recheck_current_snapshot",
+      "relatedFindings": [],
+      "note": "Retain the supplied R2 disposition for its reviewed revision. Recheck the current complete snapshot; compound subfindings may remain.",
+      "reviewTargets": [
+        "tests/audit-s1.test.ts",
+        "docs/AUDIT-REMEDIATION.md"
+      ]
+    },
+    {
+      "id": "S1-03",
+      "group": "inherited",
+      "summary": "MEASURED  packages/integrations/market-data.ts:100-102 (+ http.ts:2 same 12 MB default, used by ember.ts:10)",
+      "priorExternalReview": {
+        "revision": "4f9fba2",
+        "report": "evidence/r2/supplied-audit.md",
+        "disposition": "fixed"
+      },
+      "currentStatus": "previously_confirmed_recheck_current_snapshot",
+      "relatedFindings": [
+        "P-2"
+      ],
+      "note": "R2 confirmed the runtime byte cap; later P-2 adds shared evidence bounds, 50,000 public rows and capacity warnings. External re-audit pending.",
+      "reviewTargets": [
+        "tests/audit-s1.test.ts",
+        "docs/AUDIT-REMEDIATION.md"
+      ]
+    },
+    {
+      "id": "S1-04",
+      "group": "inherited",
+      "summary": "CODE, both channels  packages/integrations/ingestion.ts:22 (SPL variant :40), engine.ts:20, solana.ts:33",
+      "priorExternalReview": {
+        "revision": "4f9fba2",
+        "report": "evidence/r2/supplied-audit.md",
+        "disposition": "fixed"
+      },
+      "currentStatus": "previously_confirmed_recheck_current_snapshot",
+      "relatedFindings": [],
+      "note": "Retain the supplied R2 disposition for its reviewed revision. Recheck the current complete snapshot; compound subfindings may remain.",
+      "reviewTargets": [
+        "tests/audit-s1.test.ts",
+        "docs/AUDIT-REMEDIATION.md"
+      ]
+    },
+    {
+      "id": "S1-05",
+      "group": "inherited",
+      "summary": "EXECUTED  packages/db/store.ts:6  pg.Pool has no 'error' listener -> DB restart crashes API and worker",
+      "priorExternalReview": {
+        "revision": "4f9fba2",
+        "report": "evidence/r2/supplied-audit.md",
+        "disposition": "fixed"
+      },
+      "currentStatus": "previously_confirmed_recheck_current_snapshot",
+      "relatedFindings": [],
+      "note": "Retain the supplied R2 disposition for its reviewed revision. Recheck the current complete snapshot; compound subfindings may remain.",
+      "reviewTargets": [
+        "tests/audit-s1.test.ts",
+        "docs/AUDIT-REMEDIATION.md"
+      ]
+    },
+    {
+      "id": "S1-06",
+      "group": "inherited",
+      "summary": "MEASURED (arithmetic)  apps/worker/main.ts:46 with money.ts:16",
+      "priorExternalReview": {
+        "revision": "4f9fba2",
+        "report": "evidence/r2/supplied-audit.md",
+        "disposition": "regressed"
+      },
+      "currentStatus": "open",
+      "relatedFindings": [
+        "F-3"
+      ],
+      "note": "OPEN / REGRESSED: current forecast is one temporary WSOL rent short. Independent eleven-build reproduction is included as F-3; no financial fix shipped.",
+      "reviewTargets": [
+        "tests/audit-s1.test.ts",
+        "docs/AUDIT-REMEDIATION.md"
+      ]
+    },
+    {
+      "id": "S2-01",
+      "group": "inherited",
+      "summary": "MEASURED  apps/web/market.tsx:41-59 (+ src.tsx:26, view-model.ts:79)",
+      "priorExternalReview": {
+        "revision": "4f9fba2",
+        "report": "evidence/r2/supplied-audit.md",
+        "disposition": "partial"
+      },
+      "currentStatus": "partial",
+      "relatedFindings": [
+        "P-1"
+      ],
+      "note": "Expanded default/search results now retain rows through polls and show stale health. Cross-instance pages still require matching timestamp and evidence hash.",
+      "reviewTargets": [
+        "tests/audit-public.test.ts",
+        "tests/ui-view-model.test.ts",
+        "docs/evidence/external-audit/interaction-results.json"
+      ]
+    },
+    {
+      "id": "S2-02",
+      "group": "inherited",
+      "summary": "CODE  apps/web/src.tsx:20-26  reload() has no request versioning",
+      "priorExternalReview": {
+        "revision": "4f9fba2",
+        "report": "evidence/r2/supplied-audit.md",
+        "disposition": "fixed"
+      },
+      "currentStatus": "previously_confirmed_recheck_current_snapshot",
+      "relatedFindings": [
+        "P-5"
+      ],
+      "note": "Retain the supplied R2 disposition for its reviewed revision. Recheck the current complete snapshot; compound subfindings may remain.",
+      "reviewTargets": [
+        "tests/audit-public.test.ts",
+        "tests/ui-view-model.test.ts",
+        "docs/evidence/external-audit/interaction-results.json"
+      ]
+    },
+    {
+      "id": "S2-03",
+      "group": "inherited",
+      "summary": "EXECUTED  apps/api/server.ts:23, apps/web/ledger.ts:15/27, apps/api/queries.ts:29/39, records.tsx:11",
+      "priorExternalReview": {
+        "revision": "4f9fba2",
+        "report": "evidence/r2/supplied-audit.md",
+        "disposition": "fixed"
+      },
+      "currentStatus": "previously_confirmed_recheck_current_snapshot",
+      "relatedFindings": [],
+      "note": "Retain the supplied R2 disposition for its reviewed revision. Recheck the current complete snapshot; compound subfindings may remain.",
+      "reviewTargets": [
+        "tests/audit-public.test.ts",
+        "tests/ui-view-model.test.ts",
+        "docs/evidence/external-audit/interaction-results.json"
+      ]
+    },
+    {
+      "id": "S2-04",
+      "group": "inherited",
+      "summary": "CODE (Codex F01)  apps/api/hosted.ts:48-53 before :54, overview.ts:10-14,32-36",
+      "priorExternalReview": {
+        "revision": "4f9fba2",
+        "report": "evidence/r2/supplied-audit.md",
+        "disposition": "fixed"
+      },
+      "currentStatus": "previously_confirmed_recheck_current_snapshot",
+      "relatedFindings": [],
+      "note": "Retain the supplied R2 disposition for its reviewed revision. Recheck the current complete snapshot; compound subfindings may remain.",
+      "reviewTargets": [
+        "tests/audit-public.test.ts",
+        "tests/ui-view-model.test.ts",
+        "docs/evidence/external-audit/interaction-results.json"
+      ]
+    },
+    {
+      "id": "S2-05",
+      "group": "inherited",
+      "summary": "CODE  apps/web/records.tsx:22-41  useLedger partial failures",
+      "priorExternalReview": {
+        "revision": "4f9fba2",
+        "report": "evidence/r2/supplied-audit.md",
+        "disposition": "fixed"
+      },
+      "currentStatus": "previously_confirmed_recheck_current_snapshot",
+      "relatedFindings": [
+        "P-5"
+      ],
+      "note": "Retain the supplied R2 disposition for its reviewed revision. Recheck the current complete snapshot; compound subfindings may remain.",
+      "reviewTargets": [
+        "tests/audit-public.test.ts",
+        "tests/ui-view-model.test.ts",
+        "docs/evidence/external-audit/interaction-results.json"
+      ]
+    },
+    {
+      "id": "S2-06",
+      "group": "inherited",
+      "summary": "CODE  apps/api/hosted.ts:35-37, :24-26, :31",
+      "priorExternalReview": {
+        "revision": "4f9fba2",
+        "report": "evidence/r2/supplied-audit.md",
+        "disposition": "partial"
+      },
+      "currentStatus": "partial",
+      "relatedFindings": [
+        "P-5"
+      ],
+      "note": "Shared 25-second proxy deadline and CSV header exist. The 4 MB response cap and generic error classification remain.",
+      "reviewTargets": [
+        "tests/audit-public.test.ts",
+        "tests/ui-view-model.test.ts",
+        "docs/evidence/external-audit/interaction-results.json"
+      ]
+    },
+    {
+      "id": "S2-07",
+      "group": "inherited",
+      "summary": "CODE  apps/web/view-model.ts:7 + src.tsx:28  Skip link writes #main into history: #basket -> skip -> #wallet",
+      "priorExternalReview": {
+        "revision": "4f9fba2",
+        "report": "evidence/r2/supplied-audit.md",
+        "disposition": "fixed"
+      },
+      "currentStatus": "previously_confirmed_recheck_current_snapshot",
+      "relatedFindings": [],
+      "note": "Retain the supplied R2 disposition for its reviewed revision. Recheck the current complete snapshot; compound subfindings may remain.",
+      "reviewTargets": [
+        "tests/audit-public.test.ts",
+        "tests/ui-view-model.test.ts",
+        "docs/evidence/external-audit/interaction-results.json"
+      ]
+    },
+    {
+      "id": "S2-08",
+      "group": "inherited",
+      "summary": "EXECUTED (server side) apps/api/hosted.ts:51 + view-model.ts:93  A search over 100 chars (a pasted URL)",
+      "priorExternalReview": {
+        "revision": "4f9fba2",
+        "report": "evidence/r2/supplied-audit.md",
+        "disposition": "fixed"
+      },
+      "currentStatus": "previously_confirmed_recheck_current_snapshot",
+      "relatedFindings": [],
+      "note": "Retain the supplied R2 disposition for its reviewed revision. Recheck the current complete snapshot; compound subfindings may remain.",
+      "reviewTargets": [
+        "tests/audit-public.test.ts",
+        "tests/ui-view-model.test.ts",
+        "docs/evidence/external-audit/interaction-results.json"
+      ]
+    },
+    {
+      "id": "S2-09",
+      "group": "inherited",
+      "summary": "CODE  apps/web/market.tsx:6-9  Avatar keeps failed=true after the image URL changes (no reset on prop change).",
+      "priorExternalReview": {
+        "revision": "4f9fba2",
+        "report": "evidence/r2/supplied-audit.md",
+        "disposition": "fixed"
+      },
+      "currentStatus": "previously_confirmed_recheck_current_snapshot",
+      "relatedFindings": [],
+      "note": "Retain the supplied R2 disposition for its reviewed revision. Recheck the current complete snapshot; compound subfindings may remain.",
+      "reviewTargets": [
+        "tests/audit-public.test.ts",
+        "tests/ui-view-model.test.ts",
+        "docs/evidence/external-audit/interaction-results.json"
+      ]
+    },
+    {
+      "id": "S2-10",
+      "group": "inherited",
+      "summary": "EXECUTED  apps/web/view-model.ts:28  Compact money rounds past the unit: 999,950-999,999 -> \"$1000.0K\"",
+      "priorExternalReview": {
+        "revision": "4f9fba2",
+        "report": "evidence/r2/supplied-audit.md",
+        "disposition": "fixed"
+      },
+      "currentStatus": "previously_confirmed_recheck_current_snapshot",
+      "relatedFindings": [],
+      "note": "Retain the supplied R2 disposition for its reviewed revision. Recheck the current complete snapshot; compound subfindings may remain.",
+      "reviewTargets": [
+        "tests/audit-public.test.ts",
+        "tests/ui-view-model.test.ts",
+        "docs/evidence/external-audit/interaction-results.json"
+      ]
+    },
+    {
+      "id": "S2-11",
+      "group": "inherited",
+      "summary": "CODE  apps/api/hosted.ts:64  /api/basket \"universe\" is the top-100 page only, no marketPage/hasMore;",
+      "priorExternalReview": {
+        "revision": "4f9fba2",
+        "report": "evidence/r2/supplied-audit.md",
+        "disposition": "partial"
+      },
+      "currentStatus": "partial",
+      "relatedFindings": [
+        "P-5"
+      ],
+      "note": "Outage completeness is corrected. The universe is explicitly paginated; a first-page projection is not the whole catalogue.",
+      "reviewTargets": [
+        "tests/audit-public.test.ts",
+        "tests/ui-view-model.test.ts",
+        "docs/evidence/external-audit/interaction-results.json"
+      ]
+    },
+    {
+      "id": "L-01",
+      "group": "inherited",
+      "summary": "CODE, both channels  apps/worker/runner.ts:57  tick() picks ONE planned/waiting_for_route intent per loop",
+      "priorExternalReview": {
+        "revision": "4f9fba2",
+        "report": "evidence/r2/supplied-audit.md",
+        "disposition": "fixed"
+      },
+      "currentStatus": "previously_confirmed_recheck_current_snapshot",
+      "relatedFindings": [],
+      "note": "Retain the supplied R2 disposition for its reviewed revision. Recheck the current complete snapshot; compound subfindings may remain.",
+      "reviewTargets": [
+        "docs/AUDIT-REMEDIATION.md",
+        "tests/backend-orchestration.test.ts",
+        "tests/execution-regressions.test.ts"
+      ]
+    },
+    {
+      "id": "L-02",
+      "group": "inherited",
+      "summary": "CODE  packages/integrations/jupiter.ts:45  ensure(!getAccountInfo(treasury WSOL ATA)): anyone can create",
+      "priorExternalReview": {
+        "revision": "4f9fba2",
+        "report": "evidence/r2/supplied-audit.md",
+        "disposition": "open"
+      },
+      "currentStatus": "open",
+      "relatedFindings": [
+        "F-6"
+      ],
+      "note": "Retain the supplied R2 disposition for its reviewed revision. Recheck the current complete snapshot; compound subfindings may remain.",
+      "reviewTargets": [
+        "docs/AUDIT-REMEDIATION.md",
+        "tests/backend-orchestration.test.ts",
+        "tests/execution-regressions.test.ts"
+      ]
+    },
+    {
+      "id": "L-03",
+      "group": "inherited",
+      "summary": "EXECUTED  apps/worker/main.ts:29 + queries.ts:6  In prelaunch AND live the worker stores the whole discovery",
+      "priorExternalReview": {
+        "revision": "4f9fba2",
+        "report": "evidence/r2/supplied-audit.md",
+        "disposition": "fixed"
+      },
+      "currentStatus": "previously_confirmed_recheck_current_snapshot",
+      "relatedFindings": [
+        "F-14"
+      ],
+      "note": "Bounded upsert confirmed previously; repeated large status/observation I/O remains F-14.",
+      "reviewTargets": [
+        "docs/AUDIT-REMEDIATION.md",
+        "tests/backend-orchestration.test.ts",
+        "tests/execution-regressions.test.ts"
+      ]
+    },
+    {
+      "id": "L-04",
+      "group": "inherited",
+      "summary": "CODE  packages/core/engine.ts:155 + server.ts:32  Incidents are inserted on EVERY loop while a condition",
+      "priorExternalReview": {
+        "revision": "4f9fba2",
+        "report": "evidence/r2/supplied-audit.md",
+        "disposition": "fixed"
+      },
+      "currentStatus": "previously_confirmed_recheck_current_snapshot",
+      "relatedFindings": [],
+      "note": "Retain the supplied R2 disposition for its reviewed revision. Recheck the current complete snapshot; compound subfindings may remain.",
+      "reviewTargets": [
+        "docs/AUDIT-REMEDIATION.md",
+        "tests/backend-orchestration.test.ts",
+        "tests/execution-regressions.test.ts"
+      ]
+    },
+    {
+      "id": "L-05",
+      "group": "inherited",
+      "summary": "CODE  apps/web/records.tsx:78, components.tsx:20, src.tsx:49 vs engine.ts:143-145, main.ts:58",
+      "priorExternalReview": {
+        "revision": "4f9fba2",
+        "report": "evidence/r2/supplied-audit.md",
+        "disposition": "fixed"
+      },
+      "currentStatus": "previously_confirmed_recheck_current_snapshot",
+      "relatedFindings": [],
+      "note": "Worker automatic OPS sweep removed. Legacy Engine.scheduleOperations remains callable; do not infer all subfindings closed.",
+      "reviewTargets": [
+        "docs/AUDIT-REMEDIATION.md",
+        "tests/backend-orchestration.test.ts",
+        "tests/execution-regressions.test.ts"
+      ]
+    },
+    {
+      "id": "L-06",
+      "group": "inherited",
+      "summary": "CODE (Codex F02, A3)  packages/integrations/solana.ts:103-109  Rent is reconstructed from CURRENT account",
+      "priorExternalReview": {
+        "revision": "4f9fba2",
+        "report": "evidence/r2/supplied-audit.md",
+        "disposition": "fixed"
+      },
+      "currentStatus": "previously_confirmed_recheck_current_snapshot",
+      "relatedFindings": [],
+      "note": "Retain the supplied R2 disposition for its reviewed revision. Recheck the current complete snapshot; compound subfindings may remain.",
+      "reviewTargets": [
+        "docs/AUDIT-REMEDIATION.md",
+        "tests/backend-orchestration.test.ts",
+        "tests/execution-regressions.test.ts"
+      ]
+    },
+    {
+      "id": "L-07",
+      "group": "inherited",
+      "summary": "CODE, both channels  packages/integrations/ingestion.ts:19-25, ember.ts:15, http.ts:13-14, engine.ts:23-26",
+      "priorExternalReview": {
+        "revision": "4f9fba2",
+        "report": "evidence/r2/supplied-audit.md",
+        "disposition": "partial"
+      },
+      "currentStatus": "partial",
+      "relatedFindings": [
+        "F-5"
+      ],
+      "note": "Retain the supplied R2 disposition for its reviewed revision. Recheck the current complete snapshot; compound subfindings may remain.",
+      "reviewTargets": [
+        "docs/AUDIT-REMEDIATION.md",
+        "tests/backend-orchestration.test.ts",
+        "tests/execution-regressions.test.ts"
+      ]
+    },
+    {
+      "id": "L-08",
+      "group": "inherited",
+      "summary": "CODE (Codex F03)  approval.ts:5 + selection.ts:44-46 + money.ts:4  holderUnits:'0' is accepted by the policy",
+      "priorExternalReview": {
+        "revision": "4f9fba2",
+        "report": "evidence/r2/supplied-audit.md",
+        "disposition": "fixed"
+      },
+      "currentStatus": "previously_confirmed_recheck_current_snapshot",
+      "relatedFindings": [],
+      "note": "Retain the supplied R2 disposition for its reviewed revision. Recheck the current complete snapshot; compound subfindings may remain.",
+      "reviewTargets": [
+        "docs/AUDIT-REMEDIATION.md",
+        "tests/backend-orchestration.test.ts",
+        "tests/execution-regressions.test.ts"
+      ]
+    },
+    {
+      "id": "L-09",
+      "group": "inherited",
+      "summary": "CODE (Codex F04/F07/F08/F06/F11)  Recovery and gating gaps: needs_review attempts are never re-inspected even",
+      "priorExternalReview": {
+        "revision": "4f9fba2",
+        "report": "evidence/r2/supplied-audit.md",
+        "disposition": "partial"
+      },
+      "currentStatus": "partial",
+      "relatedFindings": [
+        "F-10",
+        "F-13"
+      ],
+      "note": "Retain the supplied R2 disposition for its reviewed revision. Recheck the current complete snapshot; compound subfindings may remain.",
+      "reviewTargets": [
+        "docs/AUDIT-REMEDIATION.md",
+        "tests/backend-orchestration.test.ts",
+        "tests/execution-regressions.test.ts"
+      ]
+    },
+    {
+      "id": "L-10",
+      "group": "inherited",
+      "summary": "CODE  apps/worker/main.ts:42 vs :47 vs engine.ts:43  Holder snapshot is captured BEFORE verifiedUniverse walks",
+      "priorExternalReview": {
+        "revision": "4f9fba2",
+        "report": "evidence/r2/supplied-audit.md",
+        "disposition": "fixed"
+      },
+      "currentStatus": "previously_confirmed_recheck_current_snapshot",
+      "relatedFindings": [],
+      "note": "Retain the supplied R2 disposition for its reviewed revision. Recheck the current complete snapshot; compound subfindings may remain.",
+      "reviewTargets": [
+        "docs/AUDIT-REMEDIATION.md",
+        "tests/backend-orchestration.test.ts",
+        "tests/execution-regressions.test.ts"
+      ]
+    },
+    {
+      "id": "L-11",
+      "group": "inherited",
+      "summary": "CODE, three angles  apps/api/server.ts:14,17 + deploy/nginx.conf:8  Rate limiter keys on req.ip with",
+      "priorExternalReview": {
+        "revision": "4f9fba2",
+        "report": "evidence/r2/supplied-audit.md",
+        "disposition": "partial"
+      },
+      "currentStatus": "partial",
+      "relatedFindings": [],
+      "note": "HMAC identity exists; nginx shared-client bucket remains.",
+      "reviewTargets": [
+        "docs/AUDIT-REMEDIATION.md",
+        "tests/backend-orchestration.test.ts",
+        "tests/execution-regressions.test.ts"
+      ]
+    },
+    {
+      "id": "L-12",
+      "group": "inherited",
+      "summary": "CODE, three angles  apps/worker/runner.ts:22 + jupiter.ts:54 + solana.ts:90  The \"prepared plan changed",
+      "priorExternalReview": {
+        "revision": "4f9fba2",
+        "report": "evidence/r2/supplied-audit.md",
+        "disposition": "open"
+      },
+      "currentStatus": "open",
+      "relatedFindings": [
+        "F-2"
+      ],
+      "note": "Intent evidence comparison lacks independent minimum-output price protection. R2 F-2 compatibility is a related but separate issue.",
+      "reviewTargets": [
+        "docs/AUDIT-REMEDIATION.md",
+        "tests/backend-orchestration.test.ts",
+        "tests/execution-regressions.test.ts"
+      ]
+    },
+    {
+      "id": "L-13",
+      "group": "inherited",
+      "summary": "CODE (Codex F09/F12/F13/F14/F15, B)  engine.ts:149 reconcile ignores in-flight token payouts/burns' SOL cost ->",
+      "priorExternalReview": {
+        "revision": "4f9fba2",
+        "report": "evidence/r2/supplied-audit.md",
+        "disposition": "partial"
+      },
+      "currentStatus": "partial",
+      "relatedFindings": [
+        "F-14"
+      ],
+      "note": "Retain the supplied R2 disposition for its reviewed revision. Recheck the current complete snapshot; compound subfindings may remain.",
+      "reviewTargets": [
+        "docs/AUDIT-REMEDIATION.md",
+        "tests/backend-orchestration.test.ts",
+        "tests/execution-regressions.test.ts"
+      ]
+    },
+    {
+      "id": "D-01",
+      "group": "inherited",
+      "summary": "docs/VERIFICATION.md:8-9 is stale (claims 43 tests/3 files and 7 hosted tests; actual 79/6 and 5); its demo",
+      "priorExternalReview": {
+        "revision": "4f9fba2",
+        "report": "evidence/r2/supplied-audit.md",
+        "disposition": "fixed"
+      },
+      "currentStatus": "previously_confirmed_recheck_current_snapshot",
+      "relatedFindings": [],
+      "note": "Current recorded complete run is 258 tests in 20 files. No additional full run claimed by this documentation refresh.",
+      "reviewTargets": [
+        "docs/AUDIT-REMEDIATION.md",
+        "tests/backend-orchestration.test.ts",
+        "tests/execution-regressions.test.ts"
+      ]
+    },
+    {
+      "id": "D-02",
+      "group": "inherited",
+      "summary": "The \"exact revision\" proof is circular: revision() echoes EMBER10_REVISION, verify-public.mjs:26 asserts the",
+      "priorExternalReview": {
+        "revision": "4f9fba2",
+        "report": "evidence/r2/supplied-audit.md",
+        "disposition": "partial"
+      },
+      "currentStatus": "partial",
+      "relatedFindings": [
+        "P-5"
+      ],
+      "note": "Eight static/frontend assets match public build. Server revision remains an environment marker; no cryptographic server artifact attestation.",
+      "reviewTargets": [
+        "docs/AUDIT-REMEDIATION.md",
+        "tests/backend-orchestration.test.ts",
+        "tests/execution-regressions.test.ts"
+      ]
+    },
+    {
+      "id": "D-03",
+      "group": "inherited",
+      "summary": "Test oracles that cannot fail: engine.test.ts:55 \"rejects forged outcome evidence\" contains no forged evidence",
+      "priorExternalReview": {
+        "revision": "4f9fba2",
+        "report": "evidence/r2/supplied-audit.md",
+        "disposition": "partial"
+      },
+      "currentStatus": "partial",
+      "relatedFindings": [
+        "F-3"
+      ],
+      "note": "Test-oracle weaknesses remain; the eleven-build financial harness now reproduces F-3 without fixing it.",
+      "reviewTargets": [
+        "docs/AUDIT-REMEDIATION.md",
+        "tests/backend-orchestration.test.ts",
+        "tests/execution-regressions.test.ts"
+      ]
+    },
+    {
+      "id": "D-04",
+      "group": "inherited",
+      "summary": "docs/demo/sample-epoch.json carries \"created_at\":{} because canonical() (model.ts:13) serializes Date objects",
+      "priorExternalReview": {
+        "revision": "4f9fba2",
+        "report": "evidence/r2/supplied-audit.md",
+        "disposition": "fixed"
+      },
+      "currentStatus": "previously_confirmed_recheck_current_snapshot",
+      "relatedFindings": [],
+      "note": "Supplied R2 audit reported FIXED with zero occurrences. The old first-round register is historical, not the current disposition.",
+      "reviewTargets": [
+        "docs/AUDIT-REMEDIATION.md",
+        "tests/backend-orchestration.test.ts",
+        "tests/execution-regressions.test.ts"
+      ]
+    },
+    {
+      "id": "D-05",
+      "group": "inherited",
+      "summary": "npm audit: 17 advisories (10 high, 7 moderate), all in the Solana dependency tree (bigint-buffer, node-fetch",
+      "priorExternalReview": {
+        "revision": "4f9fba2",
+        "report": "evidence/r2/supplied-audit.md",
+        "disposition": "partial"
+      },
+      "currentStatus": "partial",
+      "relatedFindings": [],
+      "note": "Five high production dependency entries remain; no clean dependency audit is claimed.",
+      "reviewTargets": [
+        "docs/AUDIT-REMEDIATION.md",
+        "tests/backend-orchestration.test.ts",
+        "tests/execution-regressions.test.ts"
+      ]
+    },
+    {
+      "id": "D-06",
+      "group": "inherited",
+      "summary": "deploy/nginx.conf:7 CSP img-src 'self' data: blocks the embercurve.fun logos the app allows -> initials only in",
+      "priorExternalReview": {
+        "revision": "4f9fba2",
+        "report": "evidence/r2/supplied-audit.md",
+        "disposition": "fixed"
+      },
+      "currentStatus": "previously_confirmed_recheck_current_snapshot",
+      "relatedFindings": [
+        "P-3"
+      ],
+      "note": "Same-origin logos were confirmed by the prior audit. Current catalogue-bound relay adds P-3 hardening and needs external re-audit.",
+      "reviewTargets": [
+        "docs/AUDIT-REMEDIATION.md",
+        "tests/backend-orchestration.test.ts",
+        "tests/execution-regressions.test.ts"
+      ]
+    },
+    {
+      "id": "D-07",
+      "group": "inherited",
+      "summary": "Cleanup (low priority, from the cleanup angle): 4 base58-pubkey validators (market-data.ts:10, hosted.ts:8,",
+      "priorExternalReview": {
+        "revision": "4f9fba2",
+        "report": "evidence/r2/supplied-audit.md",
+        "disposition": "partial"
+      },
+      "currentStatus": "partial",
+      "relatedFindings": [],
+      "note": "Retain the supplied R2 disposition for its reviewed revision. Recheck the current complete snapshot; compound subfindings may remain.",
+      "reviewTargets": [
+        "docs/AUDIT-REMEDIATION.md",
+        "tests/backend-orchestration.test.ts",
+        "tests/execution-regressions.test.ts"
+      ]
+    },
+    {
+      "id": "P-1",
+      "status": "implemented_pending_external_reaudit",
+      "evidence": "AUDIT-R2.md; evidence/r2/; AUDIT-REPRODUCE.md",
+      "remaining": null,
+      "group": "r2",
+      "currentStatus": "implemented_pending_external_reaudit"
+    },
+    {
+      "id": "P-2",
+      "status": "implemented_pending_external_reaudit",
+      "evidence": "AUDIT-R2.md; evidence/r2/; AUDIT-REPRODUCE.md",
+      "remaining": null,
+      "group": "r2",
+      "currentStatus": "implemented_pending_external_reaudit"
+    },
+    {
+      "id": "P-3",
+      "status": "implemented_pending_external_reaudit",
+      "evidence": "AUDIT-R2.md; evidence/r2/; AUDIT-REPRODUCE.md",
+      "remaining": "Existing old CDN entries are not claimed purged; known-catalogue flooding remains possible.",
+      "group": "r2",
+      "currentStatus": "implemented_pending_external_reaudit"
+    },
+    {
+      "id": "P-4",
+      "status": "implemented_pending_external_reaudit",
+      "evidence": "AUDIT-R2.md; evidence/r2/; AUDIT-REPRODUCE.md",
+      "remaining": null,
+      "group": "r2",
+      "currentStatus": "implemented_pending_external_reaudit"
+    },
+    {
+      "id": "P-5",
+      "status": "partially_remediated",
+      "evidence": "AUDIT-R2.md; evidence/r2/; AUDIT-REPRODUCE.md",
+      "remaining": "Server artifact attestation, backend export size and generic proxy errors remain open.",
+      "group": "r2",
+      "currentStatus": "partially_remediated"
+    },
+    {
+      "id": "F-1",
+      "status": "open",
+      "validation": "Independent source review; external prerequisites documented",
+      "evidence": "AUDIT-R2.md; evidence/r2/; AUDIT-REPRODUCE.md",
+      "group": "r2",
+      "currentStatus": "open"
+    },
+    {
+      "id": "F-2",
+      "status": "open",
+      "validation": "Independent source review; external prerequisites documented",
+      "evidence": "AUDIT-R2.md; evidence/r2/; AUDIT-REPRODUCE.md",
+      "group": "r2",
+      "currentStatus": "open"
+    },
+    {
+      "id": "F-3",
+      "status": "open",
+      "validation": "Independently reproduced through eleven real adapter builds using mocked RPC/legacy route",
+      "evidence": "AUDIT-R2.md; evidence/r2/; AUDIT-REPRODUCE.md",
+      "group": "r2",
+      "currentStatus": "open"
+    },
+    {
+      "id": "F-4",
+      "status": "open",
+      "validation": "Independent source review; external prerequisites documented",
+      "evidence": "AUDIT-R2.md; evidence/r2/; AUDIT-REPRODUCE.md",
+      "group": "r2",
+      "currentStatus": "open"
+    },
+    {
+      "id": "F-5",
+      "status": "open",
+      "validation": "Independent source review; external prerequisites documented",
+      "evidence": "AUDIT-R2.md; evidence/r2/; AUDIT-REPRODUCE.md",
+      "group": "r2",
+      "currentStatus": "open"
+    },
+    {
+      "id": "F-6",
+      "status": "open",
+      "validation": "Independent source review; external prerequisites documented",
+      "evidence": "AUDIT-R2.md; evidence/r2/; AUDIT-REPRODUCE.md",
+      "group": "r2",
+      "currentStatus": "open"
+    },
+    {
+      "id": "F-7",
+      "status": "open",
+      "validation": "Retained supplied audit finding; not re-executed this round",
+      "evidence": "AUDIT-R2.md; evidence/r2/; AUDIT-REPRODUCE.md",
+      "group": "r2",
+      "currentStatus": "open"
+    },
+    {
+      "id": "F-8",
+      "status": "open",
+      "validation": "Retained supplied audit finding; not re-executed this round",
+      "evidence": "AUDIT-R2.md; evidence/r2/; AUDIT-REPRODUCE.md",
+      "group": "r2",
+      "currentStatus": "open"
+    },
+    {
+      "id": "F-9",
+      "status": "open",
+      "validation": "Retained supplied audit finding; not re-executed this round",
+      "evidence": "AUDIT-R2.md; evidence/r2/; AUDIT-REPRODUCE.md",
+      "group": "r2",
+      "currentStatus": "open"
+    },
+    {
+      "id": "F-10",
+      "status": "open",
+      "validation": "Retained supplied audit finding; not re-executed this round",
+      "evidence": "AUDIT-R2.md; evidence/r2/; AUDIT-REPRODUCE.md",
+      "group": "r2",
+      "currentStatus": "open"
+    },
+    {
+      "id": "F-11",
+      "status": "open",
+      "validation": "Retained supplied audit finding; not re-executed this round",
+      "evidence": "AUDIT-R2.md; evidence/r2/; AUDIT-REPRODUCE.md",
+      "group": "r2",
+      "currentStatus": "open"
+    },
+    {
+      "id": "F-12",
+      "status": "open",
+      "validation": "Retained supplied audit finding; not re-executed this round",
+      "evidence": "AUDIT-R2.md; evidence/r2/; AUDIT-REPRODUCE.md",
+      "group": "r2",
+      "currentStatus": "open"
+    },
+    {
+      "id": "F-13",
+      "status": "open",
+      "validation": "Retained supplied audit finding; not re-executed this round",
+      "evidence": "AUDIT-R2.md; evidence/r2/; AUDIT-REPRODUCE.md",
+      "group": "r2",
+      "currentStatus": "open"
+    },
+    {
+      "id": "F-14",
+      "status": "open",
+      "validation": "Retained supplied audit finding; not re-executed this round",
+      "evidence": "AUDIT-R2.md; evidence/r2/; AUDIT-REPRODUCE.md",
+      "group": "r2",
+      "currentStatus": "open"
+    }
+  ]
+}
