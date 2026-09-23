@@ -124,4 +124,22 @@ describe('automated evidence producer contract',()=>{
   expect(()=>validateMetrics({...f.metrics,candidates:f.metrics.candidates.map((m,i)=>i?m:{...m,rankValue:'1'})},mints,config,initial,180)).toThrow('supply/price');
   expect(()=>validateMetrics({...f.metrics,candidates:f.metrics.candidates.map((m,i)=>i?m:{...m,volumeComplete:false})},mints,config,initial,180)).toThrow('window');
  });
+ it('collects built-in Jupiter observations without a custom metrics service while preserving unavailable eligibility evidence',async()=>{
+  const f=sourceFixture(),ember={read:async(path:string)=>({at:initial,value:path==='/markets'?f.catalogue:f.configs})} as EmberClient;
+  const approval:EvidenceApproval={ourMint:ownMint,treasury:testAddress('treasury'),emberFeeClaimer:testAddress('fee'),approvedPrograms:[SPL],policy,selectionEvidence:{version:'ember-evidence-v1',provider:'jupiter-tokens-v2',allowedOrigins:['https://api.jup.ag'],catalogueCompleteContract:true}};
+  let verifies=0,requests=0;const provider=createUniverseProvider(new Connection('https://rpc.example'),ember,{} as JupiterClient,approval,true,{clock:()=>initial,jupiterApiKey:'private-test-key',jupiterWait:async()=>{},fetchMetrics:async()=>{throw Error('custom endpoint must not be used');},verifyCandidate:async candidate=>{verifies++;return candidate;},jupiterFetcher:async url=>{
+   requests++;return Response.json(new URL(String(url)).searchParams.get('query')!.split(',').map(id=>({id,liquidity:1,circSupply:1000000,totalSupply:1000000,usdPrice:1,mcap:1000000,stats24h:{buyVolume:10000,sellVolume:10000},updatedAt:new Date(initial).toISOString(),tags:['verified']})));
+  }});
+  const service=new AutomaticSelectionService(policy,ownMint,provider,()=>initial),result=await service.read(budget);
+  expect(requests).toBe(1);expect(verifies).toBe(0);expect(result).toMatchObject({status:'warming',complete:false,basket:null,providerObservation:{coverage:'complete',returnedCount:12,eligibilityComplete:false}});
+  expect(result.candidates.every(c=>c.category==='unverified'&&c.evidenceFailures?.some(reason=>reason.includes('USD liquidity is below')))).toBe(true);expect(JSON.stringify(result)).not.toContain('private-test-key');
+  await expect(service.revalidate(budget)).rejects.toThrow('top ten');
+ });
+ it('excludes verified below-threshold liquidity and volume before costly RPC census and route verification',async()=>{
+  const f=sourceFixture();f.metrics.candidates[0].liquidityMicroUsd='1';f.metrics.candidates[1].volumeMicroUsd='1';let verifies=0;
+  const ember={read:async(path:string)=>({at:initial,value:path==='/markets'?f.catalogue:f.configs})} as EmberClient;
+  const approval:EvidenceApproval={ourMint:ownMint,treasury:testAddress('treasury'),emberFeeClaimer:testAddress('fee'),approvedPrograms:[SPL],policy,selectionEvidence:config};
+  const provider=createUniverseProvider(new Connection('https://rpc.example'),ember,{} as JupiterClient,approval,true,{clock:()=>initial,fetchMetrics:async()=>f.metrics,verifyCandidate:async c=>{verifies++;return {...f.rows.find(r=>r.mint===c.mint)!};}});
+  const result=await provider(budget,true);expect(verifies).toBe(10);expect(result.candidates.filter(c=>c.evidenceFailures?.some(reason=>reason.includes('costly chain checks')))).toHaveLength(2);
+ });
 });

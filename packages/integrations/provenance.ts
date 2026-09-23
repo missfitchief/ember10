@@ -13,8 +13,9 @@ import {JupiterClient,validateSwapInstruction} from './jupiter.js';
 import {boundedFetch} from './http.js';
 import {normalizeCatalogue} from './market-data.js';
 import {mapBounded,type VerifiedUniverse,type UniverseProvider} from './automatic-selection.js';
+import {JupiterTokensCollector,JUPITER_TOKENS_ENDPOINT,type JupiterTokensObservation} from './jupiter-tokens.js';
 
-export interface SelectionEvidenceConfig {version:'ember-evidence-v1';metricsEndpoint:string;allowedOrigins:string[];catalogueCompleteContract:boolean}
+export interface SelectionEvidenceConfig {version:'ember-evidence-v1';provider?:'custom'|'jupiter-tokens-v2';metricsEndpoint?:string;allowedOrigins:string[];catalogueCompleteContract:boolean}
 export type EvidenceApproval=Pick<Approval,'policy'|'ourMint'|'treasury'|'emberFeeClaimer'|'approvedPrograms'>&{selectionEvidence?:SelectionEvidenceConfig};
 const boundedRaw=raw.refine(v=>v.length<=100);
 const metric=z.object({mint:address,pool:address,at:z.number().int().positive(),source:z.string().url(),liquidityMicroUsd:boundedRaw,volumeMicroUsd:boundedRaw,rankValue:boundedRaw,rankBasis:z.enum(['circulating_market_cap','total_supply_fdv']),supplyBasis:z.string().min(8).max(500).refine(v=>!/unknown|undocumented|unverified/i.test(v)),supplyAmountRaw:boundedRaw,supplyDecimals:z.number().int().min(0).max(18),priceMicroUsd:boundedRaw,category:z.enum(['token','stock','stablecoin','lp','unverified']),volumeWindowStart:z.number().int().positive(),volumeWindowEnd:z.number().int().positive(),volumeComplete:z.boolean(),evidenceHash:z.string().regex(/^[a-f0-9]{64}$/)});
@@ -23,9 +24,10 @@ export type AutomaticMetric=z.infer<typeof metric>;
 const row=z.object({mint:address,pool:address,config:address,quoteMint:address,graduated:z.boolean(),signature:z.string().optional()}).passthrough();
 export type CatalogueIdentity=z.infer<typeof row>;
 export type CandidateVerifier=(candidate:Candidate,market:CatalogueIdentity,metric:AutomaticMetric,budget:bigint)=>Promise<Candidate>;
-export interface EvidenceDependencies {fetchMetrics?:(url:string)=>Promise<unknown>;verifyCandidate?:CandidateVerifier;clock?:()=>number;concurrency?:number}
+export interface EvidenceDependencies {fetchMetrics?:(url:string)=>Promise<unknown>;verifyCandidate?:CandidateVerifier;clock?:()=>number;concurrency?:number;jupiterApiKey?:string;jupiterFetcher?:typeof fetch;jupiterWait?:(ms:number)=>Promise<void>}
 
 export function approvedMetricsUrl(config:SelectionEvidenceConfig){
+ ensure(config.metricsEndpoint,'automatic evidence endpoint missing');
  const url=new URL(config.metricsEndpoint);
  ensure(config.version==='ember-evidence-v1'&&url.protocol==='https:'&&!url.username&&!url.password&&!url.hash,'unsupported automatic evidence endpoint');
  ensure(config.allowedOrigins.some(origin=>{try{const allowed=new URL(origin);return allowed.protocol==='https:'&&allowed.origin===origin&&url.origin===origin;}catch{return false;}}),'automatic evidence origin is not approved');
@@ -73,27 +75,50 @@ export function validateMetrics(value:unknown,mints:string[],config:SelectionEvi
 export function createUniverseProvider(connection:Connection,ember:EmberClient,jupiter:JupiterClient,approval:EvidenceApproval,completeCensusContract:boolean,deps:EvidenceDependencies={}):UniverseProvider{
  const clock=deps.clock??Date.now,verify=deps.verifyCandidate??chainVerifier(connection,jupiter,approval,completeCensusContract,clock);
  const fetchMetrics=deps.fetchMetrics??((url:string)=>boundedFetch(url,{},12_000_000));
+ let jupiterTokens:JupiterTokensCollector|undefined;
  return async (routeBudget,force)=>{
   const [rawCatalogue,rawConfigs]=await Promise.all([ember.read('/markets',force?0:45_000),ember.read('/configs',force?0:45_000)]);
   const normalized=normalizeCatalogue(rawCatalogue.value,rawConfigs.value,approval.ourMint,new Date(rawCatalogue.at).toISOString());
   const identities=z.object({markets:z.array(z.unknown())}).parse(rawCatalogue.value).markets.map(m=>row.safeParse(m)).filter(m=>m.success).map(m=>m.data!);
   const mints=normalized.markets.map(m=>m.mint),catalogueHash=hash([...mints].sort()),config=approval.selectionEvidence;
-  let metrics:ReturnType<typeof metricsSchema.parse>|undefined,metricFailure='Automatic metrics provider is not configured.';
-  if(config)try{metrics=validateMetrics(await fetchMetrics(approvedMetricsUrl(config)),mints,config,clock(),approval.policy.maxDataAgeSeconds);}catch{metricFailure='Automatic metrics provider unavailable, incomplete, stale or unbound to this catalogue.';}
+  let metrics:ReturnType<typeof metricsSchema.parse>|undefined,providerObservation:JupiterTokensObservation|undefined,metricFailure='Automatic metrics provider is not configured.';
+  if(config?.provider==='jupiter-tokens-v2')try{
+   ensure(config.version==='ember-evidence-v1','automatic provider version unsupported');
+   jupiterTokens??=new JupiterTokensCollector({apiKey:deps.jupiterApiKey,allowedOrigins:config.allowedOrigins,endpoint:config.metricsEndpoint,clock,fetcher:deps.jupiterFetcher,wait:deps.jupiterWait});
+   providerObservation=await jupiterTokens.read(mints,approval.policy.maxDataAgeSeconds,force);
+   metricFailure='Jupiter Tokens observations collected automatically; documented category, circulating-supply methodology and complete USD volume evidence remain unavailable.';
+  }catch{metricFailure='Approved Jupiter Tokens collector unavailable; no eligibility evidence was fabricated.';}
+  else if(config)try{metrics=validateMetrics(await fetchMetrics(approvedMetricsUrl(config)),mints,config,clock(),approval.policy.maxDataAgeSeconds);}catch{metricFailure='Automatic metrics provider unavailable, incomplete, stale or unbound to this catalogue.';}
   const byMint=new Map(metrics?.candidates.map(m=>[m.mint,m]));
+  const reports=new Map(providerObservation?.rows.map(row=>[row.mint,row]));
   const candidates=await mapBounded(normalized.markets,deps.concurrency??3,async market=>{
    const m=identities.find(m=>m.mint===market.mint),metric=byMint.get(market.mint);
    let candidate:Candidate={mint:market.mint,symbol:market.symbol,decimals:0,program:'unknown',pool:market.canonicalPool??m?.pool??'',config:market.config??'',provenanceVerified:false,poolVerified:false,graduated:m?.graduated??false,createdAt:0,liquidityMicroUsd:metric?.liquidityMicroUsd??'0',volumeMicroUsd:metric?.volumeMicroUsd??'0',holders:0,censusComplete:false,mintAuthority:null,freezeAuthority:null,extensions:[],category:metric?.category??'unverified',rankValue:metric?.rankValue??'0',rankBasis:metric?.rankBasis??'unknown',supplyBasis:metric?.supplyBasis??'unknown',source:metric?sourceReference(metric.source):'https://embercurve.fun/api/solana/markets',at:metric?.at??0,routeBudget:routeBudget.toString(),routeViable:false,evidenceFailures:[]};
    const sourceFailures=market.reasons.filter(r=>r.state==='fail'&&!['minimum_age','volume','holders'].includes(r.code)).map(r=>r.label);
    if(sourceFailures.length)candidate.evidenceFailures!.push(...sourceFailures);
+   if(providerObservation){
+    const reported=reports.get(market.mint);candidate.source=JUPITER_TOKENS_ENDPOINT;
+    candidate.evidenceFailures!.push(...providerObservation.blockers);
+    if(!reported)candidate.evidenceFailures!.push('Jupiter returned no usable observation for this catalogue mint.');
+    else {
+     candidate.evidenceHash=reported.evidenceHash;candidate.evidenceFailures!.push(...reported.reasons);
+     candidate.category=reported.category;
+     // A below-threshold reported total is sufficient to deny eligibility; it is never evidence to pass a pool's liquidity gate.
+     if(reported.state==='fresh'&&reported.liquidityUsd!==null&&new Decimal(reported.liquidityUsd).mul(1000000).lt(approval.policy.minLiquidityMicroUsd))candidate.evidenceFailures!.push('Jupiter reported total USD liquidity is below the minimum.');
+    }
+    return candidate;
+   }
    if(!metrics||!metric){candidate.evidenceFailures!.push(metricFailure);return candidate;}
    if(!m||metric.pool!==market.canonicalPool){candidate.evidenceFailures!.push('Metric canonical pool does not match catalogue');return candidate;}
    if(sourceFailures.length||!candidate.graduated||candidate.category!=='token')return candidate;
+   if(BigInt(metric.liquidityMicroUsd)<BigInt(approval.policy.minLiquidityMicroUsd)||BigInt(metric.volumeMicroUsd)<BigInt(approval.policy.minVolumeMicroUsd)){
+    candidate.evidenceFailures!.push('Verified metric liquidity or 24h USD volume is below the minimum; costly chain checks were not needed to exclude it.');return candidate;
+   }
    try{candidate=await verify(candidate,m,metric,routeBudget);}catch{candidate.evidenceFailures!.push('On-chain or route evidence unavailable; verification incomplete');}
    return candidate;
   });
   const complete=!!config?.catalogueCompleteContract&&normalized.coverage.status!=='partial'&&!!metrics;
-  return {candidates,complete,rawCatalogueHash:catalogueHash,observedAt:rawCatalogue.at,retryableFailure:!!config&&!metrics,reason:complete?undefined:!metrics?metricFailure:'Catalogue coverage contract is missing or source is partial/warming.'} satisfies VerifiedUniverse;
+  return {candidates,complete,rawCatalogueHash:catalogueHash,observedAt:rawCatalogue.at,retryableFailure:!!config&&!metrics&&(!providerObservation||providerObservation.coverage!=='complete'),reason:complete?undefined:!metrics?metricFailure:'Catalogue coverage contract is missing or source is partial/warming.',...(providerObservation?{providerObservation}:{})} satisfies VerifiedUniverse;
  };
 }
 

@@ -1,11 +1,13 @@
 import { ensure, fresh, hash, type Policy } from '../core/model.js';
 import { selectBasket, revalidateBasket, type Basket, type Candidate } from '../core/selection.js';
+import type {JupiterTokensObservation} from './jupiter-tokens.js';
 
-export interface VerifiedUniverse {candidates:Candidate[];complete:boolean;rawCatalogueHash:string;observedAt:number;reason?:string;retryableFailure?:boolean}
+export interface VerifiedUniverse {candidates:Candidate[];complete:boolean;rawCatalogueHash:string;observedAt:number;reason?:string;retryableFailure?:boolean;providerObservation?:JupiterTokensObservation}
 export interface SelectionObservation {
  schemaVersion:1;type:'eligible_selection';observedAt:number;policyHash:string;policy:Policy;
  status:'ready'|'warming'|'stale'|'unavailable';complete:boolean;sourceHash:string;
  candidates:Candidate[];basket:Basket|null;reason:string;evidenceHash:string;
+ providerObservation?:JupiterTokensObservation;
 }
 export type UniverseProvider=(budget:bigint,force:boolean)=>Promise<VerifiedUniverse>;
 
@@ -30,12 +32,12 @@ export class AutomaticSelectionService {
     ensure(Number.isSafeInteger(universe.observedAt)&&fresh(universe.observedAt,this.clock(),this.policy.maxDataAgeSeconds),'catalogue observation stale');
     const basket=universe.complete?selectBasket(universe.candidates,this.policy,this.self,true,this.clock()):null;
     const reason=universe.reason??(!universe.complete?'Catalogue/evidence coverage is incomplete; new commitments blocked.':basket?.ready?'Ten eligible assets verified for the current intended budget.':`${basket?.selected.length??0} of 10 verified assets; new commitments blocked.`);
-    const value={schemaVersion:1 as const,type:'eligible_selection' as const,observedAt:universe.observedAt,policyHash:hash(this.policy),policy:this.policy,status:universe.complete?'ready' as const:'warming' as const,complete:universe.complete,sourceHash:universe.rawCatalogueHash,candidates:universe.candidates,basket,reason};
+    const value={schemaVersion:1 as const,type:'eligible_selection' as const,observedAt:universe.observedAt,policyHash:hash(this.policy),policy:this.policy,status:universe.complete?'ready' as const:'warming' as const,complete:universe.complete,sourceHash:universe.rawCatalogueHash,candidates:universe.candidates,basket,reason,...(universe.providerObservation?{providerObservation:universe.providerObservation}:{})};
     this.last=structuredClone({...value,evidenceHash:hash(value)});this.failureCount=universe.retryableFailure?this.failureCount+1:0;
    }catch{
     this.failureCount++;
     const previous=this.last;
-    const value={schemaVersion:1 as const,type:'eligible_selection' as const,observedAt:previous?.observedAt??this.clock(),policyHash:hash(this.policy),policy:this.policy,status:previous?.sourceHash?'stale' as const:'unavailable' as const,complete:false,sourceHash:previous?.sourceHash??'',candidates:previous?.candidates??[],basket:null,reason:'Automatic evidence refresh failed. Previous observations cannot authorize new purchases.'};
+    const value={schemaVersion:1 as const,type:'eligible_selection' as const,observedAt:previous?.observedAt??this.clock(),policyHash:hash(this.policy),policy:this.policy,status:previous?.sourceHash?'stale' as const:'unavailable' as const,complete:false,sourceHash:previous?.sourceHash??'',candidates:previous?.candidates??[],basket:null,reason:'Automatic evidence refresh failed. Previous observations cannot authorize new purchases.',...(previous?.providerObservation?{providerObservation:previous.providerObservation}:{})};
     this.last={...value,evidenceHash:hash(value)};
    }finally{this.pending=null;}
    return this.current();
