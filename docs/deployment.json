@@ -1,14 +1,15 @@
 {
   "project": "plavi/ember5-pilot",
   "url": "https://ember5-pilot.vercel.app",
-  "deployedApplicationRevision": "1f67d0dff19c9509f586e3a4c9d98852be1b1ecc",
-  "deploymentId": "dpl_AMWpfz3c8Y5PUmiGBcKhn42e1zo5",
-  "candidateUrl": "https://ember5-pilot-n0tedbgvh-plavi.vercel.app",
-  "verifiedAt": "2026-09-23T18:54:19.337Z",
-  "verificationEvidence": "evidence/external-audit/public-verification.json",
-  "verifiedAssetCount": 7,
+  "deployedApplicationRevision": "ed67a05f7b676108a98dcaf29460d2fdc60fecc6",
+  "deploymentId": "dpl_3j6Aw9JEFf6EuX8iTAVHVNkpnit8",
+  "candidateUrl": "https://ember5-pilot-5v33nhxc2-plavi.vercel.app",
+  "verifiedAt": "2026-09-23T20:23:59.562Z",
+  "verificationEvidence": "evidence/r2/public-verification.json",
+  "verifiedAssetCount": 8,
   "verifiedLogoCount": 10,
   "financialWorkerDeployed": false,
   "productionDatabaseMigrationApplied": false,
-  "packageRevisionRule": "The external audit package adds documentation/evidence only; its commit may differ from the deployed application revision."
+  "packageRevisionRule": "The external audit package adds documentation/evidence only; its commit may differ from the deployed application revision.",
+  "serverArtifactAttestation": false
 }

@@ -18,20 +18,20 @@ npm test
 npm run preview:hosted
 ```
 
-Check the actual app at `http://127.0.0.1:5180`. Independent review must cover the tested source commit, real-source ranking evidence and desktop/mobile implementation. Deployment then sets `EMBER10_REVISION` to that exact source commit:
+Check the actual app at `http://127.0.0.1:5180`. Independent review must cover the tested source commit, real-source ranking evidence and desktop/mobile implementation. Deployment derives `EMBER10_REVISION` from the clean tested checkout and records it as source metadata. It remains an environment marker, not server-code attestation. Publish a candidate before moving the alias:
 
 ```sh
-vercel deploy --prod --yes --env EMBER10_REVISION=<tested-commit> --build-env PUBLIC_SITE_URL=https://ember5-pilot.vercel.app
+vercel deploy --prod --skip-domain --yes --env EMBER10_REVISION=<verified-git-HEAD> --meta sourceRevision=<verified-git-HEAD> --build-env PUBLIC_SITE_URL=https://ember5-pilot.vercel.app
 node scripts/verify-public.mjs https://ember5-pilot.vercel.app <tested-commit> <proof-output.json>
 node scripts/verify-sharing.mjs https://ember5-pilot.vercel.app https://ember5-pilot.vercel.app <sharing-proof.json>
 ```
 
-The deployed `/api/status` and `/api/overview` expose this revision. A successful local build or Vercel READY result alone is not verification of the public issue. Record public HTTP checks and screenshots after the alias points to the new deployment.
+The deployed `/api/status` and `/api/overview` expose this revision. A successful local build, echoed revision or Vercel READY result alone is not verification of the public issue. Byte-compare index HTML and all build assets with `scripts/audit-public.mjs`, inspect the exact candidate, then promote the alias and repeat public checks. No cryptographic server-artifact attestation is claimed. Record public HTTP checks and screenshots after the alias points to the new deployment.
 
 For a separately hosted real ledger, the existing server-only `EMBER5_API_ORIGIN` remains compatible. The adapter checks the backend's mode and rejects demo/test status. A failed configured backend returns an error, never synthetic fallback. The external ledger still requires its own PostgreSQL service and durable Node worker; this deployment does not activate either.
 
 Secrets, local databases, runtime keys, logs and Vercel account metadata are excluded from Git and deployment uploads. Tests remain in build inputs because existing development scripts import isolated fixtures during type checking; the production function's dependency graph does not import them. Supplied design references and dated snapshots are review inputs outside the application.
 
-Current deployment IDs, exact runtime revision and verification results are committed in `docs/deployment.json` and `docs/evidence/external-audit`. Earlier adjacent review directories are historical work products, not required auditor inputs.
+Current deployment IDs, exact runtime revision and verification results are committed in `docs/deployment.json` and `docs/evidence/r2`. Earlier adjacent review directories are historical work products, not required auditor inputs.
 
 The subsequent warm-light correction evidence is kept separately in `EMBER10-light-review` so the prior verified deployment evidence remains intact. `PUBLIC_SITE_URL` is a build-time setting for canonical and static sharing metadata; it does not configure a project mint or financial backend. The committed share image must be reachable with an image MIME type. Verify the initial response without JavaScript, inspect the card visually and keep social-network cache refresh claims separate from these checks.

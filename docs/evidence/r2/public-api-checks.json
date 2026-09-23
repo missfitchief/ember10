@@ -1,0 +1,36 @@
+{
+  "at": "2026-09-23T20:24:29.242Z",
+  "revision": "ed67a05f7b676108a98dcaf29460d2fdc60fecc6",
+  "unknownCatalogueCID": 404,
+  "unknownCacheControl": "no-store",
+  "knownLogoHEAD": 200,
+  "knownCacheControl": "public, max-age=0, must-revalidate",
+  "knownConditional": 304,
+  "ranking": {
+    "rows": 100,
+    "descendingUSD": true,
+    "fetchedAt": "2026-09-23T20:24:10.642Z",
+    "evidenceHash": "4a665338dc6ea3566e394ea1b51469b1edbddc2d4422e743a97f0ace41642b96",
+    "coverage": {
+      "status": "unverified",
+      "rawRows": 3087,
+      "uniqueMints": 3086,
+      "rankedMints": 3084,
+      "duplicateRows": 1,
+      "invalidRows": 0,
+      "warming": false,
+      "complete": false,
+      "note": "Full endpoint; duplicate mints collapsed. Ember suspect flags excluded from ranking but retained for inspection. No independent total-count or circulating-supply contract."
+    },
+    "selection": {
+      "policyVersion": "ember10-v2",
+      "state": "insufficient",
+      "selectedMints": [],
+      "selectedCount": 0,
+      "requiredCount": 10,
+      "commitmentsAllowed": false,
+      "reason": "No candidates have all required checks verified. New purchases remain paused until ten qualify under the unchanged eligibility rules."
+    }
+  },
+  "passed": true
+}

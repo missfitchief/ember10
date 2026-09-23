@@ -1,16 +1,16 @@
 # Current verification — 23 September 2026
 
-Application revision: `1f67d0dff19c9509f586e3a4c9d98852be1b1ecc`. The external-audit documentation commit is a separate source snapshot; it does not imply a new runtime deployment.
+Application revision: `ed67a05f7b676108a98dcaf29460d2fdc60fecc6`. The external-audit documentation commit is a separate source snapshot; it does not imply a new runtime deployment.
 
 | Check | Result | Evidence |
 |---|---|---|
-| TypeScript and Vite production build | Passed | [validation](evidence/external-audit/validation.json) |
-| Complete Vitest run | 242 passed, 18 files; isolated PostgreSQL schemas | [test results](evidence/external-audit/tests.json) |
-| npm production dependency audit | 5 high entries, zero moderate/critical; audit is not clean | [raw audit](evidence/external-audit/dependency-audit.json) |
-| Deployed revision, assets and images | Exact revision, seven asset hashes matched; ten real WebP logos decoded | [public proof](evidence/external-audit/public-verification.json) |
-| Desktop/mobile UI | 1440/375px, ten logos loaded, no overflow or page errors | [browser checks](evidence/external-audit/public-browser.json) |
-| Paging and failures | Expanded 140-row list survives polling; explicit refresh resets it; older rounds append; failed history is not empty | [interaction checks](evidence/external-audit/interaction-results.json), [local checks](evidence/external-audit/local-browser.json) |
-| Independent audit of this revision | Pending | [review brief](EXTERNAL-AUDIT.md) |
+| TypeScript and Vite production build | Passed | [validation](evidence/r2/validation.json) |
+| Complete Vitest run | 258 passed, 20 files; isolated PostgreSQL schemas | [test results](evidence/r2/tests.json) |
+| npm production dependency audit | 5 high entries, zero moderate/critical; audit is not clean | [raw audit](evidence/r2/dependency-audit.json) |
+| Deployed revision, assets and images | Exact revision, eight asset hashes matched; ten real WebP logos decoded | [public proof](evidence/r2/public-verification.json) |
+| Desktop/mobile UI | 1440/375/320px, ten logos loaded, no overflow or page errors | [browser checks](evidence/r2/public-browser.json) |
+| Paging and failures | Expanded default/search lists retain 140 rows through polling and source outages; explicit refresh resets them; independent records load despite a stalled status | [interaction checks](evidence/r2/frontend-browser.json), [local checks](evidence/r2/local-browser.json) |
+| External re-audit of this correction | Pending; internal specialist reviews included | [review brief](EXTERNAL-AUDIT.md) |
 | Real funded settlement / production DB migration | Not performed | Signing, broadcast and worker remain disabled on the public host |
 
 ## Reproduce

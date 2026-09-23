@@ -1,0 +1,1966 @@
+diff --git a/apps/api/backend-overview.ts b/apps/api/backend-overview.ts
+index 9141e79..f8865d4 100644
+--- a/apps/api/backend-overview.ts
++++ b/apps/api/backend-overview.ts
+@@ -4,13 +4,12 @@ import { ensure, fresh, hash } from '../../packages/core/model.js';
+ import { DeveloperAccounting } from '../../packages/core/developer.js';
+ import { developerPolicy } from '../../packages/core/developer-config.js';
+ import type { SelectionObservation } from '../../packages/integrations/automatic-selection.js';
+-import { MarketDataService } from '../../packages/integrations/market-data.js';
++import { publicMarketSource } from './catalogue.js';
+ import { loadApproval, assertProspectiveApproval } from '../../packages/core/approval.js';
+ import { overview } from './overview.js';
+ import type { PublicOverview } from '../../packages/shared/public.js';
+ 
+-const marketSource = new MarketDataService();
+-export async function backendOverview(db: Store, c: Config, page: Parameters<typeof overview>[1] = {}, source = marketSource): Promise<PublicOverview> {
++export async function backendOverview(db: Store, c: Config, page: Parameters<typeof overview>[1] = {}, source = publicMarketSource): Promise<PublicOverview> {
+  ensure(c.MODE === 'live' || c.MODE === 'prelaunch', 'non-production ledger cannot supply overview');
+  const result = await overview(source, page), { observed } = await source.read(c.OUR_MINT ?? null);
+  let approvedPolicy: string | null = null;
+diff --git a/apps/api/catalogue.ts b/apps/api/catalogue.ts
+new file mode 100644
+index 0000000..4b7ed17
+--- /dev/null
++++ b/apps/api/catalogue.ts
+@@ -0,0 +1,46 @@
++import { MarketDataService, validMint } from '../../packages/integrations/market-data.js';
++import { tokenImageSource, type TokenImageSource } from '../../packages/shared/token-image.js';
++
++// Shared within an API instance. An image request can also bootstrap a cold instance
++// when the browser's overview was served by another serverless instance.
++export const publicMarketSource = new MarketDataService();
++export type ImageAuthorizer = (source: TokenImageSource) => Promise<TokenImageSource | null>;
++const identity = (source: TokenImageSource) => source.cid ? `ipfs:${source.cid}` : source.url;
++
++export function createCatalogueImageAuthorizer(service = publicMarketSource): ImageAuthorizer {
++  let indexed: ReturnType<MarketDataService['snapshot']> = null;
++  let sources = new Map<string, TokenImageSource>();
++  function lookup(observation: ReturnType<MarketDataService['snapshot']>, requested: TokenImageSource) {
++    if (!observation) throw Error('Catalogue unavailable');
++    if (indexed !== observation) {
++      const next = new Map<string, TokenImageSource>();
++      // All normalized markets qualify for logo display, regardless of rank,
++      // eligibility, warming coverage, pagination or financial selection.
++      for (const row of observation.normalized.markets) {
++        const source = tokenImageSource(row.imageUrl);
++        if (source) next.set(identity(source), source);
++      }
++      sources = next; indexed = observation;
++    }
++    return sources.get(identity(requested)) ?? null;
++  }
++  return async requested => {
++    const configured = process.env.OUR_MINT;
++    const ownMint = configured && validMint(configured) ? configured : null;
++    const snapshot = service.snapshot();
++    if (snapshot) {
++      const allowed = lookup(snapshot, requested);
++      if (allowed) {
++        // Last-good logos do not wait behind a slow or failed refresh. The service
++        // coalesces this normal TTL-controlled refresh; callers cannot force one.
++        void service.read(ownMint).catch(() => {});
++        return allowed;
++      }
++    }
++    // Cold bootstrap and a newly published source both need current discovery.
++    // Concurrent calls share the service's pending read/backoff, not image slots.
++    return lookup((await service.read(ownMint)).observed, requested);
++  };
++}
++
++export const authorizeCatalogueImage = createCatalogueImageAuthorizer();
+diff --git a/apps/api/hosted.ts b/apps/api/hosted.ts
+index a8ae8b5..508912a 100644
+--- a/apps/api/hosted.ts
++++ b/apps/api/hosted.ts
+@@ -73,7 +73,7 @@ export async function hostedRead(request: Request, backendOrigin = process.env.E
+   }
+   if (route === 'status') return json({ mode: 'prelaunch', phase: 'prelaunch', dataMode: 'real', hostedSnapshot: false, broadcastEnabled: false, workerActive: false, paused: true, revision: revision(), waitingReason: 'Contract not deployed; settlement not configured.' });
+   if (route === 'project') return json({ ...projectIdentity(), policy: publicPolicy, pool: null, treasury: null, operations: null });
+-  if (route === 'basket') { const value = await overview(); return json({ ...value.selection, selected: [], universe: value.markets, universePage: value.marketPage, universeComplete: !value.marketPage.hasMore, ready: false, discovery: value.discovery, fundedBasket: value.fundedBasket }); }
++  if (route === 'basket') { const value = await overview(); return json({ ...value.selection, selected: [], universe: value.markets, universePage: value.marketPage, universeComplete: value.discovery.status === 'ready' && value.discovery.fetchedAt !== null && !value.marketPage.hasMore, ready: false, discovery: value.discovery, fundedBasket: value.fundedBasket }); }
+   if (route === 'transparency') return json({ status: 'unavailable', receivedLamports: null, assets: [], accrued: [], finalizedPayoutTransactions: null, burns: [], balances: [], reconciliation: null, incidents: [], accountingHealth: 'unavailable', message: 'No verified project ledger is connected.' });
+   if (route === 'epochs') return json({ status: 'unavailable', items: [], nextCursor: null, message: 'No verified project ledger is connected.' });
+   if (route.startsWith('wallets/')) {
+diff --git a/apps/api/overview.ts b/apps/api/overview.ts
+index a70b484..fa487bf 100644
+--- a/apps/api/overview.ts
++++ b/apps/api/overview.ts
+@@ -1,4 +1,5 @@
+-import { MarketDataService, MARKET_BASIS, MARKET_SOURCE, validMint } from '../../packages/integrations/market-data.js';
++import { MARKET_BASIS, MARKET_SOURCE, validMint } from '../../packages/integrations/market-data.js';
++import { publicMarketSource } from './catalogue.js';
+ import type { PublicOverview } from '../../packages/shared/public.js';
+ 
+ export const publicPolicy: PublicOverview['policy'] = {
+@@ -6,14 +7,13 @@ export const publicPolicy: PublicOverview['policy'] = {
+   holderUnits: '100000', minBasketMicroUsd: '50000000', rankingBasis: 'Verified circulating market cap (required for selection)',
+   eligibilityRules: ['Verified Ember origin and graduated pool', 'At least 24 hours old', 'Verified liquidity ≥ $10,000 and 24h volume ≥ $5,000', 'Complete census of at least 50 owners', 'Supported SPL token with revoked mint and freeze authorities', 'Verified route for intended purchase budget', 'Comparable circulating market cap and fresh complete data', 'Project token and unsupported asset categories excluded']
+ };
+-const service = new MarketDataService();
+ export const projectIdentity = (): PublicOverview['project'] => {
+   const value = process.env.OUR_MINT;
+   const mint = value && validMint(value) ? value : null;
+   return { name: 'EMBER10', phase: 'prelaunch', dataMode: 'real', mint, mintStatus: mint ? 'configured_unverified' : 'not_deployed', buyUrl: null };
+ };
+ export const revision = () => process.env.EMBER10_REVISION ?? process.env.VERCEL_GIT_COMMIT_SHA ?? null;
+-export async function overview(source = service, page: { query?: string; offset?: number; limit?: number; view?: 'all' | 'selection' | 'excluded' } = {}): Promise<PublicOverview> {
++export async function overview(source = publicMarketSource, page: { query?: string; offset?: number; limit?: number; view?: 'all' | 'selection' | 'excluded' } = {}): Promise<PublicOverview> {
+   const project = projectIdentity(), { observed, status } = await source.read(project.mint);
+   const query = (page.query ?? '').trim().slice(0, 100), offset = Math.max(0, page.offset ?? 0), limit = Math.max(1, Math.min(100, page.limit ?? 100));
+   const view = page.view ?? 'all';
+diff --git a/apps/api/token-image.ts b/apps/api/token-image.ts
+index abdf52a..9d6e672 100644
+--- a/apps/api/token-image.ts
++++ b/apps/api/token-image.ts
+@@ -1,17 +1,32 @@
+ import { createHash } from 'node:crypto';
+ import sharp from 'sharp';
+ import { tokenImageSource } from '../../packages/shared/token-image.js';
++import { authorizeCatalogueImage, type ImageAuthorizer } from './catalogue.js';
+ 
+ const MAX_IMAGE_BYTES = 4_000_000;
+ const MAX_CACHE_BYTES = 16_000_000;
+ const MAX_CACHE_ENTRIES = 256;
+ const MAX_CONCURRENT_IMAGES = 16;
+ const CACHE_MS = 86_400_000;
++const REQUEST_MS = 25_000;
+ type Image = { bytes: Buffer; type: string; etag: string; expires: number };
+ const error = (status: number) => Response.json({ error: status === 400 ? 'invalid_image_source' : 'image_unavailable' }, {
+   status, headers: { 'cache-control': 'no-store', 'x-content-type-options': 'nosniff' }
+ });
+ 
++class DeadlineError extends Error {}
++/** Bound each wait without letting one caller abort a shared catalogue/image job. */
++function within<T>(job: Promise<T>, deadline: number, signal?: AbortSignal): Promise<T> {
++  return new Promise((resolve, reject) => {
++    const expired = () => finish(() => reject(new DeadlineError('Image deadline reached')));
++    const timer = setTimeout(expired, Math.max(0, deadline - Date.now()));
++    function finish(action: () => void) { clearTimeout(timer); signal?.removeEventListener('abort', expired); action(); }
++    signal?.addEventListener('abort', expired, { once: true });
++    job.then(value => finish(() => resolve(value)), error => finish(() => reject(error)));
++    if (signal?.aborted || Date.now() >= deadline) expired();
++  });
++}
++
+ function imageType(bytes: Buffer): string | null {
+   if (bytes.subarray(0, 8).equals(Buffer.from([137,80,78,71,13,10,26,10]))) return 'image/png';
+   if (bytes.length >= 3 && bytes[0] === 255 && bytes[1] === 216 && bytes[2] === 255) return 'image/jpeg';
+@@ -23,75 +38,92 @@ function imageType(bytes: Buffer): string | null {
+ 
+ // No caller-controlled host, redirects, credentials, cookies, or upstream headers.
+ // Failed reads are never cached; a later visit/retry can recover immediately.
+-export function createTokenImageHandler(fetchImage: typeof fetch = (...args) => fetch(...args)) {
++export function createTokenImageHandler(fetchImage: typeof fetch = (...args) => fetch(...args), authorize: ImageAuthorizer = authorizeCatalogueImage, requestMs = REQUEST_MS) {
+   const cache = new Map<string, Image>();
+   const pending = new Map<string, Promise<Image>>();
+   let cacheBytes = 0;
+   function forget(key: string) { const entry = cache.get(key); if (entry) cacheBytes -= entry.bytes.length; cache.delete(key); }
+-  async function load(source: NonNullable<ReturnType<typeof tokenImageSource>>): Promise<Image> {
++  async function load(source: NonNullable<ReturnType<typeof tokenImageSource>>, deadline: number): Promise<Image> {
+     const urls = [...new Set([source.url, ...(source.cid ? [
+       `https://ipfs.io/ipfs/${source.cid}`, `https://dweb.link/ipfs/${source.cid}`
+     ] : [])])];
+     for (const url of urls) {
++      if (Date.now() >= deadline) throw new DeadlineError('Image deadline reached');
++      const attemptDeadline = Math.min(deadline, Date.now() + 6000), controller = new AbortController();
++      let reader: ReadableStreamDefaultReader<Uint8Array> | undefined;
+       try {
+-        const upstream = await fetchImage(url, {
++        const upstream = await within(fetchImage(url, {
+           headers: { accept: 'image/png,image/jpeg,image/webp,image/gif,image/avif' },
+-          redirect: 'error', credentials: 'omit', signal: AbortSignal.timeout(6000)
+-        });
++          redirect: 'error', credentials: 'omit', signal: controller.signal
++        }), attemptDeadline);
+         if (!upstream.ok || !upstream.body || Number(upstream.headers.get('content-length') ?? 0) > MAX_IMAGE_BYTES) {
+-          await upstream.body?.cancel(); throw new Error('Image unavailable');
++          void upstream.body?.cancel().catch(() => {}); throw new Error('Image unavailable');
+         }
+         const chunks: Uint8Array[] = []; let size = 0;
+-        for await (const chunk of upstream.body as unknown as AsyncIterable<Uint8Array>) {
+-          size += chunk.byteLength;
++        reader = upstream.body.getReader();
++        while (true) {
++          const chunk = await within(reader.read(), attemptDeadline);
++          if (chunk.done) break;
++          size += chunk.value.byteLength;
+           if (size > MAX_IMAGE_BYTES) throw new Error('Image too large');
+-          chunks.push(chunk);
++          chunks.push(chunk.value);
+         }
+         const original = Buffer.concat(chunks);
+         if (!imageType(original)) throw new Error('Unsupported image content');
+         // A fixed thumbnail bounds decode work and avoids multi-megabyte mobile icons.
+         // Decode/re-encode strips metadata and rejects invalid raster bodies.
+-        const bytes = await sharp(original, { limitInputPixels: 16_777_216, animated: false })
++        const bytes = await within(sharp(original, { limitInputPixels: 16_777_216, animated: false })
+           .timeout({ seconds: 2 }).rotate().resize(160, 160, { fit: 'inside', withoutEnlargement: true })
+-          .webp({ quality: 84, effort: 3 }).toBuffer();
++          .webp({ quality: 84, effort: 3 }).toBuffer(), deadline);
+         return { bytes, type: 'image/webp', etag: `"${createHash('sha256').update(bytes).digest('hex')}"`, expires: Date.now() + CACHE_MS };
+       } catch { /* Try another gateway for the exact same content ID, never another token. */ }
++      finally { controller.abort(); void reader?.cancel().catch(() => {}); }
+     }
++    if (Date.now() >= deadline) throw new DeadlineError('Image deadline reached');
+     throw new Error('Image unavailable');
+   }
+   return async function tokenImage(request: Request): Promise<Response> {
++    const deadline = Date.now() + requestMs;
+     if (!['GET', 'HEAD'].includes(request.method)) return error(405);
+     const params = new URL(request.url).searchParams;
+-    const source = tokenImageSource(params.get('source'));
++    const requested = tokenImageSource(params.get('source'));
+     // Hosting rewrites may append their own routing parameters. Only source and
+     // retry are inputs; all other transport metadata is ignored, never forwarded.
+-    if (!source || params.getAll('source').length !== 1 ||
++    if (!requested || params.getAll('source').length !== 1 ||
+       (params.has('retry') && !/^[0-2]$/.test(params.get('retry')!))) return error(400);
+-    let image = cache.get(source.url);
+-    if (image && image.expires <= Date.now()) { forget(source.url); image = undefined; }
++    // Membership must precede every cache hit, conditional response and image slot.
++    // Use the catalogue's canonical URL even if the request names another allowed gateway.
++    let source: Awaited<ReturnType<ImageAuthorizer>>;
++    try { source = await within(authorize(requested), deadline, request.signal); } catch { return error(503); }
++    if (!source) return error(404);
++    const key = source.cid ? `ipfs:${source.cid}` : source.url;
++    let image = cache.get(key);
++    if (image && image.expires <= Date.now()) { forget(key); image = undefined; }
+     try {
+       if (!image) {
+-        let job = pending.get(source.url);
++        let job = pending.get(key);
+         if (!job) {
+           if (pending.size >= MAX_CONCURRENT_IMAGES) return error(503);
+-          job = load(source).then(value => {
++          job = load(source, deadline).then(value => {
+             while (cache.size && (cache.size >= MAX_CACHE_ENTRIES || cacheBytes + value.bytes.length > MAX_CACHE_BYTES)) forget(cache.keys().next().value!);
+-            cache.set(source.url, value); cacheBytes += value.bytes.length;
++            cache.set(key, value); cacheBytes += value.bytes.length;
+             return value;
+-          }).finally(() => { pending.delete(source.url); });
+-          pending.set(source.url, job);
++          }).finally(() => { pending.delete(key); });
++          pending.set(key, job);
+         }
+-        image = await job;
++        image = await within(job, deadline, request.signal);
+       }
++      // A refresh may have removed membership while image I/O was in flight.
++      if (!await within(authorize(requested), deadline, request.signal)) return error(404);
+       const headers = {
+         'content-type': image.type, 'content-length': String(image.bytes.length),
+-        'cache-control': 'public, max-age=86400, s-maxage=31536000, immutable',
++        'cache-control': 'public, max-age=0, s-maxage=0, must-revalidate',
+         'x-content-type-options': 'nosniff', 'content-security-policy': "default-src 'none'; sandbox",
+         'cross-origin-resource-policy': 'same-origin', etag: image.etag
+       };
+       if (request.headers.get('if-none-match') === image.etag) return new Response(null, { status: 304, headers });
+       return new Response(request.method === 'HEAD' ? null : new Uint8Array(image.bytes), { headers });
+-    } catch { return error(502); }
++    } catch (cause) { return error(cause instanceof DeadlineError ? 503 : 502); }
+   };
+ }
+ 
+diff --git a/apps/web/homepage.tsx b/apps/web/homepage.tsx
+index ca2f4ed..d1e25f3 100644
+--- a/apps/web/homepage.tsx
++++ b/apps/web/homepage.tsx
+@@ -29,7 +29,7 @@ function Constellation({ assets, inspect, loading }: { assets: PublicMarket[]; i
+   }, []);
+   const still = paused || reduced || !inView || !visible;
+   return <div className={`constellation ${still ? 'is-still' : ''}`} ref={scene}>
+-    <div className="orbit-stage" aria-label="Ten leading observed Ember markets">
++    <div className="orbit-stage" role="group" aria-label="Ten leading observed Ember markets">
+       <div className="orbit-aura" aria-hidden="true" />
+       <div className="orbit-ring ring-one" aria-hidden="true" /><div className="orbit-ring ring-two" aria-hidden="true" />
+       <svg className="orbit-wires" viewBox="0 0 1000 420" preserveAspectRatio="none" aria-hidden="true">
+@@ -43,7 +43,7 @@ function Constellation({ assets, inspect, loading }: { assets: PublicMarket[]; i
+         const asset = assets[i];
+         const style = { '--x': `${x}%`, '--y': `${y}%`, '--drift': `${5.8 + (i % 4) * .6}s`, '--delay': `${i * -.79}s` } as React.CSSProperties;
+         return <div className={`orbit-position position-${i} ${active === i ? 'is-active' : ''}`} key={asset?.mint ?? `slot-${i}`} style={style}>
+-          {asset ? <button className="orbit-token" onClick={() => inspect(asset)} onMouseEnter={() => setActive(i)} onMouseLeave={() => setActive(undefined)} onFocus={() => setActive(i)} onBlur={() => setActive(undefined)} aria-label={`Inspect ${asset.symbol}, rank ${asset.rank}, mint ${asset.mint}`}><span className="orbit-rank">{String(asset.rank).padStart(2, '0')}</span><Avatar asset={asset} loading="eager" /><span className="orbit-token-text"><strong>{asset.symbol}</strong><small>{money(asset.marketCapUsd)}</small></span><span className="orbit-peek" aria-hidden="true"><Icon name="external" /></span></button> : <div className="orbit-token orbit-placeholder" aria-label={`Market slot ${i + 1}: ${loading ? 'loading' : 'unavailable'}`}><span className="placeholder-coin">{String(i + 1).padStart(2, '0')}</span><span className="orbit-token-text"><strong>{loading ? 'Loading' : 'Awaiting data'}</strong><small>Ember market</small></span></div>}
++          {asset ? <button className="orbit-token" onClick={() => inspect(asset)} onMouseEnter={() => setActive(i)} onMouseLeave={() => setActive(undefined)} onFocus={() => setActive(i)} onBlur={() => setActive(undefined)} aria-label={`Inspect ${asset.symbol}, rank ${asset.rank}, mint ${asset.mint}`}><span className="orbit-rank">{String(asset.rank).padStart(2, '0')}</span><Avatar asset={asset} loading="eager" /><span className="orbit-token-text"><strong>{asset.symbol}</strong><small>{money(asset.marketCapUsd)}</small></span><span className="orbit-peek" aria-hidden="true"><Icon name="external" /></span></button> : <div className="orbit-token orbit-placeholder" role="group" aria-label={`Market slot ${i + 1}: ${loading ? 'loading' : 'unavailable'}`}><span className="placeholder-coin">{String(i + 1).padStart(2, '0')}</span><span className="orbit-token-text"><strong>{loading ? 'Loading' : 'Awaiting data'}</strong><small>Ember market</small></span></div>}
+         </div>;
+       })}
+     </div>
+diff --git a/apps/web/market.tsx b/apps/web/market.tsx
+index 5f24ffa..ac9a4cb 100644
+--- a/apps/web/market.tsx
++++ b/apps/web/market.tsx
+@@ -44,8 +44,10 @@ export function MarketPanel({ data, loading, error, retry }: { data?: PublicOver
+   // The app already owns a valid observation. Read it on the first render, before any effect.
+   const current = view === 'funded' ? data : matchingPage?.snapshot ?? (defaultRanking ? data : cache.current.get(requestKey));
+   const pending = view !== 'funded' && (defaultRanking ? loading || !!matchingPage?.busy : !matchingPage || matchingPage.busy);
+-  const requestError = matchingPage?.error || (defaultRanking ? error : '');
+-  const state = marketRequestState(current, pending, requestError);
++  const requestError = matchingPage?.error || error;
++  const retainedSourceHealth = current && current !== data && data?.discovery.status !== 'ready' ? data?.discovery.status : undefined;
++  const sourceFailed = retainedSourceHealth === 'stale' || retainedSourceHealth === 'unavailable';
++  const state = marketRequestState(current, pending, requestError || (sourceFailed ? 'Latest source check failed' : ''));
+   const model = current ? marketView(current) : null;
+   const counts = current ? marketCounts(current) : null;
+   const rows = current ? filterMarkets(current.markets, query, view === 'selection') : [];
+@@ -55,13 +57,12 @@ export function MarketPanel({ data, loading, error, retry }: { data?: PublicOver
+     cache.current.set(key, snapshot);
+   }
+   useEffect(() => { setLimit(20); }, [requestKey, view]);
++  // Only a new query or view starts a page request. Parent polls are handled below.
+   useEffect(() => {
+     const version = ++requestVersion.current;
+     const controller = new AbortController();
+     if (view === 'funded' || defaultRanking) {
+-      setPage(previous => defaultRanking && previous?.key===requestKey && previous.snapshot && previous.snapshot.markets.length>(data?.markets.length??0)
+-        ? {...previous,busy:false,notice:'A newer observation may be available. Your expanded list is retained until you refresh it.'}
+-        : { key: requestKey, snapshot: data, busy: false, error: '', notice: '' });
++      setPage({ key: requestKey, snapshot: data, busy: false, error: '', notice: '' });
+       return () => { controller.abort(); ++requestVersion.current; };
+     }
+     setPage({ key: requestKey, snapshot: cache.current.get(requestKey), busy: true, error: '', notice: '' });
+@@ -75,7 +76,18 @@ export function MarketPanel({ data, loading, error, retry }: { data?: PublicOver
+       });
+     }, 300);
+     return () => { clearTimeout(timer); controller.abort(); ++requestVersion.current; };
+-  }, [query, view, data]);
++  }, [requestKey, view]);
++
++  useEffect(() => {
++    if (view === 'funded') return;
++    setPage(previous => {
++      if (previous?.key !== requestKey || !previous.snapshot) return defaultRanking ? { key: requestKey, snapshot: data, busy: false, error: '', notice: '' } : previous;
++      const snapshot = previous.snapshot;
++      if (defaultRanking && snapshot.markets.length <= (data?.markets.length ?? 0)) return { key: requestKey, snapshot: data, busy: false, error: '', notice: '' };
++      const changed = snapshot.discovery.fetchedAt !== data?.discovery.fetchedAt || snapshot.discovery.evidenceHash !== data?.discovery.evidenceHash || snapshot.discovery.status !== data?.discovery.status || snapshot.revision !== data?.revision;
++      return changed ? { ...previous, notice: 'A newer observation may be available. Your current list is retained until you refresh it.' } : previous;
++    });
++  }, [data]);
+ 
+   async function more() {
+     if (limit < rows.length) { setLimit(n => n + 30); return; }
+@@ -112,7 +124,7 @@ export function MarketPanel({ data, loading, error, retry }: { data?: PublicOver
+     setPage({ key: requestKey, snapshot: current, busy: true, error: '', notice: '' });
+     api<PublicOverview>(path()).then(assertOverview).then(snapshot => {
+       if (version !== requestVersion.current) return;
+-      remember(requestKey, snapshot); setPage({ key: requestKey, snapshot, busy: false, error: '', notice: '' });
++      remember(requestKey, snapshot); setLimit(20); setPage({ key: requestKey, snapshot, busy: false, error: '', notice: '' });
+     }).catch(e => { if (version === requestVersion.current) setPage({ key: requestKey, snapshot: current, busy: false, error: (e as Error).message, notice: '' }); });
+   };
+   return <section className="market-panel" aria-label="Market and reward basket">
+@@ -125,6 +137,7 @@ export function MarketPanel({ data, loading, error, retry }: { data?: PublicOver
+         {pending && <div className="search-feedback" role="status">Refreshing these observations…</div>}
+         {view === 'selection' && current && <div className="selection-summary"><strong>{model?.selectedLabel}</strong><p>{current.selection.reason}</p><span className="muted">Policy {current.selection.policyVersion}. Market rank alone does not establish eligibility.</span></div>}
+         {state === 'stale' && <div className="inline-notice" role="status">Stale observation. Last successful fetch: {dateTime(current?.discovery.lastSuccessfulAt ?? current?.discovery.fetchedAt)}. New purchase commitments remain blocked.</div>}
++        {retainedSourceHealth === 'warming' && <div className="inline-notice" role="status">The latest source check is warming or incomplete. Your retained list keeps its original observation time; new purchase commitments remain blocked.</div>}
+         {current?.discovery.status === 'warming' && <div className="inline-notice" role="status">The catalogue is warming or incomplete. Rows are observations; new purchase commitments remain blocked.</div>}
+         {counts && state !== 'unavailable' && <div className="market-counts"><span><strong>{counts.catalogue.toLocaleString()}</strong> catalogue mints</span><span><strong>{counts.ranked.toLocaleString()}</strong> ranked by market cap</span>{counts.filtered && <span><strong>{counts.matches.toLocaleString()}</strong> {view === 'selection' ? 'selection matches' : 'search matches'}</span>}<p>Unranked and excluded assets stay searchable for inspection. Search never changes selection or funded membership.</p></div>}
+         {!rows.length ? <Empty title={state === 'unavailable' ? 'Market data is unavailable.' : query ? 'No matching token.' : view === 'selection' ? 'No eligible selection yet.' : state === 'warming' ? 'Waiting for market observations.' : 'No market observations reported.'} text={state === 'unavailable' ? current?.discovery.message ?? 'The source has not supplied a valid observation.' : query ? 'No catalogue mint matches this search. Try a name, symbol or full mint address.' : view === 'selection' ? current?.selection.reason ?? 'No assets passed the selection policy in this observation.' : current?.discovery.message ?? 'The source returned a valid empty result.'}>{view === 'selection' && <button className="btn" onClick={() => setView('ranking')}>Inspect market observations <Icon name="arrow"/></button>}{state === 'unavailable' && <button className="btn" onClick={retryRequest}>Try again</button>}</Empty> : <>
+diff --git a/apps/web/records.tsx b/apps/web/records.tsx
+index 9fd545b..5152661 100644
+--- a/apps/web/records.tsx
++++ b/apps/web/records.tsx
+@@ -6,40 +6,39 @@ import { Allocation,Empty,Icon,Intro } from './components.js';
+ 
+ export function CreditTable({rows,ledger}:{rows:Credit[];ledger:Ledger|null}) { return <div className="record-scroll"><table className="records-table"><caption className="sr">Exact credited and finalized reward units by asset</caption><thead><tr><th>Asset</th><th>Credited</th><th>Finalized delivery</th><th>Pending</th><th>Status</th></tr></thead><tbody>{rows.map(row=>{const asset=ledger?.assets.find(a=>a.mint===row.asset);return <tr key={row.asset}><td title={row.asset}><span className="token-title">{asset?.symbol??short(row.asset)}</span><code className="token-mint">{short(row.asset)}</code></td><td>{units(row.credited,asset?.decimals)}</td><td>{units(row.paid,asset?.decimals)}</td><td>{units(row.pending,asset?.decimals)}</td><td>{creditState(row)}</td></tr>;})}</tbody></table></div>; }
+ function Receipt({receipt,cluster}:{receipt:Delivery;cluster?:string}) { const url=transferUrl(receipt.result?.signature,cluster);return <div className="receipt-row"><span>{short(receipt.asset)} <span className="status-small">{receipt.status.replaceAll('_',' ')}</span></span>{url?<a href={url} target="_blank" rel="noopener noreferrer">View transaction <Icon name="external"/></a>:<span className="muted">{receipt.result?.signature?'Recorded signature (network unverified)':'Finalized receipt not reported'}</span>}</div>; }
+-export function EpochHistory({epochs,cluster,epochError,epochStatus,nextCursor,moreEpochs,moreBusy,retry}:{epochs:Epoch[];cluster?:string;epochError?:string;epochStatus?:string;nextCursor?:string|null;moreEpochs?:()=>void;moreBusy?:boolean;retry?:()=>void}) {
++export function EpochHistory({epochs,cluster,epochError,epochStatus,epochLoading,nextCursor,moreEpochs,moreBusy,retry}:{epochs:Epoch[];cluster?:string;epochError?:string;epochStatus?:string;epochLoading?:boolean;nextCursor?:string|null;moreEpochs?:()=>void;moreBusy?:boolean;retry?:()=>void}) {
+   const [detail,setDetail]=useState<EpochDetail>();const [error,setError]=useState('');const [busy,setBusy]=useState('');
+   async function open(id:string){setBusy(id);setError('');try{const record=await api<EpochDetail>(`epochs/${encodeURIComponent(id)}`);if(record.testOnly||record.mode==='demo'||record.mode==='test')throw Error('This is a test record and is not presented as a real reward round.');setDetail(record);}catch(e){setError((e as Error).message);}finally{setBusy('');}}
+-  return <section className="history"><div className="section-heading"><div><h2>Round history</h2><p>Frozen records, actual credits and finalized transfers.</p></div></div>{epochError&&<div className="inline-notice" role="alert">{epochError} <button className="btn small" onClick={retry}>Retry history</button></div>}{!epochs.length?<div className="quiet-empty">{epochError?'History could not be checked.':epochStatus==='unavailable'?'Verified round history is not connected.':'No funded rounds are recorded.'}</div>:<div className="record-scroll"><table className="records-table"><thead><tr><th>Round</th><th>Status</th><th>Created</th><th>Evidence</th></tr></thead><tbody>{epochs.map(epoch=><tr key={epoch.id}><td className="mono">{epoch.id}</td><td>{epoch.status.replaceAll('_',' ')}<small>{epoch.reason}</small></td><td>{dateTime(epoch.created_at)}</td><td><button className="btn small" onClick={()=>open(epoch.id)} disabled={!!busy}>{busy===epoch.id?'Loading…':'Inspect round'}</button></td></tr>)}</tbody></table></div>}{nextCursor&&<button className="btn" disabled={moreBusy} onClick={moreEpochs}>{moreBusy?'Loading rounds...':'Load older rounds'}</button>}{error&&<p role="alert" className="inline-notice">{error}</p>}{detail&&<article className="panel epoch-detail"><div className="section-heading"><h3>{detail.epoch.id}</h3><div className="export-links"><a href={`/api/epochs/${encodeURIComponent(detail.epoch.id)}/export`} target="_blank" rel="noopener noreferrer">JSON <Icon name="external"/></a><a href={`/api/epochs/${encodeURIComponent(detail.epoch.id)}/export?format=csv`}>CSV <Icon name="arrow"/></a></div></div><p>Snapshot slot {detail.snapshot?.slot??'unreported'} · {detail.entitlements.length} owner / asset credits</p><code className="break">Snapshot hash: {detail.snapshot?.hash??'unreported'}</code>{uniqueReceipts(detail.intents,detail.transfers).map(row=><Receipt key={row.id} receipt={row} cluster={cluster}/>)}<details><summary>Complete accounting evidence</summary><pre>{JSON.stringify(detail,null,2)}</pre></details></article>}</section>;
++  return <section className="history"><div className="section-heading"><div><h2>Round history</h2><p>Frozen records, actual credits and finalized transfers.</p></div></div>{epochError&&<div className="inline-notice" role="alert">{epochError} <button className="btn small" onClick={retry}>Retry history</button></div>}{!epochs.length?<div className="quiet-empty">{epochLoading?'Loading round history...':epochError?'History could not be checked.':epochStatus==='unavailable'?'Verified round history is not connected.':'No funded rounds are recorded.'}</div>:<div className="record-scroll"><table className="records-table"><thead><tr><th>Round</th><th>Status</th><th>Created</th><th>Evidence</th></tr></thead><tbody>{epochs.map(epoch=><tr key={epoch.id}><td className="mono">{epoch.id}</td><td>{epoch.status.replaceAll('_',' ')}<small>{epoch.reason}</small></td><td>{dateTime(epoch.created_at)}</td><td><button className="btn small" onClick={()=>open(epoch.id)} disabled={!!busy}>{busy===epoch.id?'Loading…':'Inspect round'}</button></td></tr>)}</tbody></table></div>}{nextCursor&&<button className="btn" disabled={moreBusy} onClick={moreEpochs}>{moreBusy?'Loading rounds...':'Load older rounds'}</button>}{error&&<p role="alert" className="inline-notice">{error}</p>}{detail&&<article className="panel epoch-detail"><div className="section-heading"><h3>{detail.epoch.id}</h3><div className="export-links"><a href={`/api/epochs/${encodeURIComponent(detail.epoch.id)}/export`} target="_blank" rel="noopener noreferrer">JSON <Icon name="external"/></a><a href={`/api/epochs/${encodeURIComponent(detail.epoch.id)}/export?format=csv`}>CSV <Icon name="arrow"/></a></div></div><p>Snapshot slot {detail.snapshot?.slot??'unreported'} · {detail.entitlements.length} owner / asset credits</p><code className="break">Snapshot hash: {detail.snapshot?.hash??'unreported'}</code>{uniqueReceipts(detail.intents,detail.transfers).map(row=><Receipt key={row.id} receipt={row} cluster={cluster}/>)}<details><summary>Complete accounting evidence</summary><pre>{JSON.stringify(detail,null,2)}</pre></details></article>}</section>;
+ }
+-type LedgerState = { epochError?:string; epochStatus?:string; nextCursor?:string|null; ledger: Ledger | null; epochs: Epoch[]; availability: LedgerAvailability; message: string; error: string; loading: boolean; cluster?: string; nextEvaluation?: string | null };
+-let lastLedger: LedgerState = { ledger: null, epochs: [], availability: 'checking', message: '', error: '', loading: true };
++type LedgerState = { epochLoading?:boolean; statusLoading?:boolean; epochError?:string; epochStatus?:string; nextCursor?:string|null; ledger: Ledger | null; epochs: Epoch[]; availability: LedgerAvailability; message: string; error: string; loading: boolean; cluster?: string; nextEvaluation?: string | null };
++let lastLedger: LedgerState = { ledger: null, epochs: [], availability: 'checking', message: '', error: '', loading: true, epochLoading: true, statusLoading: true };
+ export function useLedger() {
+-  const [state, setState] = useState<LedgerState>(() => ({ ...lastLedger, loading: true }));
++  const [state, setState] = useState<LedgerState>(() => ({ ...lastLedger, cluster: undefined, nextEvaluation: undefined, loading: true, epochLoading: true, statusLoading: true }));
+   const [attempt, setAttempt] = useState(0);
+   const moreController=useRef<AbortController|null>(null);
+   const [moreBusy,setMoreBusy]=useState(false);
+   useEffect(() => {
+     moreController.current?.abort();moreController.current=null;setMoreBusy(false);
+     const controller = new AbortController();
+-    setState(previous => ({ ...previous, loading: true, error: '' }));
+-    Promise.allSettled([api<PublicRecord>('transparency', controller.signal), api<PublicRecord>('epochs', controller.signal), api<{ cluster?: string; nextEvaluation?: string | null }>('status', controller.signal)]).then(results => {
++    const update = (patch: (previous: LedgerState) => LedgerState) => {
+       if (controller.signal.aborted) return;
+-      const [t, e, s] = results;
+-      setState(previous => {
+-        const next = { ...previous, loading: false, error: '' };
+-        try {
+-          if (t.status !== 'fulfilled') throw t.reason;
+-          Object.assign(next, ledgerConnection(t.value));
+-        } catch {
+-          next.availability = 'failed';
+-          next.error = previous.ledger ? 'Refresh failed. Showing the last successful reward records; amounts may be stale.' : 'The reward service could not be reached or verified. This is a request failure, not evidence of zero rewards.';
+-        }
+-        try {if(e.status!=='fulfilled')throw e.reason;const page=epochPage(e.value);next.epochs=page.items;next.nextCursor=page.nextCursor;next.epochStatus=page.status??'available';next.epochError='';}catch{next.epochError='Round history request failed. Any retained rounds may be stale; this is not evidence of an empty history.';}
+-        if (s.status === 'fulfilled') { next.cluster = s.value.cluster; next.nextEvaluation = s.value.nextEvaluation; }else{next.cluster=undefined;next.nextEvaluation=undefined;}
+-        lastLedger = next;
+-        return next;
+-      });
+-    });
++      setState(previous => { const next = patch(previous); lastLedger = next; return next; });
++    };
++    update(previous => ({ ...previous, cluster: undefined, nextEvaluation: undefined, loading: true, epochLoading: true, statusLoading: true, error: '', epochError: '' }));
++    // Each record is usable as soon as it arrives. A slow status/epoch response cannot
++    // hide a successfully checked ledger, and all requests have the shared API deadline.
++    api<PublicRecord>('transparency', controller.signal).then(value => {
++      const connection = ledgerConnection(value);
++      update(previous => ({ ...previous, ...connection, loading: false, error: '' }));
++    }).catch(() => update(previous => ({ ...previous, loading: false, availability: 'failed', error: previous.ledger ? 'Refresh failed. Showing the last successful reward records; amounts may be stale.' : 'The reward service could not be reached or verified. This is a request failure, not evidence of zero rewards.' })));
++    api<PublicRecord>('epochs', controller.signal).then(value => {
++      const page = epochPage(value);
++      update(previous => ({ ...previous, epochs: page.items, nextCursor: page.nextCursor, epochStatus: page.status ?? 'available', epochLoading: false, epochError: '' }));
++    }).catch(() => update(previous => ({ ...previous, epochLoading: false, epochError: 'Round history request failed. Any retained rounds may be stale; this is not evidence of an empty history.' })));
++    api<{ cluster?: string; nextEvaluation?: string | null }>('status', controller.signal).then(value => {
++      update(previous => ({ ...previous, cluster: value.cluster, nextEvaluation: value.nextEvaluation, statusLoading: false }));
++    }).catch(() => update(previous => ({ ...previous, cluster: undefined, nextEvaluation: undefined, statusLoading: false })));
+     return () => {controller.abort();moreController.current?.abort();};
+   }, [attempt]);
+   async function moreEpochs(){
+@@ -52,7 +51,7 @@ export function useLedger() {
+   }
+   return { ...state,moreEpochs,moreBusy, retry: () => setAttempt(n => n + 1) };
+ }
+-export function Rewards({data}:{data?:PublicOverview}) {const records=useLedger();const {ledger,epochs,error,loading,cluster,nextEvaluation,availability,retry}=records;return <><Intro eyebrow="Received. Acquired. Credited. Delivered." title="Follow every reward." text="A credit is an obligation. A payment is a finalized transfer. Follow the record at each stage."/><div className="reward-stats"><article className="panel"><span className="label">Creator fees received</span><strong>{ledger?units(ledger.receivedLamports,9):loading?'Checking...':'Unreported'}{ledger?.receivedLamports!=null&&<small> SOL</small>}</strong><p>Finalized, attributed receipts only</p></article><article className="panel"><span className="label">Finalized payout transactions</span><strong>{ledger?.finalizedPayoutTransactions??(loading?'Checking...':'Unreported')}</strong><p>Transactions, not a count of holders</p></article><article className="panel"><span className="label">Next evaluation</span><strong className="smaller">{nextEvaluation===undefined?(loading?'Checking...':'Unreported'):nextEvaluation===null?'Not scheduled':dateTime(nextEvaluation)}</strong><p>A schedule is never a promised payment time</p></article></div><div className="process-stages" aria-label="Reward stages">{['Fees received','Assets purchased','Rewards credited','Payments finalized'].map((label,i)=><div key={label}><span>{String(i+1).padStart(2,'0')}</span><strong>{label}</strong><small>{ledger?'Inspect round evidence':loading?'Checking ledger...':'Awaiting ledger'}</small></div>)}</div>{error&&<div className="inline-notice" role="alert">{error} <button className="btn small" onClick={retry}>Retry records</button></div>}<div className="section-heading"><div><h2>Accrued & delivered</h2><p>Exact asset units. Current prices and historical settlement values are separate.</p></div></div>{loading&&!ledger?<div className="quiet-empty" role="status">Loading reward records…</div>:ledger?.accrued.length?<CreditTable rows={ledger.accrued} ledger={ledger}/>:<Empty title={ledger?'No rewards credited yet.':availability==='failed'?'Reward request failed.':'Reward accounting is not connected.'} text={ledger?'The first credits require a funded round, ten eligible assets and a complete holder snapshot.':availability==='failed'?error:data?.accounting.message??'Verified fee receipts and payment records are not available. Unknown balances are not zero.'}/>}{loading&&!ledger?<div className="quiet-empty" role="status">Loading round history...</div>:<EpochHistory {...records}/>}<div className="lower-grid"><Allocation/><article className="panel"><div className="eyebrow muted">Small rewards stay yours</div><h3>Deferred does not mean lost.</h3><p>Credits carry forward until a payment is economical and pricing is fresh. Pending, partially paid and finalized amounts remain distinct in the ledger.</p><p>No expiry is applied to existing credits. Selling affects future eligibility, not rewards already owed.</p></article></div></>;}
++export function Rewards({data}:{data?:PublicOverview}) {const records=useLedger();const {ledger,epochs,error,loading,cluster,nextEvaluation,statusLoading,availability,retry}=records;return <><Intro eyebrow="Received. Acquired. Credited. Delivered." title="Follow every reward." text="A credit is an obligation. A payment is a finalized transfer. Follow the record at each stage."/><div className="reward-stats"><article className="panel"><span className="label">Creator fees received</span><strong>{ledger?units(ledger.receivedLamports,9):loading?'Checking...':'Unreported'}{ledger?.receivedLamports!=null&&<small> SOL</small>}</strong><p>Finalized, attributed receipts only</p></article><article className="panel"><span className="label">Finalized payout transactions</span><strong>{ledger?.finalizedPayoutTransactions??(loading?'Checking...':'Unreported')}</strong><p>Transactions, not a count of holders</p></article><article className="panel"><span className="label">Next evaluation</span><strong className="smaller">{nextEvaluation===undefined?(statusLoading?'Checking...':'Unreported'):nextEvaluation===null?'Not scheduled':dateTime(nextEvaluation)}</strong><p>A schedule is never a promised payment time</p></article></div><div className="process-stages" role="group" aria-label="Reward stages">{['Fees received','Assets purchased','Rewards credited','Payments finalized'].map((label,i)=><div key={label}><span>{String(i+1).padStart(2,'0')}</span><strong>{label}</strong><small>{ledger?'Inspect round evidence':loading?'Checking ledger...':'Awaiting ledger'}</small></div>)}</div>{error&&<div className="inline-notice" role="alert">{error} <button className="btn small" onClick={retry}>Retry records</button></div>}<div className="section-heading"><div><h2>Accrued & delivered</h2><p>Exact asset units. Current prices and historical settlement values are separate.</p></div></div>{loading&&!ledger?<div className="quiet-empty" role="status">Loading reward records…</div>:ledger?.accrued.length?<CreditTable rows={ledger.accrued} ledger={ledger}/>:<Empty title={ledger?'No rewards credited yet.':availability==='failed'?'Reward request failed.':'Reward accounting is not connected.'} text={ledger?'The first credits require a funded round, ten eligible assets and a complete holder snapshot.':availability==='failed'?error:data?.accounting.message??'Verified fee receipts and payment records are not available. Unknown balances are not zero.'}/>}<EpochHistory {...records}/><div className="lower-grid"><Allocation/><article className="panel"><div className="eyebrow muted">Small rewards stay yours</div><h3>Deferred does not mean lost.</h3><p>Credits carry forward until a payment is economical and pricing is fresh. Pending, partially paid and finalized amounts remain distinct in the ledger.</p><p>No expiry is applied to existing credits. Selling affects future eligibility, not rewards already owed.</p></article></div></>;}
+ export function WalletAvailability({ availability, message, error, loading, phase, retry }: { availability: LedgerAvailability; message: string; error: string; loading: boolean; phase?: string; retry: () => void }) {
+   return <div className="wallet-availability inline-notice" role="status" id="wallet-availability">
+     <strong>{availability === 'unavailable' ? 'Reward records are not connected yet.' : availability === 'failed' ? 'Reward connection could not be checked.' : availability === 'checking' ? `${phase === 'prelaunch' ? 'Prelaunch. ' : ''}Checking reward-record availability...` : 'Public reward records are connected.'}</strong>
+diff --git a/apps/web/src.tsx b/apps/web/src.tsx
+index 8ab020e..7b27d14 100644
+--- a/apps/web/src.tsx
++++ b/apps/web/src.tsx
+@@ -24,11 +24,10 @@ function App() {
+     if (request.current) return;
+     const controller = new AbortController();
+     request.current = controller;
+-    const timeout = setTimeout(() => controller.abort(), 15000);
+     setLoading(true);
+     try { const overview = assertOverview(await api<PublicOverview>('overview', controller.signal)); if (mounted.current) { setData(overview); setError(''); } }
+     catch (e) { if (mounted.current) { setError(controller.signal.aborted ? 'The source took too long to respond. Please retry.' : (e as Error).message); setData(current => current ? { ...current, discovery: { ...current.discovery, status: 'stale', message: 'Refresh failed. Showing the previous real observation.' }, selection: { ...current.selection, commitmentsAllowed: false } } : undefined); } }
+-    finally { clearTimeout(timeout); request.current = null; if (mounted.current) setLoading(false); }
++    finally { request.current = null; if (mounted.current) setLoading(false); }
+   }
+   useEffect(() => { mounted.current = true; void reload(); const interval = setInterval(reload, 45000); return () => { mounted.current = false; clearInterval(interval); request.current?.abort(); }; }, []);
+   useEffect(() => {
+@@ -46,7 +45,7 @@ function App() {
+   });
+   return <>
+     <a className="skip" href="#main" onClick={event=>{event.preventDefault();const main=document.getElementById('main');main?.focus({preventScroll:true});main?.scrollIntoView({behavior:'instant'});}}>Skip to content</a>
+-    <header className="site-header"><div className="header-inner"><Brand /><nav className="desktop-navigation" aria-label="Main navigation">{navigation()}</nav><div className="header-actions"><span className="pill gold"><i className="dot" />{phaseLabel(data)}</span><a className="btn small desktop-action" href="#wallet" aria-current={route === 'wallet' ? 'page' : undefined}>My rewards <Icon name="arrow" /></a><div className="mobile-menu"><button ref={menuButton} aria-label={menu ? 'Close navigation menu' : 'Open navigation menu'} aria-expanded={menu} aria-controls="mobile-menu-links" className="menu-button" onClick={() => setMenu(!menu)}><Icon name={menu ? 'close' : 'menu'} /></button>{menu && <nav id="mobile-menu-links" aria-label="Mobile navigation">{navigation(true)}</nav>}</div></div></div></header>
++    <header className="site-header"><div className="header-inner"><Brand /><nav className="desktop-navigation" aria-label="Main navigation">{navigation()}</nav><div className="header-actions"><span className="pill gold"><i className="dot" />{phaseLabel(data)}</span><a className="btn small desktop-action" href="#wallet" aria-current={route === 'wallet' ? 'page' : undefined}>My rewards <Icon name="arrow" /></a><div className="mobile-menu"><button ref={menuButton} aria-label={menu ? 'Close navigation menu' : 'Open navigation menu'} aria-expanded={menu} aria-controls="mobile-menu-links" className="menu-button" onClick={() => setMenu(!menu)}><Icon name={menu ? 'close' : 'menu'} /></button><nav id="mobile-menu-links" aria-label="Mobile navigation" hidden={!menu}>{navigation(true)}</nav></div></div></div></header>
+     <div className="sr" role="status" aria-live="polite" aria-atomic="true">{announcement}</div>
+     <main id="main" tabIndex={-1}>
+       {error && <div className="connection-error" role="alert"><span><strong>{data ? 'Refresh unavailable.' : 'Connection unavailable.'}</strong> {data ? 'Showing the last real observation with its original fetch time.' : error}</span><button className="btn small" onClick={() => void reload()}>Retry</button></div>}
+diff --git a/apps/web/view-model.ts b/apps/web/view-model.ts
+index eb21d54..e357af4 100644
+--- a/apps/web/view-model.ts
++++ b/apps/web/view-model.ts
+@@ -86,7 +86,8 @@ export function marketRequestState(snapshot: PublicOverview | undefined, pending
+ }
+ export function filterMarkets(rows: PublicMarket[], query: string, selectionOnly: boolean) {
+   const q = query.trim().toLowerCase();
+-  return rows.filter(row => (!selectionOnly || row.selected) && (!q || `${row.symbol} ${row.name} ${row.mint}`.toLowerCase().includes(q)));
++  // Keep the same field order as the server, including queries spanning two fields.
++  return rows.filter(row => (!selectionOnly || row.selected) && (!q || `${row.mint} ${row.name} ${row.symbol}`.toLowerCase().includes(q)));
+ }
+ 
+ /** Pages can only be combined when they describe the same fetched ranking and request. */
+@@ -103,12 +104,25 @@ export function mergeMarketPages(previous: PublicOverview, next: PublicOverview)
+   return { ...next, markets: [...previous.markets, ...next.markets] };
+ }
+ 
++// The hosted service has a 25s total deadline; allow its cold retry and response time.
++export const PUBLIC_REQUEST_TIMEOUT_MS = 28_000;
+ export async function api<T>(path: string, signal?: AbortSignal): Promise<T> {
+-  const response = await fetch(`/api/${path}`, { headers: { accept:'application/json' }, signal });
+-  const body = await response.json().catch(() => null);
+-  if (!response.ok) throw Error(body?.message || body?.reason || 'The service is unavailable. Please try again.');
+-  if (!body || typeof body !== 'object') throw Error('The service returned an unreadable response.');
+-  return body as T;
++  const controller = new AbortController();
++  let timedOut = false;
++  const abort = () => controller.abort(signal?.reason);
++  if (signal?.aborted) abort(); else signal?.addEventListener('abort', abort, { once: true });
++  const timeout = setTimeout(() => { timedOut = true; controller.abort(); }, PUBLIC_REQUEST_TIMEOUT_MS);
++  try {
++    const response = await fetch(`/api/${path}`, { headers: { accept:'application/json' }, signal: controller.signal });
++    const body = await response.json().catch(() => null);
++    if (timedOut) throw Error('Request timed out');
++    if (!response.ok) throw Error(body?.message || body?.reason || 'The service is unavailable. Please try again.');
++    if (!body || typeof body !== 'object') throw Error('The service returned an unreadable response.');
++    return body as T;
++  } catch (error) {
++    if (timedOut) throw Error('The service took too long to respond. Please retry.');
++    throw error;
++  } finally { clearTimeout(timeout); signal?.removeEventListener('abort', abort); }
+ }
+ export function assertOverview(data: PublicOverview) {
+   if (data.schemaVersion !== 1 || data.project?.dataMode !== 'real' || !Array.isArray(data.markets) || !data.discovery || !data.selection || !data.fundedBasket || !data.accounting) throw Error('The public data contract is unavailable. No replacement assets are shown.');
+diff --git a/docs/AUDIT-R2.md b/docs/AUDIT-R2.md
+new file mode 100644
+index 0000000..5aa9cd0
+--- /dev/null
++++ b/docs/AUDIT-R2.md
+@@ -0,0 +1,44 @@
++# Round 2 remediation and review handoff
++
++The supplied second audit reviewed source `4f9fba2` and deployed application `1f67d0d`. It confirmed the public source/deployment match and identified further public defects and financial blockers. This round implements public corrections; it does not authorize or enable financial execution. Financial policy, ten equal purchase budgets, 80/10/10 allocation and OPS/DEV rules are unchanged.
++
++## Public findings
++
++| Finding | Implementation / remaining limit |
++|---|---|
++| P-1: expanded search collapses on polling | Searches and filtered views retain their observation and expanded rows. A changed parent observation presents an explicit refresh notice. The executable browser regression retains 140 default and searched rows through a 45-second poll, then explicitly refreshes back to 20. Cross-instance pages still require identical observation identity; mismatches are rejected rather than silently merged. |
++| P-2: catalogue growth limits | Shared 64 MB / 50,000-row bounds, 80% capacity warning, public coverage note, explicit row-limit failure and stale-data retention. The evidence collector uses the same byte limit. This is a bounded headroom increase, not an unlimited catalogue or an external alert service. Operators must monitor structured capacity warnings. The separate financial metrics/Jupiter provider limits remain 20,000 and are not changed by the public catalogue cap. |
++| P-3: arbitrary approved-host image CIDs | See image-proxy implementation and regression evidence in this round. Catalogue membership constrains upstream work; it does not make known-catalogue traffic immune to denial of service. |
++| P-4: inconsistent multiword search | Client field order matches the server: mint, name, symbol. Regression compares results against the actual overview function. |
++| P-5: timeout, partial loading, outage and accessibility | API requests have a 28-second deadline, beyond the server's shared 25-second proxy budget. Ledger, epoch and status requests update independently. Unavailable basket projections are never called complete. Semantic hero groups and a persistent mobile navigation target replace invalid/absent ARIA targets. Index HTML is included in deployed byte comparison. |
++
++P-5's server identity limitation remains: an environment revision plus byte-identical frontend assets does not cryptographically attest the deployed server function. Vercel deployment identity and source metadata are recorded; no independent server artifact attestation is claimed. The configured backend's 4 MB export cap and generic error classification also remain open.
++
++## Financial findings: no funded-pilot approval
++
++| Finding | Current status / required next evidence or work |
++|---|---|
++| F-1 | Open: built-in evidence cannot verify all policy requirements; no complete reviewed metrics service exists in this delivery. A provider/product decision is required without silently relaxing policy. |
++| F-2 | Open: both audit-reported Jupiter discriminators fail the installed decoder. Need a read-only keyed build capture and a reviewed compatible validator for actual allowed routes, amounts and accounts. Unknown instructions remain rejected. |
++| F-3 | Reproduced independently: current 23,632,080-lamport forecast fails the eleventh build. An additional WSOL float gives 25,671,360 in the tested assumptions. The financial implementation is unchanged this round; do not treat the earlier S1-06 closure claim as valid. |
++| F-4 | Open: no evidence-backed terminal retirement/release path for ambiguously expired attempts; priority-fee handling also requires review. |
++| F-5 | Open: historical payout window has no matching keep/payout/WSOL rows, and malformed irrelevant rows reject the strict window. Need an actual configured Keep-it pool sample plus finalized chain attribution and safe quarantine re-attribution. |
++| F-6 | Open: existing/prefunded WSOL accounts can block builds; stranded commitments and residual WSOL accounting need lifecycle and original-transaction evidence fixes. |
++| F-7 | Open: missing ATAs for registered assets and own-token/burn reconciliation. |
++| F-8 | Open: noncanonical token-account dust attribution and fee-race surplus handling. |
++| F-9 | Open: repeated full-catalogue reads on funding-route authorization. |
++| F-10 | Open: cap changes do not invalidate old pending commitments; deferred daily spend can combine. |
++| F-11 | Open: one failed DEV payout can exhaust its retry allowance without a retirement/replenishment path. |
++| F-12 | Open: inconsistent selection-cache budgets and slow revalidation can expire a quote. |
++| F-13 | Open: operator pause can race after authorization and before sign/send. |
++| F-14 | Open: status-observation I/O, zero-value storage, generic errors, Retry-After parsing, ingestion lease scope, capital attribution, policy-version and database-role/platform safeguards. |
++
++The independent money-path review and executable eleven-build harness are in `evidence/r2/`. Their mock instructions/RPC prove the forecast failure, not live Jupiter compatibility or finalized settlement. F-7 through F-14 retain the supplied auditor's findings and were not independently re-executed in this remediation round. The five high dependency entries also remain disclosed.
++
++## One-PC ownership and integration
++
++The integrator owns `audit/r2-integration`. The frontend specialist implemented P-1/P-4/P-5 in `audit/r2-public`; a separate specialist reviewed F-1 through F-6 and implemented the bounded image authorization change in the reused specialist worktree after frontend handoff. Only the integrator merges, publishes and records the final revision. Shared API meanings stay unchanged: observed ranking is not verified eligibility or a funded basket. No manual two-PC transfer is needed.
++
++## Review request
++
++Review the complete frozen package identified by `deployment.json` and its manifest. Re-run public regressions and inspect desktop/mobile screenshots. Distinguish developer implementation claims, independently executed local evidence and unexecuted external dependencies. Keep financial work disabled; no live signing, broadcast, funding or production migration occurred in this round. This package is prepared for review; it is not a passed independent external audit.
+diff --git a/docs/AUDIT-REMEDIATION.md b/docs/AUDIT-REMEDIATION.md
+index df8b46e..ab385e6 100644
+--- a/docs/AUDIT-REMEDIATION.md
++++ b/docs/AUDIT-REMEDIATION.md
+@@ -1,3 +1,5 @@
++> Historical first-round claims below are superseded where noted by [Round 2](AUDIT-R2.md). In particular, S1-06 is **open**: the forecast is one WSOL float short; do not fund an epoch.
++
+ # Audit remediation — 23 September 2026
+ 
+ The supplied audit inspected `db041a0`. This correction starts from `4d36e54`, retaining the newer backend, Orbit frontend and same-origin token logos. One PC, one integrating worktree, no transfer packages. This is a read-only prelaunch release, **not closure of the financial-service audit**.
+diff --git a/docs/DATA-SCHEMA-MAPPING.md b/docs/DATA-SCHEMA-MAPPING.md
+index d3c7359..02b6275 100644
+--- a/docs/DATA-SCHEMA-MAPPING.md
++++ b/docs/DATA-SCHEMA-MAPPING.md
+@@ -44,6 +44,6 @@ Public funded-basket and accounting data are unavailable without a verified proj
+ 
+ ## Resource bounds
+ 
+-Read timeout8seconds per attempt,2attempts,1second backoff, no redirects,12MB streaming source cap,20,000row schema cap. Concurrent reads share one in-flight request and45second instance cache. Unavailable initial reads return no markets. Failed refreshes retain explicitly stale last-good data only in memory, preserving original fetchedAt. Cold starts do not import a seed fixture.
++Read timeout 8 seconds per attempt, 2 attempts, 1 second backoff, no redirects, 64 MB streaming source cap, and 50,000 row schema cap. These bounds are shared with the evidence collector through `packages/shared/catalogue-limits.json`. At 80% of either capacity, a structured `catalogue_capacity` warning and public coverage note request operator review. Breaches remain failures, never truncated catalogues; stale last-good data remains explicitly stale. Concurrent reads share one in-flight request and a 45 second instance cache. Unavailable initial reads return no markets, and the hosted basket does not label an unavailable or partial projection complete. Cold starts do not import a seed fixture.
+ 
+ `/api/overview?q=&offset=&limit=` searches/ranks the full normalized catalogue before returning at most100rows and explicit `marketPage` counts. No selection is limited to the first page. This avoids Vercel's response-size limit; the full per-mint proof remains an operator artifact. Currency values retain source JSON precision (binary numeric values already rounded upstream); no claim of arbitrary original-source precision is made.
+diff --git a/docs/INTEGRATIONS.md b/docs/INTEGRATIONS.md
+index 4adffc8..34484ab 100644
+--- a/docs/INTEGRATIONS.md
++++ b/docs/INTEGRATIONS.md
+@@ -5,7 +5,7 @@ Raw public responses and timestamps are under `docs/evidence/`. These are untrus
+ | Surface | Actual observation | Confidence / execution consequence |
+ |---|---|---|
+ | Ember developers / how | HTTP 200 application shells; public JS documentation chunks inspected | High for documented routes, not proof of economic execution |
+-| `/api/solana/markets` | HTTP 200; initial response 7,876,999 bytes, 3,040 rows; later reads changed | Observed schema, bounded 12 MB reader; all rows remain unverified candidates |
++| `/api/solana/markets` | HTTP 200; initial response 7,876,999 bytes, 3,040 rows; later reads changed | Observed schema; current reader and evidence collector share a 64 MB cap, with a 50,000 row schema bound and warnings at 80% of capacity. All rows remain unverified candidates. |
+ | `/api/solana/quotes` | HTTP 200; `economics` and 1,291 `quotes` | `shareByMode.keep.pctOfTax=32`; SOL quote support observed; no project launch attempted |
+ | `/api/solana/configs` | HTTP 200; `program`, `partner`, `feeClaimer`, `configs`, `count`, `updatedAt`; 2,949 configs in initial capture | Off-chain list is checked against decoded on-chain config/pool identity before selection |
+ | `/api/solana/pools.csv` | HTTP 200; historical CSV with mint, DBC pool/config, DAMM pool and launch metadata | Historical catalogue evidence only |
+diff --git a/docs/evidence/r2/FINANCIAL-INDEPENDENT-REVIEW.md b/docs/evidence/r2/FINANCIAL-INDEPENDENT-REVIEW.md
+new file mode 100644
+index 0000000..625beb5
+--- /dev/null
++++ b/docs/evidence/r2/FINANCIAL-INDEPENDENT-REVIEW.md
+@@ -0,0 +1,40 @@
++# R2 independent money-path validation
++
++Reviewed source: `4f9fba2fd95d6fd8057c27d56cfad0297b9f06ce`, 23 September 2026. Scope: F-1 through F-6. Read-only specialist review; no repository edits, live provider request, signer call, broadcast, funding, deployment, or credentials access. This report is not a financial readiness approval.
++
++## F-3: reproduced through the actual adapter
++
++`f3-eleven-builds.mts` calls the repository's `epochCostForecast`, `safeJupiterBuild`, and `bindNativeCost`. It supplies a valid encoded legacy Jupiter route and mocked RPC mint/account responses, then walks one buyback and ten purchases, each with a new output ATA, deducting each finalized net fee plus output rent from the available cost account. The mock has no signing or sending method. The last burn's fee allowance is also checked. This is an executable adapter/cash sufficiency test, not a full worker/database or live-provider test.
++
++Run from the repository root:
++
++```powershell
++node --import tsx scripts/audit/f3-eleven-builds.mts ../f3-eleven-builds-results.json
++```
++
++Result: PASS (the old implementation's expected failure was reproduced). See `f3-eleven-builds-results.json` for every transaction's balance and required cash.
++
++| Forecast | Actual fee per transaction | Completed swap/buyback builds | Cash before final rejected purchase | Shortfall | Cash after 11 swaps + burn when passing |
++|---|---:|---:|---:|---:|---:|
++| Current 23,632,080 | 5,000 | 10 / 11 | 3,189,280 | 989,280 | — |
++| Current 23,632,080 | 100,000 | 10 / 11 | 2,239,280 | 1,939,280 | — |
++| Plus one WSOL float: 25,671,360 | 5,000 | 11 / 11 | — | — | 3,179,280 |
++| Plus one WSOL float: 25,671,360 | 100,000 | 11 / 11 | — | — | 2,039,280 |
++
++All amounts are lamports. Constants: fee cap 100,000; ATA rent 2,039,280. Current forecast reserves 12 fees and 11 net ATA rents. The adapter requires a temporary WSOL rent in addition to the output ATA rent, so each all-new-ATA build demands 4,178,560 of current cost-account cash. Net rent accounting correctly excludes the returned WSOL rent, but admission still needs that float. Under these assumptions `(size + 2) * maxFee + (size + 2) * rent` suffices. This does not fund unbounded failed retries, establish current Jupiter compatibility, or repair expiry recovery.
++
++The desired repository regression should use the above eleven actual adapter builds and cost-account depletion, then exercise `runIntent`/`Engine.apply` with original finalized outcome fixtures in the isolated test DB. Assert all eleven financial intents finalize, burn retains its fee cap, exact acquired units are credited once, and leftover cost is returned only after all obligations finalize. Replace the current test that merely asserts the forecast formula's literal output. Include existing-output ATA, all-new output ATA, max-fee, and finalized-failure costs.
++
++## Remaining blocker validation and evidence needed
++
++| Finding | Independently validated | What can resolve it |
++|---|---|---|
++| F-1 | Confirmed in `provenance.ts:86-120` and `jupiter-tokens.ts:7-11`. The built-in Jupiter path attaches permanent methodology/category/window blockers, returns before chain verification, and never supplies `metrics`, which `complete` requires. The custom path is an exact complete-catalogue contract with <=180-second freshness and exact integer supply/price arithmetic. | A product/provider decision is required: procure/build and review a complete evidence service satisfying the existing policy, or explicitly revise policy with the user. Do not convert undocumented reported `mcap`, tags, or `stats24h` into verified eligibility. Need catalogue completeness contract, supply methodology and comparable rank basis, mint/pool identity, explicit category coverage, complete timestamped 24h USD volume, signed/versioned or hash-bound provenance, and freshness/coverage failure behavior. The repo does not supply that service. |
++| F-2 | Adapter accepts only decoded legacy `route` with one route-plan hop. Both discriminator prefixes reported by R2 decode to `null` using the installed parser; this was executed locally. The audit's live HTTP responses were not re-fetched by this reviewer. The locally valid fixture used for F-3 proves only the accepted legacy shape. | Need a read-only authenticated build capture for the actual treasury and proposed output/budget (key must remain secret), including timestamp, query parameters, full raw instructions, lookup tables, route plan and compute-budget instructions. Decode using current primary IDL/schema and bind accounts, amounts, mint identity, minimum output, approved programs and fee limits. Decide whether policy permits newly documented route variants. A safe compatibility fix may not blindly accept unknown discriminators or discard the direct-route policy. No live signing is needed for this evidence. |
++| F-4 | Confirmed: `SolanaChain.inspect` returns `expired`, runner persists `needs_review`, worker's in-flight check blocks new work. `expired_verified` is read but never written. `recoverIntent` only re-inspects. Resolving incidents does not retire the intent/attempt or release reservation. Locally built transactions also discard remote compute-budget price instructions. | Design and test authenticated, idempotent retirement that proves the original signature absent after validity expiry on independent archival history providers, persists evidence, transitions attempt terminally and releases only unused reservations. Preserve original bytes and ambiguity; never substitute operator opinion for finalized/absence evidence. Explicit recovery semantics are needed for landed but unaccounted transactions. Independently bound any accepted priority fee. |
++| F-5 | Stored 100-row fixture census executed: zero `payout + keep + WSOL` rows; two keep rows are `claim` with amount 0 (one WSOL with claimed 0.525022996). Missing signatures on `perp` and `sweep` make the existing strict `EmberClient.payouts` reject the full window; reproduced locally. Ingestion permanently advances its cursor and `Engine.ingest` ignores existing transfer IDs, so later matching evidence cannot remove quarantine. | Capture the real configured Keep-it pool's before/after payout window and corresponding finalized on-chain transaction, decoded sender, recipient, mint, amount, fees and instruction identity. Obtain provider meaning of `claim` versus `payout`, `claimed` versus `amount`, payout destination/unwrap semantics and any aggregation. The historical global fixture does not prove what a project's Keep-it pool does. Tolerantly skip irrelevant malformed rows without admitting them as funding; add append-only, idempotent linked re-attribution after exact independent evidence is available. Do not loosen the predicate to make the fixture pass. |
++| F-6 | Confirmed code mechanism: any non-null WSOL source ATA account is rejected before building, including a system-owned prefund. `waiting_for_route` is absent from the new-epoch guard. The WSOL close returns pre-existing lamports to the payer, while settlement calculates input from net payer delta; residual returned lamports reduce observed input, causing `Engine.apply` rejection. This landing/race trigger was not executed against a chain. | Design safe handling separately for valid existing zero-balance WSOL accounts, existing token balances and system-owned prefunding. Derive exact consumed input from verified original instructions and WSOL account balance evidence, not only payer net delta. Prevent new epochs while committed work is known unexecutable. Preserve accounting for donations and externally deposited WSOL; no silent close, confiscation, revenue attribution or credit fabrication. Add original-message and pre/post account fixtures for each case and a local-validator execution when available. |
++
++## Limits and conclusion
++
++F-3 is a independently reproduced defect, not merely a forecast assertion. F-1 is an external evidence/product dependency; F-2 is an adapter/provider compatibility gate; F-4/F-6 need lifecycle/accounting changes; F-5 requires real pool evidence before choosing attribution semantics. Completing public-site fixes or adding one rent to the forecast cannot establish funded-pilot readiness. Keep financial execution disabled while these gates remain unresolved.
+diff --git a/docs/evidence/r2/f3-eleven-builds-results.json b/docs/evidence/r2/f3-eleven-builds-results.json
+new file mode 100644
+index 0000000..e113900
+--- /dev/null
++++ b/docs/evidence/r2/f3-eleven-builds-results.json
+@@ -0,0 +1,429 @@
++{
++  "revision": "4f9fba2fd95d6fd8057c27d56cfad0297b9f06ce",
++  "kind": "local_read_only_adapter_harness",
++  "signed": 0,
++  "broadcast": 0,
++  "networkRequests": 0,
++  "fixtureCaveat": "Legacy route instruction and RPC responses are mocked; this does not establish current Jupiter live compatibility.",
++  "oldLow": {
++    "forecast": "23632080",
++    "actualFee": "5000",
++    "completed": 10,
++    "remaining": "3189280",
++    "rows": [
++      {
++        "transaction": 1,
++        "kind": "buyback",
++        "before": "23632080",
++        "requiredCash": "4178560",
++        "netDebit": "2044280",
++        "status": "build_passed"
++      },
++      {
++        "transaction": 2,
++        "kind": "swap",
++        "before": "21587800",
++        "requiredCash": "4178560",
++        "netDebit": "2044280",
++        "status": "build_passed"
++      },
++      {
++        "transaction": 3,
++        "kind": "swap",
++        "before": "19543520",
++        "requiredCash": "4178560",
++        "netDebit": "2044280",
++        "status": "build_passed"
++      },
++      {
++        "transaction": 4,
++        "kind": "swap",
++        "before": "17499240",
++        "requiredCash": "4178560",
++        "netDebit": "2044280",
++        "status": "build_passed"
++      },
++      {
++        "transaction": 5,
++        "kind": "swap",
++        "before": "15454960",
++        "requiredCash": "4178560",
++        "netDebit": "2044280",
++        "status": "build_passed"
++      },
++      {
++        "transaction": 6,
++        "kind": "swap",
++        "before": "13410680",
++        "requiredCash": "4178560",
++        "netDebit": "2044280",
++        "status": "build_passed"
++      },
++      {
++        "transaction": 7,
++        "kind": "swap",
++        "before": "11366400",
++        "requiredCash": "4178560",
++        "netDebit": "2044280",
++        "status": "build_passed"
++      },
++      {
++        "transaction": 8,
++        "kind": "swap",
++        "before": "9322120",
++        "requiredCash": "4178560",
++        "netDebit": "2044280",
++        "status": "build_passed"
++      },
++      {
++        "transaction": 9,
++        "kind": "swap",
++        "before": "7277840",
++        "requiredCash": "4178560",
++        "netDebit": "2044280",
++        "status": "build_passed"
++      },
++      {
++        "transaction": 10,
++        "kind": "swap",
++        "before": "5233560",
++        "requiredCash": "4178560",
++        "netDebit": "2044280",
++        "status": "build_passed"
++      },
++      {
++        "transaction": 11,
++        "kind": "swap",
++        "before": "3189280",
++        "requiredCash": "4178560",
++        "shortfall": "989280",
++        "status": "build_rejected",
++        "reason": "swap rent/fee allowance insufficient"
++      }
++    ]
++  },
++  "oldMax": {
++    "forecast": "23632080",
++    "actualFee": "100000",
++    "completed": 10,
++    "remaining": "2239280",
++    "rows": [
++      {
++        "transaction": 1,
++        "kind": "buyback",
++        "before": "23632080",
++        "requiredCash": "4178560",
++        "netDebit": "2139280",
++        "status": "build_passed"
++      },
++      {
++        "transaction": 2,
++        "kind": "swap",
++        "before": "21492800",
++        "requiredCash": "4178560",
++        "netDebit": "2139280",
++        "status": "build_passed"
++      },
++      {
++        "transaction": 3,
++        "kind": "swap",
++        "before": "19353520",
++        "requiredCash": "4178560",
++        "netDebit": "2139280",
++        "status": "build_passed"
++      },
++      {
++        "transaction": 4,
++        "kind": "swap",
++        "before": "17214240",
++        "requiredCash": "4178560",
++        "netDebit": "2139280",
++        "status": "build_passed"
++      },
++      {
++        "transaction": 5,
++        "kind": "swap",
++        "before": "15074960",
++        "requiredCash": "4178560",
++        "netDebit": "2139280",
++        "status": "build_passed"
++      },
++      {
++        "transaction": 6,
++        "kind": "swap",
++        "before": "12935680",
++        "requiredCash": "4178560",
++        "netDebit": "2139280",
++        "status": "build_passed"
++      },
++      {
++        "transaction": 7,
++        "kind": "swap",
++        "before": "10796400",
++        "requiredCash": "4178560",
++        "netDebit": "2139280",
++        "status": "build_passed"
++      },
++      {
++        "transaction": 8,
++        "kind": "swap",
++        "before": "8657120",
++        "requiredCash": "4178560",
++        "netDebit": "2139280",
++        "status": "build_passed"
++      },
++      {
++        "transaction": 9,
++        "kind": "swap",
++        "before": "6517840",
++        "requiredCash": "4178560",
++        "netDebit": "2139280",
++        "status": "build_passed"
++      },
++      {
++        "transaction": 10,
++        "kind": "swap",
++        "before": "4378560",
++        "requiredCash": "4178560",
++        "netDebit": "2139280",
++        "status": "build_passed"
++      },
++      {
++        "transaction": 11,
++        "kind": "swap",
++        "before": "2239280",
++        "requiredCash": "4178560",
++        "shortfall": "1939280",
++        "status": "build_rejected",
++        "reason": "swap rent/fee allowance insufficient"
++      }
++    ]
++  },
++  "newLow": {
++    "forecast": "25671360",
++    "actualFee": "5000",
++    "completed": 11,
++    "burnAllowancePassed": true,
++    "afterBurn": "3179280",
++    "rows": [
++      {
++        "transaction": 1,
++        "kind": "buyback",
++        "before": "25671360",
++        "requiredCash": "4178560",
++        "netDebit": "2044280",
++        "status": "build_passed"
++      },
++      {
++        "transaction": 2,
++        "kind": "swap",
++        "before": "23627080",
++        "requiredCash": "4178560",
++        "netDebit": "2044280",
++        "status": "build_passed"
++      },
++      {
++        "transaction": 3,
++        "kind": "swap",
++        "before": "21582800",
++        "requiredCash": "4178560",
++        "netDebit": "2044280",
++        "status": "build_passed"
++      },
++      {
++        "transaction": 4,
++        "kind": "swap",
++        "before": "19538520",
++        "requiredCash": "4178560",
++        "netDebit": "2044280",
++        "status": "build_passed"
++      },
++      {
++        "transaction": 5,
++        "kind": "swap",
++        "before": "17494240",
++        "requiredCash": "4178560",
++        "netDebit": "2044280",
++        "status": "build_passed"
++      },
++      {
++        "transaction": 6,
++        "kind": "swap",
++        "before": "15449960",
++        "requiredCash": "4178560",
++        "netDebit": "2044280",
++        "status": "build_passed"
++      },
++      {
++        "transaction": 7,
++        "kind": "swap",
++        "before": "13405680",
++        "requiredCash": "4178560",
++        "netDebit": "2044280",
++        "status": "build_passed"
++      },
++      {
++        "transaction": 8,
++        "kind": "swap",
++        "before": "11361400",
++        "requiredCash": "4178560",
++        "netDebit": "2044280",
++        "status": "build_passed"
++      },
++      {
++        "transaction": 9,
++        "kind": "swap",
++        "before": "9317120",
++        "requiredCash": "4178560",
++        "netDebit": "2044280",
++        "status": "build_passed"
++      },
++      {
++        "transaction": 10,
++        "kind": "swap",
++        "before": "7272840",
++        "requiredCash": "4178560",
++        "netDebit": "2044280",
++        "status": "build_passed"
++      },
++      {
++        "transaction": 11,
++        "kind": "swap",
++        "before": "5228560",
++        "requiredCash": "4178560",
++        "netDebit": "2044280",
++        "status": "build_passed"
++      }
++    ]
++  },
++  "newMax": {
++    "forecast": "25671360",
++    "actualFee": "100000",
++    "completed": 11,
++    "burnAllowancePassed": true,
++    "afterBurn": "2039280",
++    "rows": [
++      {
++        "transaction": 1,
++        "kind": "buyback",
++        "before": "25671360",
++        "requiredCash": "4178560",
++        "netDebit": "2139280",
++        "status": "build_passed"
++      },
++      {
++        "transaction": 2,
++        "kind": "swap",
++        "before": "23532080",
++        "requiredCash": "4178560",
++        "netDebit": "2139280",
++        "status": "build_passed"
++      },
++      {
++        "transaction": 3,
++        "kind": "swap",
++        "before": "21392800",
++        "requiredCash": "4178560",
++        "netDebit": "2139280",
++        "status": "build_passed"
++      },
++      {
++        "transaction": 4,
++        "kind": "swap",
++        "before": "19253520",
++        "requiredCash": "4178560",
++        "netDebit": "2139280",
++        "status": "build_passed"
++      },
++      {
++        "transaction": 5,
++        "kind": "swap",
++        "before": "17114240",
++        "requiredCash": "4178560",
++        "netDebit": "2139280",
++        "status": "build_passed"
++      },
++      {
++        "transaction": 6,
++        "kind": "swap",
++        "before": "14974960",
++        "requiredCash": "4178560",
++        "netDebit": "2139280",
++        "status": "build_passed"
++      },
++      {
++        "transaction": 7,
++        "kind": "swap",
++        "before": "12835680",
++        "requiredCash": "4178560",
++        "netDebit": "2139280",
++        "status": "build_passed"
++      },
++      {
++        "transaction": 8,
++        "kind": "swap",
++        "before": "10696400",
++        "requiredCash": "4178560",
++        "netDebit": "2139280",
++        "status": "build_passed"
++      },
++      {
++        "transaction": 9,
++        "kind": "swap",
++        "before": "8557120",
++        "requiredCash": "4178560",
++        "netDebit": "2139280",
++        "status": "build_passed"
++      },
++      {
++        "transaction": 10,
++        "kind": "swap",
++        "before": "6417840",
++        "requiredCash": "4178560",
++        "netDebit": "2139280",
++        "status": "build_passed"
++      },
++      {
++        "transaction": 11,
++        "kind": "swap",
++        "before": "4278560",
++        "requiredCash": "4178560",
++        "netDebit": "2139280",
++        "status": "build_passed"
++      }
++    ]
++  },
++  "unknownDiscriminators": [
++    {
++      "hex": "d19853937cfed8e9",
++      "decoded": null
++    },
++    {
++      "hex": "bb64facc31c4af14",
++      "decoded": null
++    }
++  ],
++  "payoutCensus": {
++    "rows": 100,
++    "fullWindowRejectedByStrictSchema": true,
++    "keepRows": [
++      {
++        "kind": "claim",
++        "amount": 0,
++        "claimed": 0.525022996,
++        "quoteMint": "So11111111111111111111111111111111111111112"
++      },
++      {
++        "kind": "claim",
++        "amount": 0,
++        "claimed": 0.00276656,
++        "quoteMint": "XsCPL9dNWBMvFtTmwcCA5v3xWPSMEBCszbQdiLLq6aN"
++      }
++    ],
++    "keepPayoutWSOL": 0,
++    "missingSignature": [
++      "perp",
++      "sweep"
++    ]
++  }
++}
+diff --git a/docs/evidence/r2/supplied-audit.md b/docs/evidence/r2/supplied-audit.md
+new file mode 100644
+index 0000000..763129c
+--- /dev/null
++++ b/docs/evidence/r2/supplied-audit.md
+@@ -0,0 +1,184 @@
++EMBER10 AUDIT ROUND 2 - 2026-09-23 - findings for the orchestrating/building session
++Repo github.com/missfitchief/ember10 @ 4f9fba2 (HEAD, 54 commits, all "Codex <codex@local>"). Live https://ember5-pilot.vercel.app
++serves 1f67d0d; the two later commits touch docs and scripts only (verified by diff and by byte-comparing the deployed bundle).
++
++VERDICT IN ONE PARAGRAPH
++The public site works and is exactly this source: every deployed asset is byte-identical to a clean build of HEAD, 242/242 tests pass, and
++every route was driven in a browser at desktop, 375 px and 320 px with zero console errors. Ten of the fourteen public-path fixes are
++confirmed, six by execution; the residual that matters is that an expanded search list still collapses on the 45 s poll (P-1).
++The financial half is not runnable, for three independent reasons: by design the only built-in evidence provider marks every candidate
++permanently unverifiable (F-1); the swap validator rejects real Jupiter build responses fetched today with the adapter's own parameters (F-2,
++executed); and the round-1 S1-06 fix is one WSOL rent short, so a fresh treasury's first epoch strands its tenth purchase (F-3). No theft or
++mis-credit path was found by any channel, but several one-transaction conditions wedge the pipeline with no operator recovery route (F-4, F-6).
++Recommendation: keep the site, fix P-1, do not schedule a funded pilot. Flip tests for the money verdict: a keyed Jupiter build that decodes
++as a direct route, and a real Keep-it pool payout sample that matches the attribution predicate.
++
++0. PROVENANCE - WHAT WAS EXECUTED
++- Clean clone, npm ci, npm test: 242/242 in 18 files (37.5 s, embedded PostgreSQL 18). tsc + vite build OK. npm run demo OK.
++- Deployed assets/index-CO5ypo9H.js, index-EjoWDp4l.css, both woff2, favicon, share png/svg, index.html: sha256-identical to the local build.
++- Live API: all 7 public routes, HEAD, POST->405, /operator/*->404, limit/offset/q/view/cursor validation, __route override, 20 crafted logo sources.
++- Browser (built-in): overview, the ten, 4x "Show more" (140 rows), 45 s poll, "Refresh list", skip link, 101-char search, no-match search,
++  asset dialog, mobile 375/320 px (no overflow, 3 columns hidden, menu + Escape + focus return), wallet valid/invalid, rewards, transparency.
++- Local demo API over real HTTP: POST /operator/pause, /%6Fperator/pause, GET /%6fperator/funding, absolute-form target -> all 401;
++  right token -> 200; every demo ledger route carries mode:"demo", testOnly:true; CSV export keeps content-disposition.
++  pg_terminate_backend on the API's backend -> API kept serving 200, logged "Database idle connection lost" with code 57P01, no credentials.
++- Prelaunch worker 3 min against the live catalogue: ONE operational_observations row (4.94 MB) replaced in place each cycle; documents table 0 rows.
++- Live Ember catalogue: 8,002,582 B, 3,086 rows, 3,085 unique mints; launches/day last 14 d: 18-291 normally, 1,154 on 09-11.
++- Live Jupiter v2 /build (unauthenticated, exact adapter params) x2, run through the repo's own validateSwapInstruction (see F-2).
++- docs/evidence/ember-payouts.json census against the attribution predicate (see F-5). npm audit --omit=dev: 5 high, all bigint-buffer chain.
++- Channels: two isolated Codex cold packets, both VERIFIED gpt-6-astra/xhigh (public session [review session ID omitted], 12 min;
++  ledger [review session ID omitted], 16 min); three Claude finder agents (public / ledger / integrations); every claim below
++  re-read by the orchestrating auditor at the cited lines. Caveat: all commits are by Codex, so the Codex channel is same-vendor as the builder.
++  Tags: EXECUTED (reproduced), MEASURED (numbers from the live system, fixture or the code's own constants), CODE (verified by reading),
++  PLAUSIBLE (mechanism certain, trigger not reproduced).
++
++1. VERDICT
++- Public site: WORKS and matches source. No S1. One S2 residual (P-1). Safe to keep publishing.
++- Financial half: NOT RUNNABLE on three independent levels (F-1 design, F-2 live provider, F-3 forecast) and not safe to fund: no theft or
++  mis-credit path found by any channel, but several one-transaction conditions wedge it with no operator recovery route (F-4, F-6).
++
++2. INHERITED FINDINGS - STATUS
++S1-01 FIXED (EXECUTED)      server.ts:27 checks req.routeOptions.url; audit-s1.test.ts:18 pins encoded + absolute-form with a real token.
++S1-02 FIXED (CODE + test)   solana.ts:27-28 string commitment, supply slot >= census slot; test asserts the JSON-RPC params shape.
++S1-03 FIXED for runtime     http.ts:4 64 MB, used by market-data.ts:101,103 and ember.ts:10; failures logged market-data.ts:127.
++                            Residual: scripts/evidence.mjs:13 still 12 MB; docs/DATA-SCHEMA-MAPPING.md:47 and INTEGRATIONS.md:8 still say 12 MB.
++                            NEW ceiling is the 20,000-row bound at market-data.ts:21 (P-2).
++S1-04 FIXED (CODE + test)   ingestion.ts:9 skipZero; :19,:27,:41,:44 advance per signature incl. errored txs.
++S1-05 FIXED (EXECUTED)      store.ts:6 pool error listener; compose.yaml restart on api and worker.
++S1-06 REGRESSED ELSEWHERE   holder-count scaling removed; the replacement is one rent short - F-3.
++S2-01 PARTIAL (EXECUTED)    default ranking: 140 rows survive the poll with a notice, "Refresh list" resets to 20. Searched/filtered
++                            expansions still collapse silently (P-1). Cross-instance merge still keyed on fetchedAt+evidenceHash (view-model.ts:95).
++S2-02 FIXED                 src.tsx:24-31 single-flight + 15 s abort + unmount abort.
++S2-03 FIXED (EXECUTED)      server.ts:21-24 adds mode/testOnly to every /api object; UI refuses demo records (documented policy).
++S2-04 FIXED (CODE)          hosted.ts:56-70 proxies overview behind the same production check; not executable here (needs an HTTPS backend).
++S2-05 FIXED (CODE)          records.tsx:30-52: epochs error/retry, status:'unavailable' distinguished, nextCursor paging, Transparency retry.
++S2-06 PARTIAL (EXECUTED)    shared 25 s deadline, CSV header forwarded; 4 MB cap remains (hosted.ts:33); any failure still reads "not a production ledger".
++S2-07 FIXED (EXECUTED)      skip link leaves the hash untouched, focuses #main.   S2-08 FIXED (EXECUTED) specific 400 message + maxLength 100.
++S2-09 FIXED                 market.tsx:26 remounts LogoImage per mint+src.        S2-10 FIXED (EXECUTED) 999,950 -> $1.0M.
++S2-11 PARTIAL               hosted.ts:76 exposes universePage/universeComplete, but universe is still only the first 100 rows and
++                            universeComplete reads true during a catalogue outage (empty projection, hasMore false).
++L-01 FIXED  runner.ts:16-19 backoff, :106-111 fair selection.        L-02 OPEN - blast radius larger than recorded, F-6.
++L-03 FIXED (EXECUTED) store.ts:11 upsert per type, migration 008; status returns a projection. Note: a 4.9 MB row rewritten every 45 s and
++                      read whole by queries.ts:7 on every status call (S3).
++L-04 FIXED  store.ts:27 dedupe; server.ts:42-47 resolve route without resume.    L-05 FIXED  developer.ts; scheduleOperations is now dead in the
++                      worker but still callable at engine.ts:165 (S3).           L-06 FIXED  solana.ts:47-75 rent from the original message + pre/post balances.
++L-07 PARTIAL exponent form fixed (http.ts:18); quarantine still permanent; payouts schema still strict - F-5.
++L-08 FIXED  approval.ts:5, selection.ts:60.                          L-09 PARTIAL needs_review re-inspected, basket rechecked, simulate before
++                      sign, pause at the signer boundary; caps still creation-only - F-10.
++L-10 FIXED  commit.ts:9-15 snapshot and price after revalidate.      L-11 PARTIAL HMAC identity exists; nginx still one bucket for everyone.
++L-12 OPEN   runner.ts:55 compares i.expected with itself (jupiter.ts:60 mutates it; solana.ts:138 returns it). Blast radius: nothing compares
++            outAmount to an independent price, so a bad build response is bounded only by Jupiter's own priceImpactPct (S2, needs provider compromise).
++L-13 PARTIAL in-flight native bound + CSV control chars fixed; operator.ts:9 still cannot publish a policy after v2; TRUNCATE/role/Windows shutdown open.
++D-01 FIXED (242/18 matches VERIFICATION.md).   D-02 PARTIAL asset hashes now compared (audit-public.mjs:15-16); revision is still an env echo
++     (overview.ts:15, VERCEL.md:24 still tells the deployer to type it); the server function is not comparable.
++D-03 PARTIAL new real oracles exist, but engine.test.ts:55 still "rejects forged outcome evidence" with none; core.test.ts:13, market-data.test.ts:28,56,
++     ui-view-model.test.ts:220-221 still tautological.   D-04 FIXED (0 occurrences).   D-05 PARTIAL 5 high, all bigint-buffer (MEASURED).
++D-06 FIXED (same-origin logos; nginx img-src 'self' now satisfied).   D-07 PARTIAL.
++
++3. NEW FINDINGS - MONEY PATH
++F-1 S1 CODE (documented)  provenance.ts:99-110,120  With the only built-in provider (jupiter-tokens-v2) every candidate receives the three
++    permanent blockers and returns before chain verification; `complete` requires custom metrics, so status is 'warming' and no basket or epoch
++    can ever exist. The custom contract (validateMetrics :56-72) is all-or-nothing: every one of ~3,085 mints, fresh <= 180 s, exact
++    rankValue = supply x price, complete 24 h volume windows; one stale mint rejects the whole universe. Not a code bug: the product blocker is an
++    external reviewed service that does not exist. Nothing else on this list matters to the owner until that decision is made.
++F-2 S1 EXECUTED  jupiter.ts:14,19-25  Live https://api.jup.ag/swap/v2/build with the exact query the adapter sends
++    (onlyDirectRoutes=true, instructionVersion=V1, useSharedAccounts=false, platformFeeBps=0; unauthenticated):
++      SOL->USDC:                 instruction discriminator d19853937cfed8e9, 47 accounts, routePlan length 2
++      WSOL->5dvXTZ...4QEC6 (#1 Ember mint, 0.0784 SOL): discriminator bb64facc31c4af14, 50 accounts, routePlan 2 (Meteora DLMM x2)
++    Neither discriminator exists in the installed @jup-ag/instruction-parser 6.0.28 (route, sharedAccountsRoute, exactOutRoute, ...).
++    buildSchema parsed (priceImpactPct is present), then validateSwapInstruction threw 'only decoded legacy exact-input direct route supported'.
++    Consequence: safeJupiterBuild never succeeds and provenance.ts:173-177 excludes every candidate ('On-chain or route evidence unavailable').
++    Fail-closed, no loss. The response also carried computeBudgetInstructions with SetComputeUnitPrice 2,636 microlamports, which jupiter.ts:57
++    discards (see F-4). Caveat: unauthenticated; docs/INTEGRATIONS.md:17 says the keyed build was never tested. FLIP TEST: one keyed build that
++    returns a decodable direct `route`. Fix: re-derive the adapter against the current API (instruction variant, routing params, priority fee)
++    and add a test with a real captured response. No test can fail on this today.
++F-3 S1 MEASURED (arithmetic on the repo's constants; Codex R1 and both Claude agents agree)  forecast.ts:5 + jupiter.ts:51-52 +
++    execution-cost.ts:19 + runner.ts:34-36 + engine.ts:105
++    forecast = 12 x 100,000 + 11 x 2,039,280 = 23,632,080 funds eleven net rents; each swap build also demands the WSOL float:
++    requiredRent + maxFee = 2 x 2,039,280 + 100,000 = 4,178,560 of maxTotalCost (= the live cost:<epoch> balance).
++    Tick order (runner.ts:106; equal created_at; id 'buyback:' < 'purchase:'): buyback, then ten purchases by mint, burn last.
++      balance before the 10th purchase: 3,189,280 at a 5,000 fee (2,239,280 at the cap)  ->  FAIL, shortfall 989,280
++    Trigger: all eleven outputs need a new treasury ATA = every fresh treasury's first epoch (later epochs pass because the ourMint ATA exists).
++    Effect: intent waiting_for_route, retried every 300 s forever (each retry buys a Jupiter build), epoch 'partial', 8 % of net plus
++    ~3.2 M lamports stranded, returnUnusedCosts blocked (engine.ts:160), reconcile throws (F-7). Only an out-of-band ATA creation unblocks it.
++    audit-s1.test.ts:79 pins 23,632,080 = the formula's own output. Fix: forecast (size+2) x rent (25,671,360) or exclude the returning float
++    from the allowance check; add a test walking eleven all-new-ATA transactions through the real adapter with the real forecast.
++F-4 S1 CODE  runner.ts:79-84,101-103 + solana.ts:143,170-172  A transaction that expires (no priority fee, maxRetries:0) becomes needs_review,
++    which blocks all signing and new epochs (main.ts:56) until someone edits the database by hand: nothing writes 'expired_verified'
++    (only read at runner.ts:24, recovery.ts:16, 002_invariants.sql:10), recoverIntent only re-inspects, and no operator route retires an
++    intent/attempt or releases its reservation. The same dead end follows any apply()/inspect() throw (F-6b). Fix: an authenticated retire route
++    (verified absent after lastValidHeight on both providers -> expired_verified + reservation release, audited) and forward Jupiter's CU price.
++F-5 S1 PLAUSIBLE (mechanism CODE, MEASURED on captured data)  ingestion.ts:22 + engine.ts:26-30  Attribution requires kind='payout' &&
++    mode='keep' && quoteMint=WSOL && exact amount. docs/evidence/ember-payouts.json (100 rows): 0 matches; the only two mode 'keep' rows are
++    kind 'claim' with amount 0 (claimed 0.525); every 'payout' row is mode 'holders'. If a Keep-it pool's fees publish in that shape, every fee
++    is classified 'review' -> quarantine, permanently (L-07b: no re-attribution, ON CONFLICT DO NOTHING). 2/100 rows lack `signature`
++    (kinds perp, sweep) -> ember.ts:15 throws -> ingestTreasury throws every loop (L-07c). Unverifiable without a real keep pool.
++    Fix: capture a real keep-pool payout window before any funding decision; tolerant schema; re-check quarantined receipts on later passes.
++F-6 S1 CODE (L-02 blast radius; Codex R3 + both agents)  jupiter.ts:44 + main.ts:54-66  (a) any non-null account at the treasury's WSOL ATA
++    address, e.g. a 0.00089 SOL system transfer by anyone, makes every swap/buyback defer forever; 'waiting_for_route' is neither in-flight
++    nor paused, so a new epoch still commits every hour and moves min(revenue, MAX_ROUND) into unexecutable budgets each time; no cancel route.
++    (b) residual lamports in that ATA at landing (griefer, or Ember paying WSOL): the close returns them, input < amount, engine.ts:93 throws,
++    incident + rethrow every tick, tokens bought on chain but never credited. Fix: accept a zero-balance existing WSOL ATA, derive input from
++    the WSOL account's own pre/post balance, gate new epochs on "no unexecutable intents".
++F-7 S2 CODE  main.ts:78-79 + engine.ts:70  plan() registers all ten mints in `assets` before purchase; the operator-queued reconcile requires
++    every registered ATA to exist and throws otherwise, so it never completes during a partial epoch (permanent with F-3). ourMint is never
++    registered, so burn-units are never reconciled (S3). Fix: reconcile mints with a finalized purchase; register ourMint.
++F-8 S2 CODE  ingestion.ts:34-43 + engine.ts:183-192  A token account with owner=treasury (anyone can create one for ~0.002 SOL) receiving dust
++    is booked as a deposit, but reconcile compares against the canonical ATA only -> 'deficit' incident + pause on every reconcile. A fee
++    landing between ingestion (main.ts:52) and the balance read (:79) -> 'unclassified_surplus' incident + pause (PLAUSIBLE).
++    Fix: reconcile all treasury-owned accounts per mint; treat a surplus that the next ingestion explains as transient.
++F-9 S2 CODE  main.ts:31,49 + ingestion.ts:31 + ember.ts:8-10  In live mode fundingRoute is forced (ttl 0): the 8 MB /markets body is
++    downloaded every 5 s loop, plus twice per intent. docs/INTEGRATIONS.md:35 promises a 60 s cache (db041a0 had one); Ember asks <= 1 req/s;
++    a 429 throws into the main-loop catch and skips the rest of that loop. Fix: cache the funding-route read; force only at the signer boundary.
++F-10 S2 CODE (Codex R2)  engine.ts:51,62 + runner.ts:27-40  MAX_ROUND/MAX_DAY govern epoch creation only; a lowered cap never stops planned
++    intents, and epochs deferred from several days execute together. Acknowledged L-09 residual. Fix: re-check amounts and day totals in authorize.
++F-11 S2 CODE (Codex R4)  config.ts:17,20 + developer.ts:147,195 + runner.ts:74  Default DEV_PAYOUT_MAX_COST_LAMPORTS (100,000) equals
++    MAX_TX_FEE (100,000): one finalized failure charging 5,000 leaves 95,000 < fee cap, the day's intent can never sign again and blocks every
++    later daily payout (developer.ts:195); no replenish route. Fix: default allowance >= 3x fee cap; retire route (F-4).
++F-12 S2 CODE (timing PLAUSIBLE; Codex R7 + both agents)  main.ts:51 vs :33 + automatic-selection.ts:27  The loop reads the selection with
++    budget prospective x 8 % and each intent with b.leg; the strings differ, so the 45 s cache misses and a full provider walk runs every 5 s
++    during execution; with a chain-verifying provider the signer-boundary re-read outlives the 15 s quote (solana.ts:103) -> 'quote stale at
++    signing' on every attempt. Fix: cache by catalogue hash; take the quote after the authorization reads.
++F-13 S2 CODE (Codex R8)  runner.ts:31-40,88-92 vs solana.ts:104,143  Pause/approval are checked, the lock is released, then sign/send;
++    a pause committed in that gap is not seen. Bounded to one already-authorized transaction.
++F-14 S3 cluster  4.9 MB observation rewritten every 45 s and read whole by status (queries.ts:7); zero-transfer spam appends an immutable
++    documents row each (ingestion.ts:9); provider/RPC errors collapse to one generic string (provenance.ts:90-91,117; automatic-selection.ts:37-41);
++    http.ts:9 Number(retry-after) on an HTTP date -> NaN -> immediate retries; ingestion runs outside the lease fence; /operator/capital accepts
++    source == feeSender; operator.ts:9 vs policySchema 1|2; TRUNCATE/role/Windows shutdown as acknowledged.
++
++4. NEW FINDINGS - PUBLIC PATH
++P-1 S2 EXECUTED  market.tsx:67-78  Search "a" (2,791 matches), expand to 140 rows, wait for the 45 s poll: 100 rows, no notice. The retention
++    branch (:62-64) covers only the default ranking; every other key refetches offset 0 when `data` changes. Fix: retain for every key, or stop
++    refetching on `data` when query/view are unchanged.
++P-2 S3  market-data.ts:21  The 20,000-row schema bound trips before the 64 MB byte cap (about 52 MB at 2.6 KB/row) and fails to 'unavailable'
++    with only a console.error. Live 3,086 rows: about 229 days at 74/day, 31 days at 540/day, 15 days at the 09-11 rate (1,154/day).
++    Fix: raise and alert; keep scripts/evidence.mjs:13 in step.
++P-3 S3  shared/token-image.ts:13-21 + token-image.ts:32-34,88  The proxy serves any CID on the allow-listed hosts (embercurve /img/, ipfs.io,
++    pinata, arweave) re-encoded as webp and cached a year at the CDN; CORP same-origin and the CSP sandbox limit it to direct navigation;
++    16 slow distinct CIDs can 503 legitimate logos on an instance. Fix: accept only CIDs present in the last-good catalogue.
++P-4 S3  overview.ts:20 vs view-model.ts:89  Server and client concatenate mint/name/symbol in different orders; a multi-word query can show
++    "1 search matches" beside "No matching token".
++P-5 S3 cluster  src.tsx:27 (15 s) vs market-data.ts:99-105 (8 s + 1 s + 8 s): a cold first load can fail in the browser 1-2 s before the
++    server's retry answers; records.tsx:25 allSettled has no timeout, one stalled request hides the other two; hosted.ts:76 universeComplete:true
++    during an outage; homepage.tsx:32,46 aria-label on div; src.tsx:49 aria-controls to an absent element; stale 12 MB doc lines;
++    VERCEL.md:24 still tells the deployer to type the revision.
++
++5. TESTS
++The suite is green and three times larger, but the round-1 regression tests pin outputs rather than sufficiency: audit-s1.test.ts:79 asserts
++the forecast's own number; execution-regressions.test.ts:232 funds a single intent with 10,000,000; DemoChain returns maxRent '0'; the real
++chainVerifier and the real Jupiter response shape have zero coverage; engine.test.ts:55 still has no forged evidence. No existing test can
++fail on F-2 through F-6, F-9 or P-1.
++
++6. ORDER
++Public showcase: P-1, then P-2's alert. Stop there unless the money path is pursued.
++Money path, only if pursued: 1) F-2 keyed Jupiter build acceptance test (decides whether the adapter is rewritten). 2) F-3 forecast + an
++eleven-transaction test. 3) F-4 retire route + CU price. 4) F-5 real keep-pool payouts capture, tolerant schema, quarantine release.
++5) F-6 WSOL handling + epoch gate. 6) F-9 cache. 7) F-7/F-8 reconcile scope. 8) F-10/F-11/F-12/F-13. 9) D-03 oracles.
++F-1 is a service to build, not a bug; it gates everything above.
++
++7. EXTERNAL EVIDENCE LOCATION
++The supplied report lists scratch-clone logs, review packets and raw Jupiter build captures on the auditor's separate machine. Those files were not attached and have not been independently accessed by the builder. Local paths and session identifiers are omitted from this public copy; findings and reproduction details above are preserved.
++
++NOTES
++- Nothing touched the deployment or the repository; all execution was on a scratch clone. Scratch database, demo API and worker are stopped.
++- Same-vendor caveat: the builder is Codex; Codex still found F-3 independently and F-10/F-11/F-13 alone; F-2 and P-1 are executed, not read.
+diff --git a/packages/integrations/http.ts b/packages/integrations/http.ts
+index 3408e2c..a053378 100644
+--- a/packages/integrations/http.ts
++++ b/packages/integrations/http.ts
+@@ -1,7 +1,8 @@
+ import { ensure } from '../core/model.js';
+ import Decimal from 'decimal.js';
+-// Matches the bounded 20,000-row catalogue contract, with room for current row sizes.
+-export const CATALOGUE_MAX_BYTES=64_000_000;
++import catalogueLimits from '../shared/catalogue-limits.json' with { type: 'json' };
++export const CATALOGUE_MAX_BYTES=catalogueLimits.maxBytes;
++export const CATALOGUE_MAX_ROWS=catalogueLimits.maxRows;
+ export async function boundedFetch(url:string,init:RequestInit={},maxBytes=12_000_000):Promise<unknown>{
+  const parsed=new URL(url);ensure(parsed.protocol==='https:'||(['127.0.0.1','localhost'].includes(parsed.hostname)&&parsed.protocol==='http:'),'unsafe upstream URL');
+  for(let n=0;n<3;n++){
+diff --git a/packages/integrations/market-data.ts b/packages/integrations/market-data.ts
+index 8287003..b2e2ead 100644
+--- a/packages/integrations/market-data.ts
++++ b/packages/integrations/market-data.ts
+@@ -2,7 +2,8 @@ import { createHash } from 'node:crypto';
+ import Decimal from 'decimal.js';
+ import bs58 from 'bs58';
+ import { z } from 'zod';
+-import { CATALOGUE_MAX_BYTES } from './http.js';
++import { CATALOGUE_MAX_BYTES, CATALOGUE_MAX_ROWS } from './http.js';
++import { catalogueCapacity } from '../shared/catalogue-capacity.js';
+ import type { EligibilityCheck, PublicMarket, PublicOverview } from '../shared/public.js';
+ 
+ export const MARKET_SOURCE = 'https://embercurve.fun/api/solana/markets';
+@@ -18,7 +19,7 @@ const rowSchema = z.object({
+   holders: z.number().finite().nonnegative().optional(), holdersCapped: z.boolean().optional(),
+   suspect: z.boolean().optional(), paused: z.boolean().optional(), chain: z.string().optional(), engine: z.string().optional()
+ }).passthrough();
+-export const publicCatalogueSchema = z.object({ markets: z.array(z.unknown()).max(20_000), warming: z.boolean(), economics: z.unknown(), totals: z.unknown() }).passthrough();
++export const publicCatalogueSchema = z.object({ markets: z.array(z.unknown()).max(CATALOGUE_MAX_ROWS), warming: z.boolean(), economics: z.unknown(), totals: z.unknown() }).passthrough();
+ const configSchema = z.object({ count: z.number().int().nonnegative(), updatedAt: z.number().finite(), configs: z.array(z.object({ config: mint }).passthrough()) }).passthrough();
+ 
+ /** Preserve the source's decimal value; never coerce absent/empty/formatted strings to zero. */
+@@ -101,7 +102,7 @@ async function fetchJson(url: string, fetcher: typeof fetch) {
+       if (Number(response.headers.get('content-length') ?? 0) > CATALOGUE_MAX_BYTES) { await response.body.cancel(); throw new Error('source_size'); }
+       const reader = response.body.getReader(), chunks: Uint8Array[] = []; let bytes = 0;
+       while (true) { const result = await reader.read(); if (result.done) break; bytes += result.value.length; if (bytes > CATALOGUE_MAX_BYTES) { await reader.cancel(); throw new Error('source_size'); } chunks.push(result.value); }
+-      return JSON.parse(Buffer.concat(chunks).toString('utf8')) as unknown;
++      return { value: JSON.parse(Buffer.concat(chunks).toString('utf8')) as unknown, bytes };
+     } catch (error) { if (attempt === 1) throw error; await new Promise(r => setTimeout(r, 1000)); }
+   }
+   throw new Error('source_unavailable');
+@@ -115,16 +116,25 @@ export class MarketDataService {
+   private failures = 0;
+   readonly refreshSeconds: number;
+   constructor(private fetcher: typeof fetch = (...args) => fetch(...args), private clock = Date.now, refreshSeconds = 45) { this.refreshSeconds = Math.max(30, Math.min(60, refreshSeconds)); }
++  /** Last validated observation, including when a refresh is failing. Never starts a fetch. */
++  snapshot(): Readonly<Observation> | null { return this.lastGood; }
+   async read(ownMint: string | null = null) {
+     const now = this.clock();
+     const delay = Math.min(300_000,this.refreshSeconds * 1000 * 2 ** Math.min(this.failures,3));
+     if (!this.pending && now - this.lastAttempt >= delay) {
+       this.lastAttempt = now;
+       this.pending = (async () => { try {
+-        const [raw, configs] = await Promise.all([fetchJson(MARKET_SOURCE, this.fetcher), fetchJson(CONFIG_SOURCE, this.fetcher).catch(() => null)]);
++        const [response, configs] = await Promise.all([fetchJson(MARKET_SOURCE, this.fetcher), fetchJson(CONFIG_SOURCE, this.fetcher).catch(() => null)]);
++        const raw = response.value;
++        const rows = typeof raw === 'object' && raw !== null && 'markets' in raw && Array.isArray(raw.markets) ? raw.markets.length : 0;
++        const capacity = catalogueCapacity(response.bytes, rows);
++        if (capacity.nearLimit) console.warn('Ember catalogue nearing capacity', { code: 'catalogue_capacity', ...capacity });
++        if (rows > CATALOGUE_MAX_ROWS) throw new Error('source_row_limit');
+         const fetchedAt = new Date(this.clock()).toISOString();
+-        this.lastGood = { normalized: normalizeCatalogue(raw, configs, ownMint, fetchedAt), fetchedAt }; this.failed = false; this.failures = 0;
+-      } catch (error) { this.failed = true; this.failures++; console.error('Ember catalogue refresh failed',{code:error instanceof Error&&error.message==='source_size'?'source_size':'source_unavailable_or_invalid',attempt:this.failures,maxBytes:CATALOGUE_MAX_BYTES}); } finally { this.pending = null; } })();
++        const normalized = normalizeCatalogue(raw, configs?.value, ownMint, fetchedAt);
++        if (capacity.nearLimit) normalized.coverage.note += ' Catalogue approaching a configured resource limit; operator review required.';
++        this.lastGood = { normalized, fetchedAt }; this.failed = false; this.failures = 0;
++      } catch (error) { this.failed = true; this.failures++; console.error('Ember catalogue refresh failed',{code:error instanceof Error&&['source_size','source_row_limit'].includes(error.message)?error.message:'source_unavailable_or_invalid',attempt:this.failures,maxBytes:CATALOGUE_MAX_BYTES,maxRows:CATALOGUE_MAX_ROWS}); } finally { this.pending = null; } })();
+     }
+     if (this.pending) await this.pending;
+     const observed = this.lastGood;
+diff --git a/packages/shared/catalogue-capacity.ts b/packages/shared/catalogue-capacity.ts
+new file mode 100644
+index 0000000..b908618
+--- /dev/null
++++ b/packages/shared/catalogue-capacity.ts
+@@ -0,0 +1,7 @@
++import limits from './catalogue-limits.json' with { type: 'json' };
++
++/** Warn before either bounded resource is exhausted; never relax schema validation. */
++export function catalogueCapacity(bytes: number, rows: number) {
++  return { bytes, rows, maxBytes: limits.maxBytes, maxRows: limits.maxRows,
++    nearLimit: bytes >= limits.maxBytes * limits.warningFraction || rows >= limits.maxRows * limits.warningFraction };
++}
+diff --git a/packages/shared/catalogue-limits.json b/packages/shared/catalogue-limits.json
+new file mode 100644
+index 0000000..07cd7d2
+--- /dev/null
++++ b/packages/shared/catalogue-limits.json
+@@ -0,0 +1,5 @@
++{
++  "maxBytes": 64000000,
++  "maxRows": 50000,
++  "warningFraction": 0.8
++}
+diff --git a/packages/shared/token-image.ts b/packages/shared/token-image.ts
+index d6bd2c4..55e5cf7 100644
+--- a/packages/shared/token-image.ts
++++ b/packages/shared/token-image.ts
+@@ -4,7 +4,8 @@ const cid = '(?:Qm[1-9A-HJ-NP-Za-km-z]{44}|b[a-z2-7]{20,120})';
+ const emberPath = new RegExp(`^/img/(${cid})$`);
+ const ipfsPath = new RegExp(`^/ipfs/(${cid})$`);
+ 
+-export function tokenImageSource(value: string | null): { url: string; cid: string | null } | null {
++export type TokenImageSource = { url: string; cid: string | null };
++export function tokenImageSource(value: string | null): TokenImageSource | null {
+   if (!value || value.length > 300) return null;
+   try {
+     const url = new URL(value);
+@@ -25,5 +26,7 @@ export function tokenImageSource(value: string | null): { url: string; cid: stri
+ 
+ export function tokenImageUrl(value: string | null): string | null {
+   const source = tokenImageSource(value);
+-  return source ? `/api/token-image?source=${encodeURIComponent(source.url)}` : null;
++  // Change the URL when authorization/cache policy changes, so existing browsers
++  // do not reuse the old year-long immutable proxy response.
++  return source ? `/api/token-image?source=${encodeURIComponent(source.url)}&v=2` : null;
+ }
+diff --git a/scripts/audit-public.mjs b/scripts/audit-public.mjs
+index db72b27..68cd0e0 100644
+--- a/scripts/audit-public.mjs
++++ b/scripts/audit-public.mjs
+@@ -13,8 +13,8 @@ try{
+  const status=await(await get('/api/status')).json();assert.equal(status.revision,report.revision);assert.equal(status.mode,'prelaunch');assert.equal(status.broadcastEnabled,false);assert.equal(status.workerActive,false);assert.equal(status.paused,true);report.status=status;
+  const data=await(await get('/api/overview?limit=10')).json();assert.equal(data.project.dataMode,'real');assert.equal(data.project.mint,null);assert.equal(data.selection.commitmentsAllowed,false);assert.equal(data.markets.length,10);report.observedAt=data.discovery.fetchedAt;
+  const root=new URL('../dist/web/',import.meta.url),names=await readdir(new URL('assets/',root));
+- for(const path of [...names.map(n=>'assets/'+n),'favicon.svg','ember10-share.png','ember10-share.svg']){const expected=await readFile(new URL(path,root)),actual=Buffer.from(await(await get('/'+path)).arrayBuffer());assert.equal(hash(actual),hash(expected),path);report.assets.push({path,bytes:actual.length,sha256:hash(actual)});}
+- for(const market of data.markets){const response=await get('/api/token-image?source='+encodeURIComponent(market.imageUrl)),bytes=Buffer.from(await response.arrayBuffer()),meta=await sharp(bytes).metadata();assert.equal(response.headers.get('content-type'),'image/webp');assert.equal(meta.format,'webp');assert(meta.width>0&&meta.width<=160&&meta.height>0&&meta.height<=160);report.logos.push({mint:market.mint,bytes:bytes.length,width:meta.width,height:meta.height,sha256:hash(bytes)});}
++ for(const path of ['index.html',...names.map(n=>'assets/'+n),'favicon.svg','ember10-share.png','ember10-share.svg']){const expected=await readFile(new URL(path,root)),actual=Buffer.from(await(await get('/'+path)).arrayBuffer());assert.equal(hash(actual),hash(expected),path);report.assets.push({path,bytes:actual.length,sha256:hash(actual)});}
++ for(const market of data.markets){const response=await get('/api/token-image?source='+encodeURIComponent(market.imageUrl)+'&v=2'),bytes=Buffer.from(await response.arrayBuffer()),meta=await sharp(bytes).metadata();assert.equal(response.headers.get('content-type'),'image/webp');assert.equal(meta.format,'webp');assert(meta.width>0&&meta.width<=160&&meta.height>0&&meta.height<=160);report.logos.push({mint:market.mint,bytes:bytes.length,width:meta.width,height:meta.height,sha256:hash(bytes)});}
+  report.passed=true;
+ }catch(error){report.passed=false;report.failure=String(error.stack);process.exitCode=1;}
+ await writeFile(output,JSON.stringify(report,null,2)+'\n');console.log(JSON.stringify({passed:report.passed,revision:report.revision,assets:report.assets.length,logos:report.logos.length,failure:report.failure}));
+diff --git a/scripts/audit/f3-eleven-builds.mts b/scripts/audit/f3-eleven-builds.mts
+new file mode 100644
+index 0000000..1e00be2
+--- /dev/null
++++ b/scripts/audit/f3-eleven-builds.mts
+@@ -0,0 +1,59 @@
++import assert from 'node:assert/strict';
++import {createRequire} from 'node:module';
++import {readFileSync,writeFileSync} from 'node:fs';
++import {fileURLToPath} from 'node:url';
++import {epochCostForecast} from '../../apps/worker/forecast.js';
++import {safeJupiterBuild} from '../../packages/integrations/jupiter.js';
++import {bindNativeCost} from '../../packages/core/execution-cost.js';
++import {EmberClient} from '../../packages/integrations/ember.js';
++const require=createRequire(new URL('../../package.json',import.meta.url));
++const {PublicKey,Keypair,TransactionInstruction}=require('@solana/web3.js');
++const {TOKEN_PROGRAM_ID,MintLayout,ASSOCIATED_TOKEN_PROGRAM_ID,getAssociatedTokenAddressSync}=require('@solana/spl-token');
++const {program}=require('@jup-ag/instruction-parser');
++const WSOL='So11111111111111111111111111111111111111112';
++// Deterministic fixture identities only. Keys are never used to sign.
++const payer=Keypair.fromSeed(Buffer.alloc(32,42)).publicKey;
++const maxFee=100000n,rent=2039280n,size=10;
++const current=epochCostForecast(size,maxFee,rent),withFloat=current+rent;
++const u64=(value:bigint)=>({toArrayLike:(_Type:unknown,_endian:unknown,length:number)=>{const bytes=Buffer.alloc(length);bytes.writeBigUInt64LE(value);return bytes;}});
++async function walk(forecast:bigint,actualFee:bigint){
++ let remaining=forecast;
++ const rows=[];
++ for(let index=0;index<11;index++){
++  const mint=Keypair.fromSeed(Buffer.alloc(32,index+1)).publicKey;
++  const source=getAssociatedTokenAddressSync(new PublicKey(WSOL),payer),destination=getAssociatedTokenAddressSync(mint,payer);
++  const swap=new TransactionInstruction({programId:program.programId,keys:[TOKEN_PROGRAM_ID,payer,source,destination,program.programId,mint,program.programId].map((pubkey:any,k:number)=>({pubkey,isSigner:k===1,isWritable:[2,3].includes(k)})),data:program.coder.instruction.encode('route',{routePlan:[{swap:{raydium:{}},percent:100,inputIndex:0,outputIndex:1}],inAmount:u64(100n),quotedOutAmount:u64(200n),slippageBps:100,platformFeeBps:0})});
++  const jupiter={build:async()=>({inputMint:WSOL,outputMint:mint.toBase58(),inAmount:'100',outAmount:'200',otherAmountThreshold:'198',swapMode:'ExactIn',slippageBps:100,priceImpactPct:'0.001',routePlan:[{}],swapInstruction:{programId:program.programId.toBase58(),accounts:swap.keys.map((key:any)=>({...key,pubkey:key.pubkey.toBase58()})),data:swap.data.toString('base64')},blockhashWithMetadata:{blockhash:Array(32).fill(0),lastValidBlockHeight:1000}})};
++  const mintData=Buffer.alloc(MintLayout.span);
++  MintLayout.encode({mintAuthorityOption:0,mintAuthority:PublicKey.default,supply:1000000n,decimals:6,isInitialized:true,freezeAuthorityOption:0,freezeAuthority:PublicKey.default},mintData);
++  const rpc={getAccountInfo:async(key:any)=>key.equals(mint)?{owner:TOKEN_PROGRAM_ID,data:mintData,lamports:Number(rent),executable:false,rentEpoch:0}:null,getMultipleAccountsInfo:async()=>swap.keys.map(()=>null),getMinimumBalanceForRentExemption:async()=>Number(rent),getLatestBlockhash:async()=>({blockhash:PublicKey.default.toBase58(),lastValidBlockHeight:1000})};
++  const intent:any={id:index===0?'buyback:epoch':'purchase:epoch:'+mint.toBase58(),epoch_id:'epoch',kind:index===0?'buyback':'swap',asset:'SOL',amount:'100',status:'planned',expected:{inputAsset:'SOL',outputAsset:mint.toBase58(),from:'budget',to:payer.toBase58(),maxFee:maxFee.toString(),maxTotalCost:remaining.toString(),costAccount:'cost:epoch'}};
++  try{
++   const tx=await safeJupiterBuild(rpc as any,jupiter as any,payer,intent,[],[mint.toBase58()]);
++   assert.equal(tx.message.compiledInstructions.filter((ix:any)=>tx.message.staticAccountKeys[ix.programIdIndex].equals(ASSOCIATED_TOKEN_PROGRAM_ID)).length,2);
++   assert.equal(intent.expected.requiredRent,(2n*rent).toString());
++   bindNativeCost(intent,BigInt(intent.expected.maxRent),BigInt(intent.expected.requiredRent));
++   assert.equal(intent.expected.maxNativeCost,(rent+maxFee).toString());
++   rows.push({transaction:index+1,kind:intent.kind,before:String(remaining),requiredCash:String(2n*rent+maxFee),netDebit:String(rent+actualFee),status:'build_passed'});
++   remaining-=rent+actualFee;
++  }catch(error){
++   rows.push({transaction:index+1,kind:intent.kind,before:String(remaining),requiredCash:String(2n*rent+maxFee),shortfall:String(2n*rent+maxFee-remaining),status:'build_rejected',reason:(error as Error).message});
++   return {forecast:String(forecast),actualFee:String(actualFee),completed:index,remaining:String(remaining),rows};
++  }
++ }
++ assert(remaining>=maxFee,'burn fee allowance remains');
++ remaining-=actualFee;
++ return {forecast:String(forecast),actualFee:String(actualFee),completed:11,burnAllowancePassed:true,afterBurn:String(remaining),rows};
++}
++const oldLow=await walk(current,5000n),oldMax=await walk(current,maxFee),newLow=await walk(withFloat,5000n),newMax=await walk(withFloat,maxFee);
++assert.equal(oldLow.completed,10);assert.equal(oldLow.remaining,'3189280');assert.equal(oldLow.rows.at(-1)?.shortfall,'989280');
++assert.equal(oldMax.completed,10);assert.equal(oldMax.remaining,'2239280');assert.equal(oldMax.rows.at(-1)?.shortfall,'1939280');
++assert.equal(newLow.completed,11);assert.equal(newMax.completed,11);assert.equal(newMax.afterBurn,rent.toString());
++const payouts=JSON.parse(readFileSync(new URL('../../docs/evidence/ember-payouts.json',import.meta.url),'utf8')).payouts;
++const ember=new EmberClient();ember.read=async()=>({at:Date.now(),value:{payouts}});
++await assert.rejects(()=>ember.payouts(),error=>error instanceof Error&&error.name==='ZodError');
++const unknownDiscriminators=['d19853937cfed8e9','bb64facc31c4af14'].map(hex=>({hex,decoded:program.coder.instruction.decode(Buffer.from(hex,'hex'))}));
++assert(unknownDiscriminators.every(row=>row.decoded===null));
++const result={revision:'4f9fba2fd95d6fd8057c27d56cfad0297b9f06ce',kind:'local_read_only_adapter_harness',signed:0,broadcast:0,networkRequests:0,fixtureCaveat:'Legacy route instruction and RPC responses are mocked; this does not establish current Jupiter live compatibility.',oldLow,oldMax,newLow,newMax,unknownDiscriminators,payoutCensus:{rows:payouts.length,fullWindowRejectedByStrictSchema:true,keepRows:payouts.filter((p:any)=>p.mode==='keep').map((p:any)=>({kind:p.kind,amount:p.amount,claimed:p.claimed,quoteMint:p.quoteMint})),keepPayoutWSOL:payouts.filter((p:any)=>p.kind==='payout'&&p.mode==='keep'&&p.quoteMint===WSOL).length,missingSignature:payouts.filter((p:any)=>typeof p.signature!=='string').map((p:any)=>p.kind)}};
++writeFileSync(process.argv[2] ?? new URL('../../f3-eleven-builds-results.json',import.meta.url),JSON.stringify(result,null,2)+'\n');
++console.log(JSON.stringify({passed:true,oldLow:{completed:oldLow.completed,remaining:oldLow.remaining,shortfall:oldLow.rows.at(-1)?.shortfall},oldMax:{completed:oldMax.completed,remaining:oldMax.remaining,shortfall:oldMax.rows.at(-1)?.shortfall},newLow:{completed:newLow.completed,afterBurn:newLow.afterBurn},newMax:{completed:newMax.completed,afterBurn:newMax.afterBurn},payoutCensus:result.payoutCensus,output:process.argv[2] ?? fileURLToPath(new URL('../../f3-eleven-builds-results.json',import.meta.url))},null,2));
+diff --git a/scripts/audit/public-browser.mjs b/scripts/audit/public-browser.mjs
+new file mode 100644
+index 0000000..dad036b
+--- /dev/null
++++ b/scripts/audit/public-browser.mjs
+@@ -0,0 +1,40 @@
++/** Read-only browser proof: node scripts/audit/public-browser.mjs <origin> <output-directory> [before|public] */
++import assert from 'node:assert/strict';
++import { mkdir, writeFile } from 'node:fs/promises';
++import { join } from 'node:path';
++const { chromium } = await import(process.env.PLAYWRIGHT_MODULE ?? 'playwright');
++const [base, output, stage = 'public'] = process.argv.slice(2);
++if (!base || !output) throw Error('Supply origin and output directory');
++await mkdir(output, { recursive: true });
++const browser = await chromium.launch({ headless: true });
++const result = { at: new Date().toISOString(), base, stage, checks: [], errors: [], passed: false };
++try {
++  for (const width of [1440, 375, ...(stage === 'before' ? [] : [320])]) {
++    const page = await browser.newPage({ viewport: { width, height: 1000 } });
++    page.on('pageerror', error => result.errors.push(error.message));
++    await page.goto(base);
++    await page.waitForFunction(() => [...document.querySelectorAll('.orbit-position img')].filter(i => i.complete && i.naturalWidth > 0).length === 10, {}, { timeout: 60_000 });
++    await page.evaluate(() => document.fonts.ready);
++    assert(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth));
++    await page.screenshot({ path: join(output, `${stage}-${width}.png`), fullPage: true });
++    result.checks.push(`${width}: all ten catalogue logos decoded; no horizontal overflow`);
++    if (stage !== 'before') {
++      await page.goto(base + '/#basket');
++      await page.locator('.token-button').first().click();
++      await page.getByRole('dialog').waitFor();
++      assert(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth));
++      if (width === 375) await page.screenshot({ path: join(output, `${stage}-375-detail.png`) });
++      await page.keyboard.press('Escape');
++      await page.goto(base + '/#rewards');
++      await page.getByText('Verified round history is not connected.').waitFor();
++      const previous = await page.evaluate(() => ({ hash: location.hash, length: history.length }));
++      await page.locator('.skip').focus(); await page.keyboard.press('Enter');
++      assert.deepEqual(await page.evaluate(() => ({ hash: location.hash, length: history.length })), previous);
++      assert.equal(await page.evaluate(() => document.activeElement.id), 'main');
++      result.checks.push(`${width}: token details, unavailable ledger and keyboard skip verified`);
++    }
++    await page.close();
++  }
++  assert.deepEqual(result.errors, []); result.passed = true;
++} catch (error) { result.failure = String(error.stack); process.exitCode = 1; }
++finally { await browser.close(); await writeFile(join(output, `${stage}-browser.json`), JSON.stringify(result, null, 2) + '\n'); console.log(JSON.stringify(result)); }
+diff --git a/scripts/evidence.mjs b/scripts/evidence.mjs
+index 747485b..a6461d4 100644
+--- a/scripts/evidence.mjs
++++ b/scripts/evidence.mjs
+@@ -1,4 +1,5 @@
+ import {mkdir,writeFile} from 'node:fs/promises';
++import catalogueLimits from '../packages/shared/catalogue-limits.json' with { type: 'json' };
+ const dir = new URL('../docs/evidence/', import.meta.url); await mkdir(dir,{recursive:true});
+ const urls = [
+  ['ember-developers','https://embercurve.fun/developers'], ['ember-how','https://embercurve.fun/how'],
+@@ -10,9 +11,9 @@ const urls = [
+ const index=[];
+ for(const [name,url] of urls){
+  const observedAt=new Date().toISOString();
+- try {const r=await fetch(url,{signal:AbortSignal.timeout(20000),redirect:'error'});const chunks=[];let size=0;for await(const chunk of r.body){size+=chunk.byteLength;if(size>12000000)throw Error('response too large');chunks.push(Buffer.from(chunk));}const body=Buffer.concat(chunks).toString('utf8');
++ try {const maxBytes=name==='ember-markets'?catalogueLimits.maxBytes:12000000;const r=await fetch(url,{signal:AbortSignal.timeout(20000),redirect:'error'});if(Number(r.headers.get('content-length')??0)>maxBytes){await r.body?.cancel();throw Error('response too large');}const chunks=[];let size=0;for await(const chunk of r.body){size+=chunk.byteLength;if(size>maxBytes)throw Error('response too large');chunks.push(Buffer.from(chunk));}const body=Buffer.concat(chunks).toString('utf8');
+  const file=name+(r.headers.get('content-type')?.includes('json')?'.json':'.txt');
+- await writeFile(new URL(file,dir),body); index.push({url,observedAt,status:r.status,contentType:r.headers.get('content-type'),bytes:body.length,file});
++ await writeFile(new URL(file,dir),body); index.push({url,observedAt,status:r.status,contentType:r.headers.get('content-type'),bytes:size,maxBytes,file});
+  console.log(name,r.status,body.length,body.slice(0,150).replace(/\s+/g,' '));
+  }catch(e){index.push({url,observedAt,error:e.message}); console.log(name,'unavailable',e.message);}
+ }
+diff --git a/tests/catalogue-runtime.test.ts b/tests/catalogue-runtime.test.ts
+new file mode 100644
+index 0000000..9e055b0
+--- /dev/null
++++ b/tests/catalogue-runtime.test.ts
+@@ -0,0 +1,13 @@
++import { readFileSync } from 'node:fs';
++import { execFileSync } from 'node:child_process';
++import { expect, it } from 'vitest';
++import ts from 'typescript';
++
++it('loads the emitted capacity module in native Node ESM without a TypeScript loader', () => {
++  const source = new URL('../packages/shared/catalogue-capacity.ts', import.meta.url);
++  const json = new URL('../packages/shared/catalogue-limits.json', import.meta.url);
++  const emitted = ts.transpileModule(readFileSync(source, 'utf8'), { compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ESNext } }).outputText;
++  const native = emitted.replace('./catalogue-limits.json', json.href) + '\nconsole.log(JSON.stringify(catalogueCapacity(51200000, 1)));';
++  const output = execFileSync(process.execPath, ['--input-type=module', '-e', native], { encoding: 'utf8', env: { ...process.env, NODE_OPTIONS: '' } });
++  expect(JSON.parse(output)).toMatchObject({ maxBytes: 64000000, maxRows: 50000, nearLimit: true });
++});
+diff --git a/tests/hosted.test.ts b/tests/hosted.test.ts
+index 4d05d8a..a4e7dbc 100644
+--- a/tests/hosted.test.ts
++++ b/tests/hosted.test.ts
+@@ -3,6 +3,12 @@ import { hostedRead } from '../apps/api/hosted.js';
+ import entry from '../api/index.js';
+ const request=(path:string,options?:RequestInit)=>hostedRead(new Request('https://pilot.example/api/'+path,options),'');
+ afterEach(()=>{vi.unstubAllGlobals();vi.unstubAllEnvs();});
++it('does not call an unavailable empty catalogue a complete universe',async()=>{
++ vi.stubGlobal('fetch',vi.fn().mockRejectedValue(new Error('offline')));
++ const basket=await(await request('basket')).json();
++ expect(basket.discovery.status).toBe('unavailable');expect(basket.universe).toEqual([]);
++ expect(basket.universeComplete).toBe(false);expect(basket.ready).toBe(false);
++});
+ it('ignores hosting runtime context and defaults to real prelaunch without fixture identity',async()=>{
+  vi.stubEnv('EMBER5_API_ORIGIN','');vi.stubEnv('OUR_MINT','');vi.stubEnv('EMBER10_REVISION','tested-commit');
+  const handler=entry.fetch as (request:Request,context:unknown)=>Promise<Response>;
+diff --git a/tests/market-data.test.ts b/tests/market-data.test.ts
+index 8968588..f30fa13 100644
+--- a/tests/market-data.test.ts
++++ b/tests/market-data.test.ts
+@@ -1,6 +1,8 @@
+ ﻿import {readFileSync} from 'node:fs';
+-import {expect,it} from 'vitest';
+-import {decimalValue,MarketDataService,normalizeCatalogue} from '../packages/integrations/market-data.js';
++import {expect,it,vi} from 'vitest';
++import {decimalValue,MarketDataService,normalizeCatalogue,publicCatalogueSchema} from '../packages/integrations/market-data.js';
++import {catalogueCapacity} from '../packages/shared/catalogue-capacity.js';
++import catalogueLimits from '../packages/shared/catalogue-limits.json' with { type: 'json' };
+ import {overview} from '../apps/api/overview.js';
+ import {selectBasket} from '../packages/core/selection.js';
+ import {defaultPolicy,hash,policyBasketSize} from '../packages/core/model.js';
+@@ -13,6 +15,26 @@ const at='2026-09-23T15:03:19.224Z';
+ const sample=(rows:unknown[],warming=false)=>({...raw,markets:rows,warming});
+ const row=(n:number,cap:unknown,extra:Record<string,unknown>={})=>({...raw.markets[0],mint:testAddress('market-'+n),pool:testAddress('market-pool-'+n),dammPool:'',marketCapUsd:cap,suspect:false,...extra});
+ const registry={count:1,updatedAt:1790175809,configs:[{config:raw.markets[0].config}]};
++it('admits growth beyond 20,000 rows while bounding rows and warning before either capacity is exhausted',()=>{
++ expect(publicCatalogueSchema.safeParse(sample(Array(20_001).fill(null))).success).toBe(true);
++ expect(publicCatalogueSchema.safeParse(sample(Array(catalogueLimits.maxRows+1).fill(null))).success).toBe(false);
++ expect(catalogueCapacity(51_199_999,39_999).nearLimit).toBe(false);
++ expect(catalogueCapacity(51_200_000,1).nearLimit).toBe(true);
++ expect(catalogueCapacity(1,40_000).nearLimit).toBe(true);
++});
++it('surfaces capacity alerts and preserves stale last-good data on a row-limit breach',async()=>{
++ let rows:unknown[]=Array(40_000).fill(null),now=Date.parse(at);
++ const warn=vi.spyOn(console,'warn').mockImplementation(()=>{}),error=vi.spyOn(console,'error').mockImplementation(()=>{});
++ try {
++  const source=new MarketDataService(async(url)=>Response.json(String(url).endsWith('/configs')?registry:sample(rows)),()=>now);
++  const first=await source.read();
++  expect(first.observed?.normalized.coverage.note).toContain('approaching a configured resource limit');
++  expect(warn).toHaveBeenCalledWith('Ember catalogue nearing capacity',expect.objectContaining({code:'catalogue_capacity',rows:40_000}));
++  rows=Array(catalogueLimits.maxRows+1).fill(null);now+=46_000;
++  const later=await source.read();expect(later.status).toBe('stale');expect(later.observed?.fetchedAt).toBe(at);
++  expect(error).toHaveBeenCalledWith('Ember catalogue refresh failed',expect.objectContaining({code:'source_row_limit'}));
++ } finally {warn.mockRestore();error.mockRestore();}
++});
+ it('validates the complete current response without fixture names deciding rank or eligibility',()=>{
+  const result=normalizeCatalogue(raw,configs,null,at);
+  expect(result.coverage).toMatchObject({rawRows:3062,uniqueMints:3061,rankedMints:3059,duplicateRows:1,invalidRows:0,complete:false});
+diff --git a/tests/token-image.test.ts b/tests/token-image.test.ts
+index 64c3f74..2cbf2d2 100644
+--- a/tests/token-image.test.ts
++++ b/tests/token-image.test.ts
+@@ -1,7 +1,10 @@
+ import { afterEach, expect, it, vi } from 'vitest';
+ import sharp from 'sharp';
+ import { tokenImageSource, tokenImageUrl } from '../packages/shared/token-image.js';
+-import { createTokenImageHandler } from '../apps/api/token-image.js';
++import { createTokenImageHandler as createHandler } from '../apps/api/token-image.js';
++import { createCatalogueImageAuthorizer } from '../apps/api/catalogue.js';
++import { MarketDataService } from '../packages/integrations/market-data.js';
++import { testAddress } from '../packages/integrations/demo.js';
+ import { hostedRead } from '../apps/api/hosted.js';
+ 
+ const cid = 'bafybeiacpflqennfh67t6vctwx3sie43drsenrme6i75sa7jmgi2cjy77y';
+@@ -9,10 +12,18 @@ const source = `https://embercurve.fun/img/${cid}`;
+ const request = (url = source, init?: RequestInit) => new Request(`https://pilot.example${tokenImageUrl(url)}`, init);
+ const png = await sharp({ create: { width: 1024, height: 512, channels: 4, background: '#ee713f' } }).png().toBuffer();
+ const response = () => new Response(new Uint8Array(png), { headers: { 'content-type': 'image/png', 'set-cookie': 'never=forward' } });
+-afterEach(() => vi.unstubAllGlobals());
++// Decoder/cache unit tests authorize only this fixture; catalogue tests below use
++// the real normalized discovery and membership authorizer.
++const createTokenImageHandler = (fetcher: typeof fetch) => createHandler(fetcher, async requested => requested.cid === cid ? tokenImageSource(source) : null);
++const config = testAddress('image-config');
++const registry = { count: 1, updatedAt: 1, configs: [{ config }] };
++const logo = (n: number) => n === 0 ? source : `https://embercurve.fun/img/b${'abcdefghijklmnopqrstuvwxyz234567'[n % 32].repeat(52)}`;
++const market = (n: number, extra = {}) => ({ mint: testAddress('logo-mint-'+n), pool: testAddress('logo-pool-'+n), config, quoteMint: testAddress('quote'), symbol: 'LOGO'+n, name: 'Logo '+n, image: logo(n), createdAt: 1, graduated: true, marketCapUsd: 1000-n, ...extra });
++const catalogue = (markets: unknown[], warming = false) => ({ markets, warming, economics: {}, totals: {} });
++afterEach(() => { vi.unstubAllGlobals(); vi.useRealTimers(); vi.restoreAllMocks(); });
+ 
+ it('uses a same-origin URL for approved content-addressed images', () => {
+-  expect(tokenImageUrl(source)).toBe(`/api/token-image?source=${encodeURIComponent(source)}`);
++  expect(tokenImageUrl(source)).toBe(`/api/token-image?source=${encodeURIComponent(source)}&v=2`);
+   expect(tokenImageSource(source.replace('embercurve.fun', 'www.embercurve.fun'))?.url).toBe(source);
+   expect(tokenImageSource(`https://ipfs.io/ipfs/${cid}`)?.cid).toBe(cid);
+   expect(tokenImageSource(`https://gateway.pinata.cloud/ipfs/${cid}`)?.cid).toBe(cid);
+@@ -39,7 +50,7 @@ it('decodes and resizes real raster bytes, strips upstream headers and caches su
+   const result = await handler(request()), bytes = Buffer.from(await result.arrayBuffer());
+   expect(result.status).toBe(200); expect(result.headers.get('content-type')).toBe('image/webp');
+   expect(result.headers.get('set-cookie')).toBeNull(); expect(result.headers.get('x-content-type-options')).toBe('nosniff');
+-  expect(result.headers.get('cache-control')).toContain('immutable');
++  expect(result.headers.get('cache-control')).toBe('public, max-age=0, s-maxage=0, must-revalidate');
+   expect(await sharp(bytes).metadata()).toMatchObject({ width: 160, height: 80, format: 'webp' });
+   expect(bytes.length).toBeLessThan(png.length);
+   const options = fetcher.mock.calls[0] as unknown as [string, RequestInit];
+@@ -88,11 +99,106 @@ it('rejects writes and malformed query parameters', async () => {
+ });
+ 
+ it('routes images through the hosted Vercel rewrite independently of the ledger origin', async () => {
+-  const fetcher = vi.fn(async (_url: RequestInfo | URL) => response()); vi.stubGlobal('fetch', fetcher);
++  const fetcher = vi.fn(async (url: RequestInfo | URL) => String(url).endsWith('/markets') ? Response.json(catalogue([market(0)])) : String(url).endsWith('/configs') ? Response.json(registry) : response()); vi.stubGlobal('fetch', fetcher);
+   const url = new URL(request().url); url.pathname = '/api/index'; url.searchParams.set('__route','token-image');
+   url.searchParams.set('route','token-image'); url.searchParams.set('url','https://evil.test');
+   const result = await hostedRead(new Request(url), 'https://ledger.example');
+   expect(result.status).toBe(200); expect(result.headers.get('content-type')).toBe('image/webp');
+-  expect(fetcher.mock.calls[0][0]).toBe(source);
+-  expect(fetcher).toHaveBeenCalledTimes(1);
++  expect(fetcher.mock.calls.map(call => call[0])).toContain(source);
++  expect(fetcher).toHaveBeenCalledTimes(3);
++});
++
++it('bootstraps ten distinct logos on a cold instance from one full catalogue read', async () => {
++  const fetchCatalogue = vi.fn(async (url: RequestInfo | URL) => Response.json(String(url).endsWith('/configs') ? registry : catalogue(Array.from({ length: 10 }, (_, n) => market(n)))));
++  const service = new MarketDataService(fetchCatalogue), fetchImage = vi.fn(async () => response());
++  const handler = createHandler(fetchImage, createCatalogueImageAuthorizer(service));
++  const results = await Promise.all(Array.from({ length: 10 }, (_, n) => handler(request(logo(n)))));
++  expect(results.every(result => result.status === 200)).toBe(true);
++  expect(fetchCatalogue).toHaveBeenCalledTimes(2); expect(fetchImage).toHaveBeenCalledTimes(10);
++});
++
++it('rejects arbitrary valid CIDs before image slots and still serves a catalogue logo', async () => {
++  const fetchCatalogue = vi.fn(async (url: RequestInfo | URL) => Response.json(String(url).endsWith('/configs') ? registry : catalogue([market(0)])));
++  const service = new MarketDataService(fetchCatalogue), fetchImage = vi.fn(async () => response());
++  const handler = createHandler(fetchImage, createCatalogueImageAuthorizer(service));
++  const results = await Promise.all(Array.from({ length: 24 }, (_, n) => handler(request(logo(n+1)))));
++  expect(results.every(result => result.status === 404 && result.headers.get('cache-control') === 'no-store')).toBe(true);
++  expect(fetchImage).not.toHaveBeenCalled(); expect(fetchCatalogue).toHaveBeenCalledTimes(2);
++  expect((await handler(request())).status).toBe(200); expect(fetchImage).toHaveBeenCalledTimes(1);
++});
++
++it('authorizes the same listed CID through approved aliases and fetches only its catalogue URL', async () => {
++  const service = new MarketDataService(async url => Response.json(String(url).endsWith('/configs') ? registry : catalogue([market(0)])));
++  const fetchImage = vi.fn().mockRejectedValueOnce(Error('source unavailable')).mockResolvedValueOnce(response());
++  const handler = createHandler(fetchImage, createCatalogueImageAuthorizer(service));
++  expect((await handler(request(`https://gateway.pinata.cloud/ipfs/${cid}`))).status).toBe(200);
++  expect((await handler(request(`https://ipfs.io/ipfs/${cid}`))).status).toBe(200);
++  expect(fetchImage.mock.calls.map(call => call[0])).toEqual([source, `https://ipfs.io/ipfs/${cid}`]);
++});
++
++it('keeps logos from the full excluded and warming catalogue, including rows beyond the first page', async () => {
++  const rows = Array.from({ length: 102 }, (_, n) => market(n, { image: n === 101 ? source : undefined, suspect: n === 101 }));
++  const service = new MarketDataService(async url => Response.json(String(url).endsWith('/configs') ? {} : catalogue(rows, true)));
++  const handler = createHandler(async () => response(), createCatalogueImageAuthorizer(service));
++  expect((await handler(request())).status).toBe(200);
++  const data = await service.read(); expect(data.status).toBe('warming');
++  expect(data.observed?.normalized.markets.find(row => row.imageUrl === source)).toMatchObject({ rank: null, eligibility: 'excluded' });
++});
++
++it('serves warm last-good logos without awaiting a stalled refresh, and preserves them after failed refresh', async () => {
++  let now = Date.now(), fail = false, release!: () => void;
++  const gate = new Promise<void>(resolve => { release = resolve; });
++  const service = new MarketDataService(async url => {
++    if (fail) { await gate; throw Error('offline'); }
++    return Response.json(String(url).endsWith('/configs') ? registry : catalogue([market(0)]));
++  }, () => now);
++  await service.read(); const original = service.snapshot();
++  const handler = createHandler(async () => response(), createCatalogueImageAuthorizer(service));
++  now += 181_000; fail = true; vi.spyOn(console, 'error').mockImplementation(() => {});
++  expect((await handler(request())).status).toBe(200);
++  release(); expect((await service.read()).status).toBe('stale');
++  expect(service.snapshot()).toBe(original); expect((await handler(request())).status).toBe(200);
++});
++
++it('rechecks catalogue membership before cached bytes, HEAD and an ETag 304', async () => {
++  let now = Date.now(), rows = [market(0)];
++  const service = new MarketDataService(async url => Response.json(String(url).endsWith('/configs') ? registry : catalogue(rows)), () => now);
++  const fetchImage = vi.fn(async () => response()), handler = createHandler(fetchImage, createCatalogueImageAuthorizer(service));
++  const first = await handler(request()), etag = first.headers.get('etag')!; expect(first.status).toBe(200);
++  rows = []; now += 46_000; await service.read();
++  for (const init of [{}, { method: 'HEAD' }, { headers: { 'if-none-match': etag } }]) {
++    const denied = await handler(request(source, init)); expect(denied.status).toBe(404); expect(denied.headers.get('cache-control')).toBe('no-store');
++  }
++  expect(fetchImage).toHaveBeenCalledTimes(1);
++});
++
++it('fails closed during a cold catalogue outage and recovers when a later read succeeds', async () => {
++  let now = Date.now(), offline = true; vi.spyOn(console, 'error').mockImplementation(() => {});
++  const service = new MarketDataService(async url => { if (offline) throw Error('offline'); return Response.json(String(url).endsWith('/configs') ? registry : catalogue([market(0)])); }, () => now);
++  const fetchImage = vi.fn(async () => response()), handler = createHandler(fetchImage, createCatalogueImageAuthorizer(service));
++  const failed = await handler(request()); expect(failed.status).toBe(503); expect(failed.headers.get('cache-control')).toBe('no-store'); expect(fetchImage).not.toHaveBeenCalled();
++  offline = false; now += 91_000;
++  expect((await handler(request())).status).toBe(200); expect(fetchImage).toHaveBeenCalledTimes(1);
++});
++
++it('bounds cold authorization and gateway reads with one request deadline', async () => {
++  vi.useFakeTimers();
++  const fetchImage = vi.fn(() => new Promise<Response>(() => {}));
++  const handler = createHandler(fetchImage, async () => { await new Promise(resolve => setTimeout(resolve, 17_000)); return tokenImageSource(source); });
++  const result = handler(request());
++  await vi.advanceTimersByTimeAsync(25_000);
++  const failed = await result; expect(failed.status).toBe(503); expect(failed.headers.get('cache-control')).toBe('no-store');
++  expect(fetchImage).toHaveBeenCalledTimes(2);
++  for (const [, options] of fetchImage.mock.calls as unknown as [unknown, RequestInit][]) expect(options.signal?.aborted).toBe(true);
++});
++
++it('does not let one aborted caller cancel another caller sharing the same image job', async () => {
++  let release!: () => void; const gate = new Promise<void>(resolve => { release = resolve; });
++  const fetchImage = vi.fn(async () => { await gate; return response(); });
++  const handler = createTokenImageHandler(fetchImage), controller = new AbortController();
++  const first = handler(request(source, { signal: controller.signal })), second = handler(request());
++  await vi.waitFor(() => expect(fetchImage).toHaveBeenCalledTimes(1));
++  controller.abort(); expect((await first).status).toBe(503);
++  const options = (fetchImage.mock.calls[0] as unknown as [string, RequestInit])[1]; expect(options.signal?.aborted).toBe(false);
++  release(); expect((await second).status).toBe(200); expect(fetchImage).toHaveBeenCalledTimes(1);
+ });
+diff --git a/tests/ui-r2.browser.mjs b/tests/ui-r2.browser.mjs
+new file mode 100644
+index 0000000..ad39c7b
+--- /dev/null
++++ b/tests/ui-r2.browser.mjs
+@@ -0,0 +1,128 @@
++/** Browser regression suite. Run against dev:web with only intercepted fixture APIs:
++ * PLAYWRIGHT_MODULE=<installed playwright entry> node --import tsx tests/ui-r2.browser.mjs
++ * BASE_URL and EVIDENCE_DIR are optional. No fixture is bundled into the application.
++ */
++import assert from 'node:assert/strict';
++import { mkdir, writeFile } from 'node:fs/promises';
++import { overview } from '../apps/api/overview.ts';
++const { chromium } = await import(process.env.PLAYWRIGHT_MODULE ?? 'playwright');
++const base = process.env.BASE_URL ?? 'http://127.0.0.1:5192';
++const markets = Array.from({ length: 250 }, (_, i) => ({
++  mint: `fixture-mint-${String(i).padStart(4, '0')}`, name: `Alpha asset ${i}`, symbol: `TEST${i}`,
++  imageUrl: null, canonicalPool: null, config: null, quoteMint: null, marketCapUsd: String(250000 - i),
++  priceUsd: null, volume24hUsd: null, change24hPct: null, currency: 'USD', supplyBasis: 'undocumented',
++  sourceTimestamp: null, createdAt: null, rank: i + 1, eligibility: 'unknown', reasons: [], selected: i < 10,
++  weightBps: null, sourceUrl: 'https://embercurve.fun/markets',
++}));
++let poll = 0, searches = 0, selections = 0, stalledStatus = false, sourceStatus = 'ready';
++const source = { refreshSeconds: 45, read: async () => ({ status: sourceStatus, observed: {
++  fetchedAt: new Date(Date.UTC(2026, 8, 23, 12, poll)).toISOString(), normalized: {
++    markets, evidenceHash: `fixture-${poll}`, coverage: { status: 'unverified', rawRows: 250, uniqueMints: 250, rankedMints: 250, duplicateRows: 0, invalidRows: 0, warming: false, complete: true, note: 'Browser test fixture' },
++  },
++} }) };
++const browser = await chromium.launch({ headless: true });
++const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
++const errors = [];
++page.on('pageerror', error => errors.push(error.message));
++await page.route('**/api/**', async route => {
++  const url = new URL(route.request().url());
++  if (url.pathname === '/api/overview') {
++    const query = url.searchParams.get('q') ?? '';
++    const view = url.searchParams.get('view') ?? 'all';
++    if (!url.search) poll++;
++    if (query) searches++;
++    if (view === 'selection') selections++;
++    const result = await overview(source, { query, view, offset: Number(url.searchParams.get('offset') ?? 0), limit: 100 });
++    await route.fulfill({ json: result });
++  } else if (url.pathname === '/api/transparency') {
++    await route.fulfill({ json: { status: 'available', receivedLamports: '1000000000', finalizedPayoutTransactions: '0', assets: [], accrued: [], balances: [], accountingHealth: 'not_checked' } });
++  } else if (url.pathname === '/api/epochs') {
++    await route.fulfill({ json: { status: 'available', items: [{ id: 'browser-fixture-round', status: 'planned' }], nextCursor: null } });
++  } else if (url.pathname === '/api/status') {
++    if (stalledStatus) return;
++    await route.fulfill({ json: { cluster: 'devnet', nextEvaluation: null } });
++  } else await route.fulfill({ status: 404, json: { message: 'Unexpected fixture path' } });
++});
++const waitFor = async (condition, label) => {
++  for (let i = 0; i < 100; i++) { if (await condition()) return; await new Promise(resolve => setTimeout(resolve, 25)); }
++  throw Error(`Timed out: ${label}`);
++};
++const rowCount = () => page.locator('.market-table tbody tr').count();
++try {
++  await page.clock.install();
++  await page.goto(base + '/#basket');
++  await waitFor(async () => await rowCount() === 20, 'initial market list');
++  for (const expected of [50, 80, 100, 140]) {
++    await page.getByRole('button', { name: 'Show more markets' }).click();
++    await waitFor(async () => await rowCount() === expected, `${expected} default rows`);
++  }
++  const defaultPoll = poll;
++  await page.clock.fastForward(45_000);
++  await waitFor(() => poll > defaultPoll, 'default parent poll');
++  await waitFor(() => page.getByRole('button', { name: 'Refresh list' }).isVisible(), 'default retention notice');
++  assert.equal(await rowCount(), 140, 'default expansion survives parent poll');
++  await page.getByRole('button', { name: 'Refresh list' }).click();
++  await waitFor(async () => await rowCount() === 20, 'explicit default refresh');
++  await page.getByPlaceholder('Find a token or mint').fill('a');
++  await page.clock.fastForward(350);
++  await waitFor(() => searches === 1, 'search response');
++  for (const expected of [50, 80, 100, 140]) {
++    await page.getByRole('button', { name: 'Show more markets' }).click();
++    await waitFor(async () => await rowCount() === expected, `${expected} search rows`);
++  }
++  const beforeSearches = searches, beforePoll = poll;
++  await page.clock.fastForward(45_000);
++  await waitFor(() => poll > beforePoll, 'parent poll');
++  await waitFor(() => page.getByRole('button', { name: 'Refresh list' }).isVisible(), 'retained-page notice');
++  assert.equal(await rowCount(), 140, 'searched expansion survives parent poll');
++  assert.equal(searches, beforeSearches, 'parent poll does not refetch search offset zero');
++  const originalTime = await page.locator('.source-time').innerText();
++  for (const health of ['stale', 'unavailable']) {
++    const beforeHealthPoll = poll;
++    sourceStatus = health;
++    await page.clock.fastForward(45_000);
++    await waitFor(() => poll > beforeHealthPoll, 'source health poll');
++    await waitFor(() => page.getByText(/^Stale observation\. Last successful fetch:/).isVisible(), 'retained source failure warning');
++    assert.equal(await rowCount(), 140, 'outage retains expanded rows');
++    assert.equal(await page.locator('.source-time').innerText(), originalTime, 'outage retains original provenance');
++  }
++  sourceStatus = 'ready';
++  await page.clock.fastForward(45_000);
++  await page.getByRole('button', { name: 'Refresh list' }).click();
++  await waitFor(async () => await rowCount() === 20, 'explicit refresh resets search');
++  await page.getByPlaceholder('Find a token or mint').fill('0 TEST0');
++  await page.clock.fastForward(350);
++  await waitFor(async () => await rowCount() === 1, 'cross-field multiword match');
++  assert.match(await page.locator('.market-counts').innerText(), /1 search matches/);
++  await page.getByPlaceholder('Find a token or mint').fill('');
++  await page.getByRole('tab', { name: /Eligibility/ }).click();
++  await page.clock.fastForward(350);
++  await waitFor(async () => await rowCount() === 10, 'eligibility result');
++  const beforeSelection = selections;
++  await page.clock.fastForward(45_000);
++  await waitFor(() => page.getByRole('button', { name: 'Refresh list' }).isVisible(), 'filtered retention notice');
++  assert.equal(await rowCount(), 10);
++  assert.equal(selections, beforeSelection, 'parent poll preserves eligibility request');
++
++  stalledStatus = true;
++  await page.goto(base + '/#rewards');
++  await waitFor(() => page.getByText('browser-fixture-round', { exact: true }).isVisible(), 'round history while status stalls');
++  await waitFor(async () => (await page.locator('.reward-stats').innerText()).includes('1 SOL'), 'available ledger while status stalls');
++  await page.clock.fastForward(28_100);
++  await waitFor(async () => (await page.locator('.reward-stats').innerText()).includes('Unreported'), 'stalled status is bounded');
++  await page.setViewportSize({ width: 320, height: 780 });
++  const menu = page.getByRole('button', { name: 'Open navigation menu' });
++  const controlled = await menu.getAttribute('aria-controls');
++  assert.equal(await page.locator(`#${controlled}`).count(), 1);
++  assert.equal(await page.locator(`#${controlled}`).isVisible(), false);
++  await menu.click();
++  assert.equal(await page.locator(`#${controlled}`).isVisible(), true);
++  await page.keyboard.press('Escape');
++  assert.equal(await page.locator(`#${controlled}`).isVisible(), false);
++  assert.equal(await menu.evaluate(node => node === document.activeElement), true);
++  assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false);
++  assert.deepEqual(errors, []);
++  const evidence = { passed: true, assertions: ['140 default rows survive parent poll', '140 searched rows survive parent poll without offset-zero refetch', 'Retained searches show stale and unavailable source health without changing provenance', 'Explicit refresh resets searched list to 20 rows', 'Server/client multiword results agree', 'Eligibility view retained across parent poll', 'Ledger and epochs render while status stalls', 'Stalled status reaches bounded unavailable state', 'Mobile navigation target exists when closed; Escape returns focus', '320px no horizontal overflow', 'No page errors'], publicData: 'Intercepted browser-only fixtures; no financial operations or live-status claims' };
++  if (process.env.EVIDENCE_DIR) { await mkdir(process.env.EVIDENCE_DIR, { recursive: true }); await writeFile(process.env.EVIDENCE_DIR + '/frontend-browser.json', JSON.stringify(evidence, null, 2)); }
++  console.log(JSON.stringify(evidence, null, 2));
++} finally { await browser.close(); }
+diff --git a/tests/ui-r2.test.ts b/tests/ui-r2.test.ts
+new file mode 100644
+index 0000000..5c17ff5
+--- /dev/null
++++ b/tests/ui-r2.test.ts
+@@ -0,0 +1,61 @@
++import { afterEach, describe, expect, it, vi } from 'vitest';
++import { api, filterMarkets } from '../apps/web/view-model.js';
++import { overview } from '../apps/api/overview.js';
++import type { MarketDataService } from '../packages/integrations/market-data.js';
++import type { PublicMarket } from '../packages/shared/public.js';
++
++afterEach(() => { vi.useRealTimers(); vi.unstubAllGlobals(); });
++
++describe('Round two public regressions', () => {
++  it('keeps multi-field search results identical to the authoritative server projection', async () => {
++    const markets = [
++      { mint: 'mint-one', name: 'Alpha asset', symbol: 'FIRST', selected: false },
++      { mint: 'mint-two', name: 'Alpha asset', symbol: 'SECOND', selected: true },
++    ] as PublicMarket[];
++    const source = { refreshSeconds: 45, read: async () => ({ status: 'ready', observed: { fetchedAt: '2026-09-23T12:00:00Z', normalized: { markets, evidenceHash: 'fixture', coverage: {} } } }) } as unknown as MarketDataService;
++    for (const query of ['asset FIRST', 'mint-two Alpha', ' ASSET second ', 'FIRST Alpha', 'not found']) {
++      for (const selectionOnly of [false, true]) {
++        const result = await overview(source, { query, view: selectionOnly ? 'selection' : 'all' });
++        expect(filterMarkets(markets, query, selectionOnly).map(row => row.mint)).toEqual(result.markets.map(row => row.mint));
++        expect(filterMarkets(result.markets, query, selectionOnly)).toHaveLength(result.marketPage.totalMatches);
++      }
++    }
++  });
++
++  it('allows a cold catalogue retry to finish after the former 15 second cutoff', async () => {
++    vi.useFakeTimers();
++    let requestSignal: AbortSignal | undefined;
++    vi.stubGlobal('fetch', vi.fn((_url, init) => new Promise<Response>((resolve, reject) => {
++      requestSignal = init.signal;
++      init.signal.addEventListener('abort', () => reject(new DOMException('Aborted', 'AbortError')));
++      // Upstream cold path: 8s attempt + 1s backoff + 8s successful retry.
++      setTimeout(() => resolve(new Response(JSON.stringify({ status: 'ready' }))), 17_000);
++    })));
++    const response = api<{ status: string }>('overview');
++    await vi.advanceTimersByTimeAsync(15_001);
++    expect(requestSignal?.aborted).toBe(false);
++    await vi.advanceTimersByTimeAsync(1_999);
++    await expect(response).resolves.toEqual({ status: 'ready' });
++    expect(vi.getTimerCount()).toBe(0);
++  });
++
++  it('bounds stalled requests, aborts their work and clears timers after caller cancellation', async () => {
++    vi.useFakeTimers();
++    const signals: AbortSignal[] = [];
++    vi.stubGlobal('fetch', vi.fn((_url, init) => new Promise<Response>((_resolve, reject) => {
++      signals.push(init.signal);
++      init.signal.addEventListener('abort', () => reject(new DOMException('Aborted', 'AbortError')));
++    })));
++    const stalled = expect(api('epochs')).rejects.toThrow('too long');
++    await vi.advanceTimersByTimeAsync(30_000);
++    await stalled;
++    expect(signals[0].aborted).toBe(true);
++    expect(vi.getTimerCount()).toBe(0);
++    const controller = new AbortController();
++    const cancelled = expect(api('status', controller.signal)).rejects.toThrow('Aborted');
++    controller.abort();
++    await cancelled;
++    expect(signals[1].aborted).toBe(true);
++    expect(vi.getTimerCount()).toBe(0);
++  });
++});

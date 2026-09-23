@@ -1,0 +1,33 @@
+{
+  "at": "2026-09-23T20:24:41.827Z",
+  "revision": "ed67a05f7b676108a98dcaf29460d2fdc60fecc6",
+  "node": "v24.17.0",
+  "tests": {
+    "passed": 258,
+    "failed": 0,
+    "files": 20,
+    "report": "tests.json"
+  },
+  "typecheck": "passed",
+  "viteBuild": "passed",
+  "browserWidths": [
+    1440,
+    375,
+    320
+  ],
+  "syntheticBrowserAssertions": 11,
+  "financialHarness": "Reproduced current eleven-build forecast shortfall; no financial remediation or live execution",
+  "productionDependencyAudit": {
+    "high": 5,
+    "critical": 0,
+    "clean": false
+  },
+  "failedCandidate": {
+    "revision": "c2cf4701715f9f3588d6fcc8885c709d2bd09b42",
+    "deploymentId": "dpl_FvgVmTEwENzHyWoiU6fkzMzcHeJU",
+    "error": "ERR_IMPORT_ATTRIBUTE_MISSING",
+    "promotedToPublicAlias": false,
+    "correction": "Native Node ESM JSON import attributes and native emitted-module regression"
+  },
+  "reviewScope": "Internal specialists; external re-audit pending"
+}

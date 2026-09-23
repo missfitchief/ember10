@@ -1,12 +1,14 @@
 # EMBER10 external audit brief
 
-Review the complete repository snapshot, not just the latest patch. The application revision under review and deployed at capture time is **`1f67d0dff19c9509f586e3a4c9d98852be1b1ecc`**. The preparation commit adds documentation and evidence; its different hash does not represent a new runtime deployment. The downloadable package manifest identifies both revisions.
+Review the complete repository snapshot, not just the latest patch. The application revision under review and deployed at capture time is **`ed67a05f7b676108a98dcaf29460d2fdc60fecc6`**. The preparation commit adds documentation and evidence; its different hash does not represent a new runtime deployment. The downloadable package manifest identifies both revisions.
 
 Repository: https://github.com/missfitchief/ember10
 
 Read-only pilot: https://ember5-pilot.vercel.app/
 
 ## Start here
+
+Read [Round 2](AUDIT-R2.md) and [the supplied R2 audit](evidence/r2/supplied-audit.md) first. Its review of `4f9fba2` confirmed the earlier public deployment but reopened the funding forecast and identified the F-1 through F-14 financial blockers. These remain open; the current correction targets the public path.
 
 1. [Current verification](VERIFICATION.md), [deployment identity](deployment.json), and [readiness](READINESS.md).
 2. [Findings register](evidence/external-audit/findings.json): all 37 top-level findings (original reproduction details are preserved in [the redacted supplied report](evidence/external-audit/original-audit-redacted.md)) from the supplied audit of `db041a0`, mapped to current claims, partial work and open items. “Implemented” is the developer's claim, not an independent closure decision.
@@ -35,11 +37,13 @@ The Vercel deployment has no financial worker, configured project token or conne
 
 The implementation controls a reward treasury and depends on trusted operators, RPCs, provider contracts and a remote signer. Do not infer trustlessness or production readiness. The five high production dependency entries are disclosed in the raw npm audit; all derive from the bigint-buffer chain. A local JavaScript fallback does not establish the native dependency's safety on another host.
 
-No independent audit of this correction has completed. Earlier independent reviews covered different revisions. The attempted specialist review of the latest patch was unavailable; the included latest checks were performed by the implementer.
+The supplied independent external R2 audit covers the preceding source. This correction has internal specialist review with explicit scope and same-vendor limitations; external re-audit is pending. See `evidence/r2/independent-public-review.md`, `independent-image-review.md` and `FINANCIAL-INDEPENDENT-REVIEW.md`.
 
 ## Evidence and reproduction
 
-All paths below are inside the repository; no access to the developer's PC is required:
+Current evidence is in `evidence/r2/`: 258 passing tests in 20 files, independent internal reviews, an eleven-build financial failure reproduction, public/candidate byte comparisons and 1440/375/320px browser checks. These are browser emulations, not physical-device tests. The before screenshots show the preceding deployed revision.
+
+The following first-round evidence is preserved as history; it does not establish closure of R2 findings:
 
 - [Test report](evidence/external-audit/tests.json), [validation metadata](evidence/external-audit/validation.json), [production dependency audit](evidence/external-audit/dependency-audit.json).
 - [Candidate proof](evidence/external-audit/candidate-verification.json), [public proof](evidence/external-audit/public-verification.json): deployed revision plus seven byte-identical build assets and ten decoded logo responses. An echoed revision alone is insufficient.

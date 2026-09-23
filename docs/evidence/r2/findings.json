@@ -1,0 +1,121 @@
+{
+  "reviewedBase": "4f9fba2",
+  "applicationRevision": "ed67a05f7b676108a98dcaf29460d2fdc60fecc6",
+  "financialExecutionEnabled": false,
+  "findings": [
+    {
+      "id": "P-1",
+      "status": "implemented_pending_external_reaudit",
+      "evidence": "AUDIT-R2.md and evidence/r2/",
+      "remaining": null
+    },
+    {
+      "id": "P-2",
+      "status": "implemented_pending_external_reaudit",
+      "evidence": "AUDIT-R2.md and evidence/r2/",
+      "remaining": null
+    },
+    {
+      "id": "P-3",
+      "status": "implemented_pending_external_reaudit",
+      "evidence": "AUDIT-R2.md and evidence/r2/",
+      "remaining": "Existing old CDN entries are not claimed purged; known-catalogue flooding remains possible."
+    },
+    {
+      "id": "P-4",
+      "status": "implemented_pending_external_reaudit",
+      "evidence": "AUDIT-R2.md and evidence/r2/",
+      "remaining": null
+    },
+    {
+      "id": "P-5",
+      "status": "partially_remediated",
+      "evidence": "AUDIT-R2.md and evidence/r2/",
+      "remaining": "Server artifact attestation, backend export size and generic proxy errors remain open."
+    },
+    {
+      "id": "F-1",
+      "status": "open",
+      "validation": "Independent source review; external prerequisites documented",
+      "evidence": "AUDIT-R2.md and evidence/r2/FINANCIAL-INDEPENDENT-REVIEW.md"
+    },
+    {
+      "id": "F-2",
+      "status": "open",
+      "validation": "Independent source review; external prerequisites documented",
+      "evidence": "AUDIT-R2.md and evidence/r2/FINANCIAL-INDEPENDENT-REVIEW.md"
+    },
+    {
+      "id": "F-3",
+      "status": "open",
+      "validation": "Independently reproduced through eleven real adapter builds using mocked RPC/legacy route",
+      "evidence": "AUDIT-R2.md and evidence/r2/FINANCIAL-INDEPENDENT-REVIEW.md"
+    },
+    {
+      "id": "F-4",
+      "status": "open",
+      "validation": "Independent source review; external prerequisites documented",
+      "evidence": "AUDIT-R2.md and evidence/r2/FINANCIAL-INDEPENDENT-REVIEW.md"
+    },
+    {
+      "id": "F-5",
+      "status": "open",
+      "validation": "Independent source review; external prerequisites documented",
+      "evidence": "AUDIT-R2.md and evidence/r2/FINANCIAL-INDEPENDENT-REVIEW.md"
+    },
+    {
+      "id": "F-6",
+      "status": "open",
+      "validation": "Independent source review; external prerequisites documented",
+      "evidence": "AUDIT-R2.md and evidence/r2/FINANCIAL-INDEPENDENT-REVIEW.md"
+    },
+    {
+      "id": "F-7",
+      "status": "open",
+      "validation": "Retained supplied audit finding; not re-executed this round",
+      "evidence": "AUDIT-R2.md and evidence/r2/FINANCIAL-INDEPENDENT-REVIEW.md"
+    },
+    {
+      "id": "F-8",
+      "status": "open",
+      "validation": "Retained supplied audit finding; not re-executed this round",
+      "evidence": "AUDIT-R2.md and evidence/r2/FINANCIAL-INDEPENDENT-REVIEW.md"
+    },
+    {
+      "id": "F-9",
+      "status": "open",
+      "validation": "Retained supplied audit finding; not re-executed this round",
+      "evidence": "AUDIT-R2.md and evidence/r2/FINANCIAL-INDEPENDENT-REVIEW.md"
+    },
+    {
+      "id": "F-10",
+      "status": "open",
+      "validation": "Retained supplied audit finding; not re-executed this round",
+      "evidence": "AUDIT-R2.md and evidence/r2/FINANCIAL-INDEPENDENT-REVIEW.md"
+    },
+    {
+      "id": "F-11",
+      "status": "open",
+      "validation": "Retained supplied audit finding; not re-executed this round",
+      "evidence": "AUDIT-R2.md and evidence/r2/FINANCIAL-INDEPENDENT-REVIEW.md"
+    },
+    {
+      "id": "F-12",
+      "status": "open",
+      "validation": "Retained supplied audit finding; not re-executed this round",
+      "evidence": "AUDIT-R2.md and evidence/r2/FINANCIAL-INDEPENDENT-REVIEW.md"
+    },
+    {
+      "id": "F-13",
+      "status": "open",
+      "validation": "Retained supplied audit finding; not re-executed this round",
+      "evidence": "AUDIT-R2.md and evidence/r2/FINANCIAL-INDEPENDENT-REVIEW.md"
+    },
+    {
+      "id": "F-14",
+      "status": "open",
+      "validation": "Retained supplied audit finding; not re-executed this round",
+      "evidence": "AUDIT-R2.md and evidence/r2/FINANCIAL-INDEPENDENT-REVIEW.md"
+    }
+  ]
+}

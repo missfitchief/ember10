@@ -1,0 +1,17 @@
+{
+  "passed": true,
+  "assertions": [
+    "140 default rows survive parent poll",
+    "140 searched rows survive parent poll without offset-zero refetch",
+    "Retained searches show stale and unavailable source health without changing provenance",
+    "Explicit refresh resets searched list to 20 rows",
+    "Server/client multiword results agree",
+    "Eligibility view retained across parent poll",
+    "Ledger and epochs render while status stalls",
+    "Stalled status reaches bounded unavailable state",
+    "Mobile navigation target exists when closed; Escape returns focus",
+    "320px no horizontal overflow",
+    "No page errors"
+  ],
+  "publicData": "Intercepted browser-only fixtures; no financial operations or live-status claims"
+}

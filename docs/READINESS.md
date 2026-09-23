@@ -1,4 +1,4 @@
-> Current application revision: `1f67d0d`. See [external audit](EXTERNAL-AUDIT.md) and [verification](VERIFICATION.md). Funded operations remain disabled; independent audit is pending.
+> Current deployed revision: see [deployment identity](deployment.json). Read [Round 2 blockers](AUDIT-R2.md) before any financial work. External re-audit of this public correction is pending.
 
 # Readiness as of 23 September 2026
 
@@ -7,18 +7,18 @@
 | Public UI | Implemented; desktop and mobile inspected, real prelaunch discovery, empty/error/unavailable states checked; ordinary UI refuses demo financial records |
 | Vercel deployment | EMBER10 real-source prelaunch correction prepared for existing URL; exact publication result is recorded in deployment evidence; no financial worker or signing |
 | API and operator boundary | Implemented; address/limit validation, rate limiting, bearer authentication and public write rejection tested |
-| Core accounting | Implemented and tested against PostgreSQL: integer allocation, budgets, source attribution, liabilities, immutable records and recovery |
-| Durable worker | Runs independently; persisted intents, signed bytes, lease fencing, restart reconciliation and synthetic replay tested |
+| Core accounting | Existing PostgreSQL tests pass, but R2 identifies open reconciliation, attribution and recovery defects; not financially ready |
+| Durable worker | Not deployed; open R2 forecast, expiry, WSOL and commitment-lifecycle blockers prevent a funded pilot |
 | Local/test-chain settlement | Real transfer/burn/signer adapters and executable exercise included; **not executed to settlement** here because validator initialization and devnet faucet failed |
 | Live market reads | Real Ember catalogue/config/quotes/payout/fee/holder responses observed and recorded; discovery works in the prelaunch UI |
-| Live authenticated quote/build | Current Jupiter v2 adapters and instruction tests implemented; **not tested** with a project key/taker. One unauthenticated quote-only read succeeded |
+| Live authenticated quote/build | **Blocked:** audit-reported live build instruction variants are rejected. No keyed project build acceptance test has passed |
 | Real creator-fee ingestion | Conservative finalized matching/cursor implementation exists; **not tested for our pool**, which does not exist |
 | Verified automatic basket selection | Deterministic policy implemented; needs a complete fresh reviewed liquidity/capitalization metrics feed and full-census RPC coverage before live commitments |
 | Funded mainnet payouts | **Not configured, not tested, disabled** |
 | Container deployment | Configuration provided; **not run** in this environment |
 | Backup restoration | Guarded helper and procedure included; **not run**; standard PostgreSQL client tools required |
-| Security audit | Supplied historical audit mapped to current source; independent review of current changes pending. Open findings are listed in the external audit register |
-| Dependency audit | Fresh production scan: 5 high entries in the bigint-buffer chain, no moderate/critical entries; not clean. See `docs/evidence/external-audit/dependency-audit.json` |
+| Security audit | External R2 reviewed the previous revision; internal public corrections and financial failure reproduction are recorded. External re-audit pending; F-1 through F-14 remain open |
+| Dependency audit | Fresh production scan: 5 high entries in the bigint-buffer chain, no moderate/critical entries; not clean. See `docs/evidence/r2/dependency-audit.json` |
 
 ## External configuration required
 
