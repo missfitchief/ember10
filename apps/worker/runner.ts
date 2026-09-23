@@ -82,17 +82,18 @@ export async function runIntent(engine:Engine,chain:Chain,id:string,lease:Lease,
   await t.query('UPDATE intents SET status=$2,reason=$3 WHERE id=$1',[id,review?'needs_review':'unknown',review?'Original signature requires finalized history evidence; no replacement authorized':null]);
  });
  if(options.recoveryOnly||review)return;
- if(engine.mode==='live'&&!options.authorizeNewSigning)return;
- try{
+ const authorizeBroadcast=async()=>{
+  ensure(engine.mode!=='live'||options.authorizeNewSigning,'live broadcast requires a fresh execution authorization');
   await options.authorizeNewSigning?.(i);
   await db.tx(async t=>{await db.fence(t,lease);await db.lock(t);
    ensure(!(await t.query('SELECT paused FROM control')).rows[0].paused,'transaction rebroadcast paused');
    await options.authorizeNewSigningLocked?.(i,t);
    await db.fence(t,lease);
   });
- }catch{return;}
+ };
+ try{await authorizeBroadcast();}catch{return;}
  // While unpaused, only the original bytes may be resent and only after adapter validity checks.
- try{await chain.broadcast(signed);}catch{/* unknown outcome remains durable; reconcile on next tick */}
+ try{await chain.broadcast(signed,authorizeBroadcast);}catch{/* unknown outcome remains durable; reconcile on next tick */}
  if(crash==='after_send')throw Error('INJECTED_CRASH after_send');
 }
 export async function tick(engine:Engine,chain:Chain,owner:string,options:ExecutionOptions={}){

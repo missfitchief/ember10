@@ -128,7 +128,9 @@ export class SolanaChain implements Chain {
   ensure(height!==undefined||typeof i.expected.lastValidHeight==='number','missing expiry metadata');
   const bytes=Buffer.from(tx.serialize());return {signature:bs58.encode(tx.signatures[0]),bytes,blockhash,lastValidHeight:height??Number(i.expected.lastValidHeight),messageHash:hash(Buffer.from(tx.message.serialize()).toString('base64')),approvedPlan:i.expected};
  }
- async broadcast(s:Signed){ensure(this.config.BROADCAST_ENABLED&&!this.config.MASTER_PAUSE,'broadcast paused; inspection only');await this.verifyCluster();ensure((await this.connection.isBlockhashValid(s.blockhash,{commitment:'finalized'})).value,'blockhash expired; reconcile only');ensure(await this.connection.getBlockHeight('finalized')<=s.lastValidHeight,'expired block height');
+ async broadcast(s:Signed,authorizeBroadcast?:()=>Promise<void>){ensure(this.config.BROADCAST_ENABLED&&!this.config.MASTER_PAUSE,'broadcast paused; inspection only');await this.verifyCluster();ensure((await this.connection.isBlockhashValid(s.blockhash,{commitment:'finalized'})).value,'blockhash expired; reconcile only');ensure(await this.connection.getBlockHeight('finalized')<=s.lastValidHeight,'expired block height');
+  ensure(this.mode!=='live'||authorizeBroadcast,'live broadcast requires a fresh execution authorization');
+  await authorizeBroadcast?.();
   const signature=await this.connection.sendRawTransaction(s.bytes,{skipPreflight:false,maxRetries:0,preflightCommitment:'finalized'});ensure(signature===s.signature,'RPC returned different signature');}
  async inspect(i:Intent,s:Signed):Promise<Outcome>{
   let status;try{status=(await this.connection.getSignatureStatuses([s.signature],{searchTransactionHistory:true})).value[0];}catch{return {status:'unknown',signature:s.signature};}

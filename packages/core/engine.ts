@@ -15,7 +15,7 @@ export interface Outcome {status:'finalized'|'failed'|'pending'|'unknown'|'expir
 export interface Chain {
  mode:'demo'|'test'|'live'; prepare(intent:Intent,authorizeSigning?:()=>Promise<void>):Promise<Signed>;
  inspect(intent:Intent,signed:Signed):Promise<Outcome>;
- broadcast(signed:Signed):Promise<void>;
+ broadcast(signed:Signed,authorizeBroadcast?:()=>Promise<void>):Promise<void>;
  destination(owner:string,asset:string):string;
 }
 export class Engine {
