@@ -18,9 +18,13 @@ import {ensure} from '../../packages/core/model.js';
 import {tokenImage} from './token-image.js';
 export function createServer(db:Store,c:Config){
  const app=Fastify({logger:false,bodyLimit:8192,trustProxy:false});
+ app.addHook('preSerialization',async(req,_reply,payload)=>{
+  if(req.routeOptions.url?.startsWith('/api/')&&payload&&typeof payload==='object'&&!Array.isArray(payload))return {...payload,mode:c.MODE,testOnly:c.MODE==='demo'||c.MODE==='test'};
+  return payload;
+ });
  app.addHook('onRequest',async(req,reply)=>{reply.header('x-content-type-options','nosniff').header('referrer-policy','no-referrer');
   if(!await takeRateLimit(db,clientKey(req.ip,req.headers,req.method,req.url,c.EMBER10_PROXY_SECRET)))return reply.header('retry-after','60').code(429).send({error:'rate_limited'});
-  if(req.url.startsWith('/operator/')){const supplied=req.headers.authorization??'';const expected=c.OPERATOR_TOKEN?'Bearer '+c.OPERATOR_TOKEN:'';
+  if(req.routeOptions.url?.startsWith('/operator/')){const supplied=req.headers.authorization??'';const expected=c.OPERATOR_TOKEN?'Bearer '+c.OPERATOR_TOKEN:'';
    if(!expected||!timingSafeEqual(createHash('sha256').update(supplied).digest(),createHash('sha256').update(expected).digest()))return reply.code(401).send({error:'operator_auth_required'});
   }
  });
@@ -35,6 +39,12 @@ export function createServer(db:Store,c:Config){
  app.get<{Params:{address:string}}>('/api/wallets/:address/rewards',req=>{try{new PublicKey(req.params.address);}catch{throw Error('invalid address');}return q.wallet(db,req.params.address);});
  app.get('/api/transparency',async()=>{const dev=['prelaunch','live'].includes(c.MODE)?await new DeveloperAccounting(db,c.MODE).summary(developerPolicy(c)):null;return {...await q.transparency(db),developerAccounting:dev?.hasRecords?dev:null};});
  app.post('/operator/pause',async req=>{const body=z.object({reason:z.string().min(1).max(200)}).parse(req.body);await db.tx(async t=>{await db.lock(t);await t.query('UPDATE control SET paused=true,reason=$1',[body.reason]);await t.query('INSERT INTO operator_audit(actor,action,body) VALUES($1,$2,$3)',['authenticated-operator','pause',canonical(body)]);});return {paused:true};});
+ app.post<{Params:{id:string}}>('/operator/incidents/:id/resolve',async req=>{
+  const id=z.string().regex(/^\d+$/).parse(req.params.id),body=z.object({reason:z.string().min(10).max(500),evidenceReference:z.string().min(5).max(500)}).strict().parse(req.body);
+  await db.tx(async t=>{await db.lock(t);const incident=(await t.query('SELECT id,resolved_at FROM incidents WHERE id=$1 FOR UPDATE',[id])).rows[0];ensure(incident,'incident not found');if(incident.resolved_at)return;
+   await t.query('INSERT INTO operator_audit(actor,action,body) VALUES($1,$2,$3)',['authenticated-operator','resolve-incident',canonical({id,...body})]);await t.query('UPDATE incidents SET resolved_at=clock_timestamp() WHERE id=$1',[id]);
+  });return {resolved:true,automaticResume:false};
+ });
  app.post('/operator/resume',async()=>{if(c.MASTER_PAUSE||c.MODE==='prelaunch'||c.MODE==='live'&&!c.APPROVAL_FILE)throw Error('master pause/configuration blocks resume');await db.tx(async t=>{await db.lock(t);if((await t.query('SELECT id FROM incidents WHERE resolved_at IS NULL')).rowCount)throw Error('unresolved incidents');await t.query("UPDATE control SET paused=false,reason='Waiting for fresh verified funding and selection'");await t.query("INSERT INTO operator_audit(actor,action,body) VALUES('authenticated-operator','resume','{}')");});return {paused:false};});
  app.get('/operator/funding',async()=>({balances:await db.balances(),receipts:(await db.pool.query('SELECT id,classification,asset,amount::text FROM incoming_transfers ORDER BY id')).rows}));
  app.post('/operator/capital',async req=>{const {signature}=z.object({signature:z.string().regex(/^[1-9A-HJ-NP-Za-km-z]{80,90}$/)}).parse(req.body);ensure(c.TREASURY&&['live','test'].includes(c.MODE),'configured real test/live treasury required');const connection=new Connection(c.RPC_URL,'finalized');const evidence=await verifiedOperatorTransfer(connection,c,signature);

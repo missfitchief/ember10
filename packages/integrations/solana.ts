@@ -24,7 +24,8 @@ export async function fullSnapshot(connection:Connection,mint:string,policy:Poli
  ensure(mintInfo.mintAuthority===null&&mintInfo.freezeAuthority===null,'mint authority unsupported for pilot');
  const response=await connection.getProgramAccounts(TOKEN_PROGRAM_ID,{commitment:'finalized',withContext:true,filters:[{dataSize:165},{memcmp:{offset:0,bytes:mint}}]});
  const accounts:TokenAccount[]=response.value.map(a=>{const p=AccountLayout.decode(a.account.data);return {address:a.pubkey.toBase58(),mint:p.mint.toBase58(),program:a.account.owner.toBase58(),owner:p.owner.toBase58(),amount:p.amount.toString(),state:p.state===1?'initialized':p.state===2?'frozen':'uninitialized'};});
- const supply=await connection.getTokenSupply(key,{commitment:'finalized',minContextSlot:response.context.slot} as never);
+ const supply=await connection.getTokenSupply(key,'finalized');
+ ensure(supply.context.slot>=response.context.slot,'supply observation predates holder census; retry');
  return snapshot({mint,decimals:mintInfo.decimals,program:SPL,slot:response.context.slot,accounts,complete:true,supply:supply.value.amount,supplySlot:supply.context.slot,policy});
 }
 export async function parsedTransfers(connection:Connection,signature:string){
@@ -98,7 +99,7 @@ export class SolanaChain implements Chain {
     ix.push(createTransferCheckedInstruction(getAssociatedTokenAddressSync(mint,market.publicKey),mint,dest,market.publicKey,this.simulatedMarket.outputFor(i),metadata.decimals));
    }else {ensure(this.swapBuilder,'live swap validator/build adapter not configured');tx=await this.swapBuilder(i);const fee=await this.connection.getFeeForMessage(tx.message,'finalized');ensure(fee.value!==null&&BigInt(fee.value)<=BigInt(i.expected.maxFee),'fee cap');
     ensure(typeof i.expected.maxRent==='string'&&/^\d+$/.test(i.expected.maxRent)&&typeof i.expected.requiredRent==='string'&&/^\d+$/.test(i.expected.requiredRent),'swap builder omitted verified rent bounds');
-    const rent=BigInt(i.expected.maxRent),requiredRent=BigInt(i.expected.requiredRent);await authorizeSigning?.();bindNativeCost(i,rent,requiredRent);
+    const rent=BigInt(i.expected.maxRent),requiredRent=BigInt(i.expected.requiredRent);bindNativeCost(i,rent,requiredRent);await this.preflightUnsigned(tx,i.expected.lastValidHeight);await authorizeSigning?.();bindNativeCost(i,rent,requiredRent);
     ensure(typeof i.expected.quotedAt==='number'&&Date.now()>=i.expected.quotedAt&&Date.now()-i.expected.quotedAt<15000,'quote stale at signing');
     const signed=await this.signer.sign(tx);return this.checkedSigned(signed,i);}
   }else if(i.kind==='burn'){
@@ -117,8 +118,16 @@ export class SolanaChain implements Chain {
   const rentBound=ataCount?BigInt(await this.connection.getMinimumBalanceForRentExemption(ACCOUNT_SIZE,'finalized'))*BigInt(ataCount):0n;
   ensure(rentBound+BigInt(i.expected.maxFee)<=BigInt(String(i.expected.maxTotalCost??'0')),'rent/fee allowance insufficient; defer before signing');
   tx=new VersionedTransaction(legacy.compileMessage());if(this.simulatedMarket&&(i.kind==='swap'||i.kind==='buyback'))tx.sign([this.simulatedMarket.signer]);
-  const fee=await this.connection.getFeeForMessage(tx.message,'finalized');ensure(fee.value!==null&&BigInt(fee.value)<=BigInt(i.expected.maxFee),'transaction fee cap');await authorizeSigning?.();bindNativeCost(i,rentBound);tx=await this.signer.sign(tx);
+  const fee=await this.connection.getFeeForMessage(tx.message,'finalized');ensure(fee.value!==null&&BigInt(fee.value)<=BigInt(i.expected.maxFee),'transaction fee cap');bindNativeCost(i,rentBound);await this.preflightUnsigned(tx,block.lastValidBlockHeight);await authorizeSigning?.();bindNativeCost(i,rentBound);tx=await this.signer.sign(tx);
   return this.checkedSigned(tx,i,block.lastValidBlockHeight);
+ }
+ async preflightUnsigned(tx:VersionedTransaction,height:unknown){
+  ensure(tx.serialize().length<=1232,'batch exceeds transaction size; reduce recipients');
+  ensure(typeof height==='number'&&Number.isSafeInteger(height)&&height>0,'missing expiry metadata');
+  const sim=await this.connection.simulateTransaction(tx,{sigVerify:false,commitment:'finalized'});
+  ensure(!sim.value.err,'simulation failed before signing');ensure((sim.value.unitsConsumed??0)<=1_400_000,'compute limit');
+  ensure((await this.connection.isBlockhashValid(tx.message.recentBlockhash,{commitment:'finalized'})).value,'blockhash invalid');
+  ensure(await this.connection.getBlockHeight('finalized')<=height,'expired block height');
  }
  async checkedSigned(tx:VersionedTransaction,i:Intent,height?:number){
   ensure(tx.serialize().length<=1232,'batch exceeds transaction size; reduce recipients');

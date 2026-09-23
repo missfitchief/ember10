@@ -191,7 +191,7 @@ export class Engine {
     const explained=inflight.length>0&&(delta===0n||delta<0n&&!unknownNativeCost&&-delta<=debitBound||delta>0n&&mayCredit);
     const state=stale?'stale_observation':delta<0n&&unknownNativeCost?'cost_bound_unavailable':explained?'in_flight':delta===0n?'balanced':delta<0n?'deficit':'unclassified_surplus';
     const report={...a,expected:expected.toString(),delta:delta.toString(),state,inflight:inflight.map(i=>i.id),maximumPendingDebit:unknownNativeCost?null:debitBound.toString(),ledgerFinalizedSlot:Number(latest.slot)};reports.push(report);
-    if(!stale&&!explained&&delta!==0n){await t.query('INSERT INTO incidents(kind,details) VALUES($1,$2)',['reconciliation_'+state,canonical(report)]);await t.query('UPDATE control SET paused=true,reason=$1',['reconciliation_'+state]);}
+    if(!stale&&!explained&&delta!==0n)await this.db.recordIncident(t,'reconciliation_'+state,report);
    }
    await this.db.doc('reconciliation',{at:new Date().toISOString(),reports},t);return reports;
   });

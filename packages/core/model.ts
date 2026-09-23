@@ -8,6 +8,7 @@ export const WSOL = 'So11111111111111111111111111111111111111112';
 export const MAINNET_GENESIS='5eykt4UsFv8P8NJdTREpY1vzqKqZKvdpKuc147dw2N9d';
 export type Mode = 'prelaunch'|'demo'|'test'|'live';
 export const canonical = (v: unknown): string => {
+ if(v instanceof Date) return JSON.stringify(v.toISOString());
  if(typeof v==='bigint') return JSON.stringify(v.toString());
  if(Array.isArray(v)) return '['+v.map(canonical).join(',')+']';
  if(v!==null && typeof v==='object') return '{'+Object.entries(v).filter(([,x])=>x!==undefined).sort(([a],[b])=>a<b?-1:1).map(([k,x])=>JSON.stringify(k)+':'+canonical(x)).join(',')+'}';

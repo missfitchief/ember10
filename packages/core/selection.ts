@@ -57,6 +57,7 @@ export function snapshot(input:{mint:string;decimals:number;program:string;slot:
  ensure(a.mint===input.mint&&a.program===input.program&&a.state!=='uninitialized','invalid token account');
  ensure(/^(0|[1-9][0-9]*)$/.test(a.amount),'invalid raw balance');const b=BigInt(a.amount);accountSum+=b; totals.set(a.owner,(totals.get(a.owner)??0n)+b);}
  ensure(accountSum===BigInt(input.supply),'supply/census check mismatch; retry a stable complete observation');
+ ensure(BigInt(input.policy.holderUnits)>0n,'holder threshold must be positive');
  const threshold=BigInt(input.policy.holderUnits)*10n**BigInt(input.decimals);
  const owners=[...totals].sort(([a],[b])=>a<b?-1:1).map(([owner,balance])=>{
  const exclusion=input.policy.exclusions.find(e=>e.owner===owner);return {owner,balance:balance.toString(),eligible:!exclusion&&balance>=threshold,reason:exclusion?.reason??(balance<threshold?'below threshold':null)};});

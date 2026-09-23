@@ -5,6 +5,12 @@ export interface Delivery { id:string; asset:string; status:string; result?:{sig
 export interface WalletResult { address:string; status?:string; reason:string; snapshotSlot:number|null; eligibility:{eligible?:boolean;reason?:string}|null; entitlements:Credit[]; deliveries:Delivery[] }
 export interface Ledger { receivedLamports:string|null; finalizedPayoutTransactions:string|null; assets:{mint:string;symbol:string;decimals:number}[]; accrued:Credit[]; balances:{asset:string;account:string;amount:string}[]; accountingHealth:string; burns:unknown[]; reconciliation:unknown; incidents:unknown[] }
 export type Epoch = { id:string; status:string; reason?:string; created_at?:string };
+export type EpochPage = {status?:'available'|'unavailable'; items:Epoch[]; nextCursor:string|null; message?:string};
+export function epochPage(v:PublicRecord):EpochPage {
+ if(v.testOnly===true||v.mode==='demo'||v.mode==='test')throw Error('Test rounds are not presented as funded reward history.');
+ if(!Array.isArray(v.items)||v.items.some(row=>!row||typeof row.id!=='string'||typeof row.status!=='string')||v.nextCursor!=null&&typeof v.nextCursor!=='string'||v.status!=null&&!['available','unavailable'].includes(String(v.status)))throw Error('Round history could not be verified.');
+ return {items:v.items,status:v.status as EpochPage['status'],nextCursor:v.nextCursor as string??null,message:typeof v.message==='string'?v.message:undefined};
+}
 export interface EpochDetail { mode?:string; testOnly?:boolean; epoch:Epoch; snapshot:{slot:number;hash:string}; entitlements:unknown[]; intents:(Delivery&{kind:string})[]; transfers:Delivery[] }
 export type PublicRecord = Record<string,unknown>;
 export type LedgerAvailability = 'checking' | 'available' | 'unavailable' | 'failed';

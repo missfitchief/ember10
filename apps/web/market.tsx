@@ -59,7 +59,9 @@ export function MarketPanel({ data, loading, error, retry }: { data?: PublicOver
     const version = ++requestVersion.current;
     const controller = new AbortController();
     if (view === 'funded' || defaultRanking) {
-      setPage({ key: requestKey, snapshot: data, busy: false, error: '', notice: '' });
+      setPage(previous => defaultRanking && previous?.key===requestKey && previous.snapshot && previous.snapshot.markets.length>(data?.markets.length??0)
+        ? {...previous,busy:false,notice:'A newer observation may be available. Your expanded list is retained until you refresh it.'}
+        : { key: requestKey, snapshot: data, busy: false, error: '', notice: '' });
       return () => { controller.abort(); ++requestVersion.current; };
     }
     setPage({ key: requestKey, snapshot: cache.current.get(requestKey), busy: true, error: '', notice: '' });
@@ -88,11 +90,7 @@ export function MarketPanel({ data, loading, error, retry }: { data?: PublicOver
         remember(requestKey, merged);
         setPage({ key: requestKey, snapshot: merged, busy: false, error: '', notice: '' }); setLimit(n => n + 30);
       } else {
-        setPage({ key: requestKey, snapshot: current, busy: true, error: '', notice: 'The catalogue changed while paging. Refreshing the first page; observations will not be mixed.' });
-        const fresh = assertOverview(await api<PublicOverview>(path()));
-        if (version !== requestVersion.current) return;
-        remember(requestKey, fresh);
-        setPage({ key: requestKey, snapshot: fresh, busy: false, error: '', notice: 'The catalogue changed while paging. Showing the newest first page.' }); setLimit(20);
+        setPage({ key: requestKey, snapshot: current, busy: false, error: '', notice: 'The catalogue changed while paging. Your current list is retained. Refresh the list to start from the newest observation.' });
       }
     } catch (e) {
       if (version === requestVersion.current) setPage({ key: requestKey, snapshot: current, busy: false, error: (e as Error).message, notice: '' });
@@ -108,7 +106,7 @@ export function MarketPanel({ data, loading, error, retry }: { data?: PublicOver
   }
   const open = (asset: PublicMarket) => { if (current) setDetail({ asset, snapshot: current }); };
   const retryRequest = () => {
-    if (defaultRanking) { retry(); return; }
+    if (defaultRanking) { setPage(undefined); setLimit(20); retry(); return; }
     // Retry the exact query without mutating the canonical selection or clearing last-good rows.
     const version = ++requestVersion.current;
     setPage({ key: requestKey, snapshot: current, busy: true, error: '', notice: '' });
@@ -118,12 +116,12 @@ export function MarketPanel({ data, loading, error, retry }: { data?: PublicOver
     }).catch(e => { if (version === requestVersion.current) setPage({ key: requestKey, snapshot: current, busy: false, error: (e as Error).message, notice: '' }); });
   };
   return <section className="market-panel" aria-label="Market and reward basket">
-    <div className="market-toolbar"><div className="tabs" role="tablist" aria-label="Market and basket views">{([['ranking', 'Market ranking'], ['selection', 'Eligibility'], ['funded', 'Funded basket']] as const).map(([key, label]) => <button type="button" className="tab" key={key} id={`tab-${key}`} role="tab" aria-selected={view === key} aria-controls="market-content" tabIndex={view === key ? 0 : -1} onKeyDown={tabKey} onClick={() => setView(key)}>{label}{key === 'selection' && data && <span>{data.selection.selectedCount}/10</span>}</button>)}</div>{view !== 'funded' && <label className="table-search"><Icon name="search"/><span className="sr">Search markets by name, symbol or mint</span><input value={query} onChange={e => setQuery(e.target.value)} placeholder="Find a token or mint" autoComplete="off" spellCheck={false}/></label>}</div>
+    <div className="market-toolbar"><div className="tabs" role="tablist" aria-label="Market and basket views">{([['ranking', 'Market ranking'], ['selection', 'Eligibility'], ['funded', 'Funded basket']] as const).map(([key, label]) => <button type="button" className="tab" key={key} id={`tab-${key}`} role="tab" aria-selected={view === key} aria-controls="market-content" tabIndex={view === key ? 0 : -1} onKeyDown={tabKey} onClick={() => setView(key)}>{label}{key === 'selection' && data && <span>{data.selection.selectedCount}/10</span>}</button>)}</div>{view !== 'funded' && <label className="table-search"><Icon name="search"/><span className="sr">Search markets by name, symbol or mint</span><input maxLength={100} value={query} onChange={e => setQuery(e.target.value)} placeholder="Find a token or mint" autoComplete="off" spellCheck={false}/></label>}</div>
     <div className="market-source"><span><i className="dot"/>{view === 'funded' ? 'Frozen round membership' : state === 'loading' ? 'Loading observations' : state === 'stale' ? 'Stale observation' : model?.sourceLabel ?? 'Request failed'}{model && view !== 'funded' && <span className="source-time"> · {model.observedLabel}</span>}</span><span>{view === 'funded' ? 'Immutable funded record' : 'Market cap · USD'}</span></div>
     <div id="market-content" role="tabpanel" aria-labelledby={`tab-${view}`} tabIndex={0} aria-busy={pending}>
       {view === 'funded' ? data ? <FundedBasket data={data}/> : loading ? <Skeleton/> : <Empty title="Funded basket unavailable." text={error || 'No verified funded record is available.'}/> : state === 'loading' ? <Skeleton/> : state === 'failed' ? <Empty title="Market request failed." text={requestError || error || 'We could not read the source. No substitute assets are shown.'}><button className="btn" onClick={retryRequest}>Try again</button></Empty> : <>
         {requestError && current && <div className="inline-notice" role="alert">Refresh failed. The visible observations retain their last successful fetch time. <button className="btn small" onClick={retryRequest}>Retry</button></div>}
-        {matchingPage?.notice && <div className="inline-notice" role="status">{matchingPage.notice}</div>}
+        {matchingPage?.notice && <div className="inline-notice" role="status">{matchingPage.notice} <button className="btn small" onClick={retryRequest}>Refresh list</button></div>}
         {pending && <div className="search-feedback" role="status">Refreshing these observations…</div>}
         {view === 'selection' && current && <div className="selection-summary"><strong>{model?.selectedLabel}</strong><p>{current.selection.reason}</p><span className="muted">Policy {current.selection.policyVersion}. Market rank alone does not establish eligibility.</span></div>}
         {state === 'stale' && <div className="inline-notice" role="status">Stale observation. Last successful fetch: {dateTime(current?.discovery.lastSuccessfulAt ?? current?.discovery.fetchedAt)}. New purchase commitments remain blocked.</div>}

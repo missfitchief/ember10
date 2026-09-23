@@ -36,8 +36,28 @@ const args=(id:string)=>({id,policy:policy(),snapshot:snapshot({...f.snapshot,po
 async function seed(){for(const kind of ['seed','creator_fee'] as const)await engine.ingest({signature:'funding-'+serial++,instruction:'0',asset:SOL,amount:kind==='seed'?'300000000':'3000000000',destination:f.treasury,source:f.sender,slot:500000,finalized:true,error:null,pool:f.pool,publishedPool:f.pool,kind,attributionVerified:true,rawEvidence:{testOnly:true}},{pool:f.pool,treasury:f.treasury,feeSender:f.sender});}
 async function commit(id='first',rows=candidates()) {const service=new AutomaticSelectionService(policy(),f.mint,async budget=>({candidates:rows.map(x=>({...x,routeBudget:budget.toString()})),complete:true,rawCatalogueHash:hash(rows),observedAt:Date.now()}));await commitFreshEpoch(engine,service,args(id),async()=>{});return service;}
 const realConfig=()=>({...loadConfig({MODE:'prelaunch',MASTER_PAUSE:'false'}),MODE:'live' as const,BROADCAST_ENABLED:true,TREASURY:f.treasury});
+it('bounds operational polling while preserving funded evidence and audits incident resolution without resuming',async()=>{
+ await seed();await commit();const before=(await db.pool.query("SELECT id FROM documents WHERE kind IN ('basket','snapshot') ORDER BY id")).rows;
+ for(let n=0;n<8;n++)await db.observe({type:'observed_market',sequence:n});
+ expect((await db.pool.query("SELECT body FROM operational_observations WHERE type='observed_market'")).rows).toEqual([{body:{type:'observed_market',sequence:7}}]);
+ expect((await db.pool.query("SELECT id FROM documents WHERE kind IN ('basket','snapshot') ORDER BY id")).rows).toEqual(before);
+ await Promise.all([db.incident('same-condition',{n:1}),db.incident('same-condition',{n:2})]);
+ const incidents=(await db.pool.query('SELECT id FROM incidents')).rows;expect(incidents).toHaveLength(1);
+ const token='regression-operator-token-with-enough-length',app=createServer(db,loadConfig({MODE:'prelaunch',OPERATOR_TOKEN:token}));
+ const url='/operator/incidents/'+incidents[0].id+'/resolve',payload={reason:'Verified external evidence and reviewed underlying cause',evidenceReference:'local-regression-evidence'};
+ expect((await app.inject({method:'POST',url,payload})).statusCode).toBe(401);
+ expect((await app.inject({method:'POST',url,payload,headers:{authorization:'Bearer '+token}})).statusCode).toBe(200);
+ expect((await db.pool.query('SELECT paused FROM control')).rows[0].paused).toBe(true);
+ expect((await db.pool.query("SELECT id FROM operator_audit WHERE action='resolve-incident'")).rowCount).toBe(1);await app.close();
+});
+it('captures holder and price evidence after selection and reauthorizes before committing',async()=>{
+ await seed();const events:string[]=[],original=args('late-evidence');
+ const service=new AutomaticSelectionService(policy(),f.mint,async budget=>{events.push('selection');return {candidates:candidates().map(x=>({...x,routeBudget:budget.toString()})),complete:true,rawCatalogueHash:'late',observedAt:Date.now()};});
+ await commitFreshEpoch(engine,service,{...original,snapshot:undefined},async()=>{events.push('authorize');},async()=>{events.push('snapshot');return original.snapshot;},async()=>{events.push('price');return {...original.price,at:Date.now()};});
+ expect(events).toEqual(['authorize','selection','snapshot','price','authorize']);
+});
 beforeAll(async()=>{await admin.pool.query(`CREATE SCHEMA ${schema}`);const url=new URL(base);url.searchParams.set('options','-c search_path='+schema);db=new Store(url.toString());await migrate(db);await db.bindMode('prelaunch');chain=new DemoChain(db);await chain.init();});
-beforeEach(async()=>{await db.pool.query('TRUNCATE documents,incoming_transfers,cursors,epochs,intents,attempts,entitlements,payout_batches,batch_items,ledger_events,postings,leases,jobs,incidents,operator_audit,chain_receipts,demo_chain,assets,api_rate_limits CASCADE');await db.pool.query("UPDATE control SET paused=false,reason='isolated test'");f=fixtures();engine=new Engine(db,'demo');chain=new DemoChain(db);lease=(await db.lease('integration-test',300))!;});
+beforeEach(async()=>{await db.pool.query('TRUNCATE operational_observations,documents,incoming_transfers,cursors,epochs,intents,attempts,entitlements,payout_batches,batch_items,ledger_events,postings,leases,jobs,incidents,operator_audit,chain_receipts,demo_chain,assets,api_rate_limits CASCADE');await db.pool.query("UPDATE control SET paused=false,reason='isolated test'");f=fixtures();engine=new Engine(db,'demo');chain=new DemoChain(db);lease=(await db.lease('integration-test',300))!;});
 afterEach(()=>{vi.restoreAllMocks();vi.unstubAllEnvs();vi.unstubAllGlobals();});
 afterAll(async()=>{await db?.close();await admin.pool.query(`DROP SCHEMA ${schema} CASCADE`);await admin.close();});
 
@@ -90,7 +110,7 @@ it('local overview exposes selection, funded history and actual allocation; stal
  const source=new MarketDataService(async url=>Response.json(String(url).endsWith('/configs')?configs:raw));
  const result=await backendOverview(db,loadConfig({MODE:'prelaunch'}),{},source);
  expect(result.selection).toMatchObject({state:'ready',selectedCount:10,commitmentsAllowed:false});expect(result.fundedBasket).toMatchObject({status:'funded',epochId:'first'});expect(result.accounting).toMatchObject({status:'available',unit:'lamports',opsAllocation:'98000000',creatorRevenue:'3000000000'});
- await db.doc('observation',{...service.current(),observedAt:Date.now()-181000});const stale=await backendOverview(db,loadConfig({MODE:'prelaunch'}),{},source);expect(stale.selection.state).toBe('blocked');expect(stale.fundedBasket.members).toHaveLength(10);
+ await db.observe({...service.current()!,observedAt:Date.now()-181000});const stale=await backendOverview(db,loadConfig({MODE:'prelaunch'}),{},source);expect(stale.selection.state).toBe('blocked');expect(stale.fundedBasket.members).toHaveLength(10);
  await expect(backendOverview(db,loadConfig({MODE:'demo'}),{},source)).rejects.toThrow('non-production');
 });
 it('hosted overview uses authoritative backend with search parameters and rejects demo substitution',async()=>{

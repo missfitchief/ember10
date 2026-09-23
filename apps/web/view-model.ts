@@ -25,7 +25,7 @@ export function decimal(value: unknown): Decimal | null {
 function grouped(value: string) { const [whole,fraction] = value.split('.'); return whole.replace(/\B(?=(\d{3})+(?!\d))/g, ',') + (fraction ? '.'+fraction : ''); }
 export function money(value: string | null | undefined, compact = true) {
   const n = decimal(value); if (!n || n.isNegative()) return 'Unavailable';
-  if (compact) { for (const [unit, divisor] of [['T', '1000000000000'],['B', '1000000000'],['M', '1000000'],['K', '1000']]) { if (n.gte(divisor)) return `$${n.div(divisor).toFixed(1)}${unit}`; } }
+  if (compact) { for (const [unit, divisor] of [['T', '1000000000000'],['B', '1000000000'],['M', '1000000'],['K', '1000']]) { if (n.gte(new Decimal(divisor).mul('0.99995'))) return `$${n.div(divisor).toFixed(1)}${unit}`; } }
   return `$${grouped(n.toFixed(n.gte(1) ? 2 : 6))}`;
 }
 export function change(value: string | null) { const n = decimal(value); return n ? `${n.gt(0)?'+':''}${n.toFixed(2)}%` : '—'; }

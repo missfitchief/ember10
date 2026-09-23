@@ -19,11 +19,11 @@ export async function backendOverview(db: Store, c: Config, page: Parameters<typ
   await tx.query('SET TRANSACTION ISOLATION LEVEL REPEATABLE READ READ ONLY');
   const installation = (await tx.query('SELECT mode FROM installation')).rows[0];
   ensure(installation?.mode === c.MODE, 'database mode mismatch');
-  const selection: SelectionObservation | undefined = (await tx.query("SELECT body FROM documents WHERE kind='observation' AND body->>'type'='eligible_selection' ORDER BY created_at DESC,id DESC LIMIT 1")).rows[0]?.body;
+  const selection: SelectionObservation | undefined = (await tx.query("SELECT body FROM current_observation_records WHERE kind='observation' AND body->>'type'='eligible_selection' ORDER BY created_at DESC,id DESC LIMIT 1")).rows[0]?.body;
   const control = (await tx.query('SELECT paused,reason FROM control')).rows[0];
   const worker = (await tx.query("SELECT expires_at FROM leases WHERE name='worker'")).rows[0];
   const active = !!worker && new Date(worker.expires_at).getTime() > Date.now();
-  const readiness = (await tx.query("SELECT body FROM documents WHERE kind='observation' AND body->>'type'='worker_readiness' ORDER BY created_at DESC LIMIT 1")).rows[0]?.body;
+  const readiness = (await tx.query("SELECT body FROM current_observation_records WHERE kind='observation' AND body->>'type'='worker_readiness' ORDER BY created_at DESC LIMIT 1")).rows[0]?.body;
   const epoch = (await tx.query('SELECT e.id,e.created_at,b.body AS basket,p.body AS policy FROM epochs e JOIN documents b ON b.id=e.basket_id JOIN documents p ON p.id=e.policy_id ORDER BY e.created_at DESC,e.id DESC LIMIT 1')).rows[0];
   const lastFinalized = (await tx.query("SELECT max(i.updated_at) AS at FROM intents i JOIN chain_receipts r ON r.intent_id=i.id WHERE i.status='finalized'")).rows[0]?.at;
   const usable = !!selection && selection.status === 'ready' && selection.complete && fresh(selection.observedAt, Date.now(), selection.policy.maxDataAgeSeconds) && selection.policyHash === hash(selection.policy);

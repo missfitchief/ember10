@@ -4,14 +4,14 @@ import { defaultPolicy, ensure, SOL } from '../../packages/core/model.js';
 import { publicEvidence } from './public-evidence.js';
 export async function status(db:Store,c:Config){
  const control=(await db.pool.query('SELECT paused,reason FROM control')).rows[0];
- const discovery=(await db.pool.query("SELECT body,created_at FROM documents WHERE kind='observation' AND body->>'type'='observed_market' ORDER BY created_at DESC LIMIT 1")).rows[0];
+ const discovery=(await db.pool.query("SELECT body,created_at FROM current_observation_records WHERE kind='observation' AND body->>'type'='observed_market' ORDER BY created_at DESC LIMIT 1")).rows[0];
  const worker=(await db.pool.query("SELECT expires_at FROM leases WHERE name='worker'")).rows[0];
  return {mode:c.MODE,cluster:c.CLUSTER,phase:c.OUR_MINT?'configured':'prelaunch',broadcastEnabled:c.BROADCAST_ENABLED,paused:control.paused,waitingReason:control.reason,
   configured:!!c.OUR_MINT,discovery:discovery?{type:'observed_market',status:discovery.body.status,fetchedAt:discovery.body.fetchedAt??null,coverage:discovery.body.normalized?.coverage??null,evidenceHash:discovery.body.normalized?.evidenceHash??null}:null,discoveryStale:!discovery||['stale','unavailable'].includes(discovery.body.status)||!discovery.body.fetchedAt||Date.now()-Date.parse(discovery.body.fetchedAt)>180000,
   workerActive:!!worker&&new Date(worker.expires_at).getTime()>Date.now(),asOf:new Date().toISOString(),nextEvaluation:null};
 }
 export async function project(db:Store,c:Config){const r=(await db.pool.query("SELECT id,body FROM documents WHERE kind='policy' ORDER BY created_at DESC LIMIT 1")).rows[0];return {name:'EMBER10',workingName:true,nameCollision:true,mint:c.OUR_MINT??null,pool:c.OUR_POOL??null,treasury:c.TREASURY??null,operations:c.OPERATIONS??null,policy:r?.body??defaultPolicy,policyVersion:r?.id??'prelaunch-draft',buyUrl:c.MODE==='live'&&c.OUR_MINT&&c.OUR_POOL?`https://embercurve.fun/t/${c.OUR_MINT}`:null,disclosure:'Rewards depend on received creator fees. The service controls the reward treasury. Independent project; no official Ember affiliation.'};}
-export async function basket(db:Store){const r=(await db.pool.query("SELECT id,body,created_at FROM documents WHERE kind='observation' AND body->>'type'='eligible_selection' ORDER BY created_at DESC LIMIT 1")).rows[0];const stale=!!r&&Date.now()-r.body.observedAt>r.body.policy.maxDataAgeSeconds*1000;return r?{id:r.id,...r.body,basket:stale?null:r.body.basket,stale,ready:!stale&&r.body.status==='ready'&&!!r.body.basket?.ready}:{id:null,selected:[],universe:[],eligibleCount:0,ready:false,stale:false,reason:'No current verified selection has been produced'};}
+export async function basket(db:Store){const r=(await db.pool.query("SELECT id,body,created_at FROM current_observation_records WHERE kind='observation' AND body->>'type'='eligible_selection' ORDER BY created_at DESC LIMIT 1")).rows[0];const stale=!!r&&Date.now()-r.body.observedAt>r.body.policy.maxDataAgeSeconds*1000;return r?{id:r.id,...r.body,basket:stale?null:r.body.basket,stale,ready:!stale&&r.body.status==='ready'&&!!r.body.basket?.ready}:{id:null,selected:[],universe:[],eligibleCount:0,ready:false,stale:false,reason:'No current verified selection has been produced'};}
 export async function epochs(db:Store,limit=20,before?:string){const rows=(await db.pool.query(`SELECT id,status,reason,funding,created_at FROM epochs WHERE ($2::text IS NULL OR id<$2) ORDER BY id DESC LIMIT $1`,[limit+1,before??null])).rows;return {items:rows.slice(0,limit),nextCursor:rows.length>limit?rows[limit-1].id:null};}
 export async function exportEpoch(db:Store,id:string){
  const e=(await db.pool.query('SELECT * FROM epochs WHERE id=$1',[id])).rows[0];ensure(e,'epoch not found');const mode=(await db.pool.query('SELECT mode FROM installation')).rows[0].mode;
@@ -43,4 +43,8 @@ export async function transparency(db:Store){
  const health=incidents.length?'needs_review':reports.some((r:{state:string})=>r.state==='stale_observation')||reconciliation&&!current?'stale':reports.length&&reports.every((r:{state:string})=>r.state==='balanced')?'reconciled':reports.some((r:{state:string})=>r.state==='in_flight')?'pending':'not_yet_verified';
  return {status:recorded?'available':'unavailable',receivedLamports:recorded?received:null,assets,accrued,finalizedPayoutTransactions:recorded?txCount:null,burns,balances,reconciliation,incidents,accountingHealth:recorded?health:'unavailable'};
 }
-export function csv(rows:Record<string,unknown>[]){const keys=['asset','owner','amount','paid','unpaid'];const cell=(v:unknown)=>'"'+String(v??'').replace(/^[=+@-]/,"'$&").replaceAll('"','""')+'"';return keys.join(',')+'\n'+rows.map(row=>keys.map(k=>cell(row[k])).join(',')).join('\n');}
+export function csv(rows:Record<string,unknown>[]){
+ const keys=['asset','owner','amount','paid','unpaid'];
+ const cell=(v:unknown)=>{const text=String(v??'');const safe=/^[\s\u0000-\u001f]*[=+@-]/.test(text)?"'"+text:text;return '"'+safe.replaceAll('"','""')+'"';};
+ return keys.join(',')+'\n'+rows.map(row=>keys.map(k=>cell(row[k])).join(',')).join('\n');
+}

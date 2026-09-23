@@ -2,6 +2,7 @@ import { createHash } from 'node:crypto';
 import Decimal from 'decimal.js';
 import bs58 from 'bs58';
 import { z } from 'zod';
+import { CATALOGUE_MAX_BYTES } from './http.js';
 import type { EligibilityCheck, PublicMarket, PublicOverview } from '../shared/public.js';
 
 export const MARKET_SOURCE = 'https://embercurve.fun/api/solana/markets';
@@ -44,7 +45,7 @@ export function normalizeCatalogue(raw: unknown, rawConfigs: unknown, ownMint: s
   for (const rawRow of catalogue.markets) {
     const parsed = rowSchema.safeParse(rawRow);
     if (!parsed.success) { invalidRows++; continue; }
-    groups.set(parsed.data.mint, [...(groups.get(parsed.data.mint) ?? []), parsed.data]);
+    const group=groups.get(parsed.data.mint);if(group)group.push(parsed.data);else groups.set(parsed.data.mint,[parsed.data]);
   }
   const now = Date.parse(fetchedAt);
   const markets: PublicMarket[] = [...groups].map(([key, rows]) => {
@@ -97,9 +98,9 @@ async function fetchJson(url: string, fetcher: typeof fetch) {
     try {
       const response = await fetcher(url, { headers: { accept: 'application/json' }, signal: AbortSignal.timeout(8000), redirect: 'error' });
       if (!response.ok || !response.body) { await response.body?.cancel(); throw new Error('source_unavailable'); }
-      if (Number(response.headers.get('content-length') ?? 0) > 12_000_000) { await response.body.cancel(); throw new Error('source_size'); }
+      if (Number(response.headers.get('content-length') ?? 0) > CATALOGUE_MAX_BYTES) { await response.body.cancel(); throw new Error('source_size'); }
       const reader = response.body.getReader(), chunks: Uint8Array[] = []; let bytes = 0;
-      while (true) { const result = await reader.read(); if (result.done) break; bytes += result.value.length; if (bytes > 12_000_000) { await reader.cancel(); throw new Error('source_size'); } chunks.push(result.value); }
+      while (true) { const result = await reader.read(); if (result.done) break; bytes += result.value.length; if (bytes > CATALOGUE_MAX_BYTES) { await reader.cancel(); throw new Error('source_size'); } chunks.push(result.value); }
       return JSON.parse(Buffer.concat(chunks).toString('utf8')) as unknown;
     } catch (error) { if (attempt === 1) throw error; await new Promise(r => setTimeout(r, 1000)); }
   }
@@ -123,7 +124,7 @@ export class MarketDataService {
         const [raw, configs] = await Promise.all([fetchJson(MARKET_SOURCE, this.fetcher), fetchJson(CONFIG_SOURCE, this.fetcher).catch(() => null)]);
         const fetchedAt = new Date(this.clock()).toISOString();
         this.lastGood = { normalized: normalizeCatalogue(raw, configs, ownMint, fetchedAt), fetchedAt }; this.failed = false; this.failures = 0;
-      } catch { this.failed = true; this.failures++; } finally { this.pending = null; } })();
+      } catch (error) { this.failed = true; this.failures++; console.error('Ember catalogue refresh failed',{code:error instanceof Error&&error.message==='source_size'?'source_size':'source_unavailable_or_invalid',attempt:this.failures,maxBytes:CATALOGUE_MAX_BYTES}); } finally { this.pending = null; } })();
     }
     if (this.pending) await this.pending;
     const observed = this.lastGood;

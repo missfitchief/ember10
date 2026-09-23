@@ -1,3 +1,5 @@
+> Current audit corrections and verification: [AUDIT-REMEDIATION.md](AUDIT-REMEDIATION.md). The original figures and walkthrough below are historical; funded operations remain disabled.
+
 # Build verification — 23 September 2026
 
 This is a runnable local controlled-pilot MVP. Synthetic settlement is proven against PostgreSQL. Real funded Solana settlement has **not** been completed here.

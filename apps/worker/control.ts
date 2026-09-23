@@ -25,7 +25,7 @@ export function executionAuthorizer(engine: Engine, c: Config, control: Executio
   const effective = await control.approval();
   ensure(hash(effective) === hash(a), 'approval changed during execution checks');
   ensure(!(await engine.db.pool.query('SELECT paused FROM control')).rows[0].paused, 'new execution paused');
-  await engine.db.doc('observation', { type: 'worker_readiness', at: Date.now(), policyHash: hash(a.policy), approvalId: a.approvalId, allowed: true });
+  await engine.db.observe( { type: 'worker_readiness', at: Date.now(), policyHash: hash(a.policy), approvalId: a.approvalId, allowed: true });
  };
 }
 export async function controlledExecutionTick(engine: Engine, chain: Chain, owner: string, c: Config, control: ExecutionControl) {
@@ -33,7 +33,7 @@ export async function controlledExecutionTick(engine: Engine, chain: Chain, owne
  if (!c.BROADCAST_ENABLED || c.MASTER_PAUSE) return { recoveryOnly: true };
  const authorize = executionAuthorizer(engine, c, control);
  try { await authorize(); } catch {
-  await engine.db.doc('observation', { type: 'worker_readiness', at: Date.now(), allowed: false });
+  await engine.db.observe( { type: 'worker_readiness', at: Date.now(), allowed: false });
   return { recoveryOnly: true };
  }
  return tick(engine, chain, owner, { authorizeNewSigning: authorize, authorizeNewSigningLocked:control.conditionsLocked });

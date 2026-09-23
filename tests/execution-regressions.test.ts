@@ -60,10 +60,18 @@ function actualAdapter(){
  vi.spyOn(adapter.connection,'getFeeForMessage').mockResolvedValue({context:{slot:600},value:5000});
  vi.spyOn(adapter.connection,'simulateTransaction').mockResolvedValue({context:{slot:600},value:{err:null,logs:[],unitsConsumed:10000}});
  vi.spyOn(adapter.connection,'isBlockhashValid').mockResolvedValue({context:{slot:600},value:true});
+ vi.spyOn(adapter.connection,'getBlockHeight').mockResolvedValue(999);
  vi.spyOn(adapter,'inspect').mockImplementation(async(_i,s)=>({status:'unknown',signature:s.signature}));
  vi.spyOn(adapter,'broadcast').mockResolvedValue();
  return {adapter,signer,recipient};
 }
+it('rejects failed unsigned simulation before any signing authorization or signer call',async()=>{
+ const {adapter,signer,recipient}=actualAdapter(),sign=vi.spyOn(signer,'sign'),authorize=vi.fn(async()=>{});
+ vi.mocked(adapter.connection.simulateTransaction).mockResolvedValue({context:{slot:600},value:{err:{InstructionError:[0,'InvalidArgument']},logs:[],unitsConsumed:10000}});
+ const i:Intent={id:'preflight-reject',epoch_id:null,kind:'operations',asset:SOL,amount:'100',status:'planned',expected:{inputAsset:SOL,from:'operations',maxFee:'5000',maxTotalCost:'5000',costAccount:'reserve',transfers:[{owner:recipient,destination:recipient,amount:'100',entitlements:[]}]}};
+ await expect(adapter.prepare(i,authorize)).rejects.toThrow('simulation failed before signing');expect(sign).not.toHaveBeenCalled();expect(authorize).not.toHaveBeenCalled();
+ expect(vi.mocked(adapter.connection.simulateTransaction).mock.calls[0][1]).toMatchObject({sigVerify:false});
+});
 beforeAll(async()=>{await admin.pool.query(`CREATE SCHEMA ${schema}`);const url=new URL(base);url.searchParams.set('options','-c search_path='+schema);db=new Store(url.toString());await migrate(db);await db.bindMode('demo');chain=new ControlledChain(db);await chain.init();await expenseFixtureTables();});
 beforeEach(async()=>{await db.pool.query('TRUNCATE intents,attempts,execution_recoveries,ledger_events,postings,leases,jobs,incidents,operator_audit,chain_receipts,demo_chain,documents,operating_expense_payments,operating_expenses CASCADE');await db.pool.query("UPDATE control SET paused=false,reason='test'");engine=new Engine(db,'demo');chain=new ControlledChain(db);lease=(await db.lease('execution',300))!;await db.tx(t=>db.move(t,'capital',SOL,'external:test','reserve',100000n));});
 afterAll(async()=>{await db?.close();await admin.pool.query(`DROP SCHEMA ${schema} CASCADE`);await admin.close();});
@@ -125,7 +133,7 @@ describe('Execution orchestration regressions',()=>{
   const {adapter,signer,recipient}=actualAdapter(),i=await intent('rpc-broadcast-race');i.expected={...i.expected,sourceTokenAccount:signer.publicKey.toBase58(),transfers:[{owner:recipient,destination:recipient,amount:'100',entitlements:[]}]};await db.pool.query('UPDATE intents SET expected=$2 WHERE id=$1',[i.id,JSON.stringify(i.expected)]);engine=new Engine(db,'test');
   const sign=vi.spyOn(signer,'sign');await expect(runIntent(engine,adapter,i.id,lease,'after_sign')).rejects.toThrow('INJECTED_CRASH');const original=await signature(i.id);
   vi.mocked(adapter.broadcast).mockRestore();const send=vi.spyOn(adapter.connection,'sendRawTransaction').mockResolvedValue(original);
-  const height=vi.spyOn(adapter.connection,'getBlockHeight').mockImplementation(async()=>{if(change==='expense')await approveFixtureExpense('during-send-rpc');else await db.tx(async t=>{await db.lock(t);await t.query('UPDATE control SET paused=true');});return 999;});
+  const height=vi.spyOn(adapter.connection,'getBlockHeight').mockClear().mockImplementation(async()=>{if(change==='expense')await approveFixtureExpense('during-send-rpc');else await db.tx(async t=>{await db.lock(t);await t.query('UPDATE control SET paused=true');});return 999;});
   const external=vi.fn(async()=>{}),locked=vi.fn(lockedExpenseCheck);await runIntent(engine,adapter,i.id,lease,undefined,{authorizeNewSigning:external,authorizeNewSigningLocked:locked});
   expect(height).toHaveBeenCalledOnce();expect(external).toHaveBeenCalledTimes(2);expect(locked).toHaveBeenCalledTimes(change==='expense'?2:1);expect(send).not.toHaveBeenCalled();expect(sign).toHaveBeenCalledOnce();expect(await signature(i.id)).toBe(original);expect((await db.pool.query('SELECT * FROM attempts')).rowCount).toBe(1);expect((await status(i.id)).status).toBe('unknown');expect(await db.balance(SOL,i.expected.from)).toBe(100n);
   await db.pool.query("UPDATE control SET paused=true; UPDATE intents SET status='needs_review' WHERE id='rpc-broadcast-race'; UPDATE attempts SET status='needs_review' WHERE intent_id='rpc-broadcast-race'");const deny=vi.fn(async()=>{throw Error('new signing denied');});
@@ -139,6 +147,9 @@ describe('Execution orchestration regressions',()=>{
   vi.spyOn(adapter.connection,'getLatestBlockhash').mockResolvedValue({blockhash:testAddress('block'),lastValidBlockHeight:100});
   vi.spyOn(adapter.connection,'getMinimumBalanceForRentExemption').mockResolvedValue(2039280);
   const fee=vi.spyOn(adapter.connection,'getFeeForMessage').mockResolvedValue({context:{slot:1},value:5000});
+  vi.spyOn(adapter.connection,'simulateTransaction').mockResolvedValue({context:{slot:1},value:{err:null,logs:[],unitsConsumed:10000}});
+  vi.spyOn(adapter.connection,'isBlockhashValid').mockResolvedValue({context:{slot:1},value:true});
+  vi.spyOn(adapter.connection,'getBlockHeight').mockResolvedValue(99);
   const sign=vi.spyOn(signer,'sign');
   const i:Intent={id:'native',epoch_id:null,kind:'operations',asset:SOL,amount:'100',status:'planned',expected:{inputAsset:SOL,from:'operations',maxFee:'5000',maxTotalCost:'5000',costAccount:'reserve',transfers:[{owner:recipient,destination:recipient,amount:'100',entitlements:[]}]}};
   await expect(adapter.prepare(i,async()=>{expect(fee).toHaveBeenCalled();throw Error('approval revoked');})).rejects.toThrow('approval revoked');

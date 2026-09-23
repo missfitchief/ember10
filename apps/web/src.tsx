@@ -45,7 +45,7 @@ function App() {
     return <a key={destination} href={`#${destination}`} onClick={() => setMenu(false)} aria-current={route === destination ? 'page' : undefined} className={`nav-item ${route === destination ? 'active' : ''}`}>{mobile && <Icon name={destination} />}{routes[destination]}</a>;
   });
   return <>
-    <a className="skip" href="#main">Skip to content</a>
+    <a className="skip" href="#main" onClick={event=>{event.preventDefault();const main=document.getElementById('main');main?.focus({preventScroll:true});main?.scrollIntoView({behavior:'instant'});}}>Skip to content</a>
     <header className="site-header"><div className="header-inner"><Brand /><nav className="desktop-navigation" aria-label="Main navigation">{navigation()}</nav><div className="header-actions"><span className="pill gold"><i className="dot" />{phaseLabel(data)}</span><a className="btn small desktop-action" href="#wallet" aria-current={route === 'wallet' ? 'page' : undefined}>My rewards <Icon name="arrow" /></a><div className="mobile-menu"><button ref={menuButton} aria-label={menu ? 'Close navigation menu' : 'Open navigation menu'} aria-expanded={menu} aria-controls="mobile-menu-links" className="menu-button" onClick={() => setMenu(!menu)}><Icon name={menu ? 'close' : 'menu'} /></button>{menu && <nav id="mobile-menu-links" aria-label="Mobile navigation">{navigation(true)}</nav>}</div></div></div></header>
     <div className="sr" role="status" aria-live="polite" aria-atomic="true">{announcement}</div>
     <main id="main" tabIndex={-1}>

@@ -1,3 +1,5 @@
+> Current audit corrections and verification: [AUDIT-REMEDIATION.md](AUDIT-REMEDIATION.md). The original figures and walkthrough below are historical; funded operations remain disabled.
+
 # Readiness as of 23 September 2026
 
 | Area | Status |
