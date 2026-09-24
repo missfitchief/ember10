@@ -1,18 +1,13 @@
-# EMBER10 external review package
+# EMBER10 external review package ? R3
 
-This is the complete source repository, including tests, migrations and recorded evidence. The package manifest identifies the exact source commit and per-file hashes. The deployed application is `ed67a05f7b676108a98dcaf29460d2fdc60fecc6`; later audit-preparation commits change documentation and reviewer tooling, not financial or public application behavior.
+This is the complete source repository, including tests, migrations and recorded evidence. The package manifest identifies the source commit and per-file hashes. [deployment.json](docs/deployment.json) identifies the exact deployed application revision separately from later documentation/evidence commits.
 
-- [Review brief](docs/EXTERNAL-AUDIT.md): scope, priorities and requested deliverables.
-- [Current findings](docs/AUDIT-FINDINGS.json): all 37 inherited findings plus 19 R2 findings, with prior auditor dispositions distinguished from current implementation claims.
-- [Reproduce the checks](docs/AUDIT-REPRODUCE.md): exact source, test, browser and financial-failure commands.
-- [Verification](docs/VERIFICATION.md) and [deployment identity](docs/deployment.json).
-- [R2 correction and open financial blockers](docs/AUDIT-R2.md).
-- [Latest publication recheck](docs/evidence/audit-ready/public-proof.json): eight asset hashes and ten actual catalogue logos.
-- [Desktop/mobile and before/after screenshots](docs/evidence/r2/).
-- [Packet verification](docs/evidence/audit-ready/checks.json) and [separate packet review](docs/evidence/audit-ready/packet-review.md).
+- [Review brief](docs/EXTERNAL-AUDIT.md) and [copy-ready external review request](docs/EXTERNAL-AUDIT-REQUEST.md).
+- [Current findings](docs/AUDIT-FINDINGS.json): all 70 findings ? 37 inherited, 19 R2 and 14 R3. Prior external conclusions and new implementation claims are distinct.
+- [R3 correction and residual limits](docs/AUDIT-R3.md), [verification](docs/VERIFICATION.md) and [reproduction commands](docs/AUDIT-REPRODUCE.md).
+- [Supplied R3 audit](docs/evidence/r3/supplied-audit.md), [R2 history](docs/AUDIT-R2.md), and [corrected financial evidence](docs/evidence/r3/financial-evidence.md).
+- Current tests, deployed byte comparisons, measured logo cache behavior, before/after desktop/mobile screenshots and exact-revision review are under [R3 evidence](docs/evidence/r3/).
 
-The last complete test run passed 258 tests in 20 files against isolated PostgreSQL schemas. Its date, source and limits are recorded; preparing this package does not imply a newer full test run. Real funded settlement was not performed. Signing, broadcast and the financial worker remain disabled on the public host.
+Financial code and OPS/DEV rules are unchanged. F-1 through F-14 and the new financial findings remain blockers. Signing, broadcast and the financial worker remain disabled on the public host. No funded settlement or production database migration was performed. Five high production dependency entries remain disclosed.
 
-Financial findings F-1 through F-14 remain open, including the independently reproduced forecast shortfall. Five high production dependency entries remain disclosed. Passing public-site checks is not approval to fund or launch the financial service. Internal specialist reviews are included with scope and same-vendor caveats; external re-audit of the correction is pending.
-
-Start an external review with [this copy-ready request](docs/EXTERNAL-AUDIT-REQUEST.md). No credentials, signer keys, private runtime state or node_modules are included. No auditor has been contacted automatically. This is an audit delivery, not a two-PC development transfer.
+Internal specialist reviews are same-vendor reviews, not external audit approval. External re-audit of this correction is pending. No auditor has been contacted automatically. The package excludes credentials, private runtime state and dependencies; this is a one-PC audit delivery, not a two-PC transfer.

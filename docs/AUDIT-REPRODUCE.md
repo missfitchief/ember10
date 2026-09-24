@@ -23,7 +23,7 @@ Then run:
 npm.cmd test -- --reporter=json --outputFile=../tests-audit.json
 ```
 
-The historical R2 result was 258 passing tests in20files at ed67a05; see VERIFICATION.md and evidence/r3/tests.json for the current run. Tests use isolated schemas in `ember5_test`; set `TEST_DATABASE_URL` only to a disposable database if using a different server. No production migration is part of this procedure. The native ESM regression runs without a TypeScript loader and covers the first candidate's JSON-import failure.
+The historical R2 result was 258 passing tests in 20 files at ed67a05; see VERIFICATION.md and evidence/r3/tests.json for the current run. Tests use isolated schemas in `ember5_test`; set `TEST_DATABASE_URL` only to a disposable database if using a different server. No production migration is part of this procedure. The native ESM regression runs without a TypeScript loader and covers the first candidate's JSON-import failure.
 
 ## Read-only preview and deployment identity
 
@@ -43,7 +43,7 @@ The verifier compares index HTML and all seven referenced/static build assets, c
 
 ## Browser tests without changing the project lockfile
 
-Playwright is reviewer tooling, not a project dependency. R3 runs use Playwright1.61.1 with installed Chrome (BROWSER_CHANNEL=chrome); R2 used bundled Chromium. Install it in a separate tooling directory if unavailable:
+Playwright is reviewer tooling, not a project dependency. R3 runs use Playwright 1.61.1 with installed Chrome (BROWSER_CHANNEL=chrome); R2 used bundled Chromium. Install it in a separate tooling directory if unavailable:
 
 ```powershell
 npm.cmd install --prefix ../ember10-audit-tools --no-save --package-lock=false playwright@1.61.1

@@ -1,48 +1,27 @@
-# EMBER10 external audit brief
+# EMBER10 external audit brief ? R3
 
-Review the complete frozen source package. The manifest identifies the package commit and per-file hashes. The deployed application is **ed67a05f7b676108a98dcaf29460d2fdc60fecc6**; subsequent audit preparation changes documentation and reviewer tooling only. Public application, financial code, policy and migrations remain byte-identical to that application revision.
+Review the complete frozen source package. Record its manifest commit, tree and per-file hashes. Compare its runtime/test/config files with the application revision in deployment.json; later package commits should change only documentation, evidence or reviewer tooling. Verify the actual public revision and assets rather than relying solely on the revision marker. No cryptographic server artifact attestation is claimed.
 
 Repository: https://github.com/missfitchief/ember10
 
 Read-only pilot: https://ember5-pilot.vercel.app/
 
-## Start here
+Start with AUDIT-R3.md, AUDIT-FINDINGS.json, VERIFICATION.md, AUDIT-REPRODUCE.md and the supplied R3 audit. Retain prior audits as historical evidence. Review all 70 top-level findings and compound subfindings; do not infer closure from developer labels.
 
-1. [Package entry point](../AUDIT-START-HERE.md), [current findings register](AUDIT-FINDINGS.json) and [R2 correction](AUDIT-R2.md).
-2. [Reproduction commands](AUDIT-REPRODUCE.md), [verification](VERIFICATION.md), [deployment identity](deployment.json) and [readiness](READINESS.md).
-3. [Supplied R2 audit](evidence/r2/supplied-audit.md), plus [the original audit](evidence/external-audit/original-audit-redacted.md). The [first-round register](evidence/external-audit/findings.json) describes application 1f67d0d and is historical. Its S1-06 implementation claim is superseded by open F-3; its D-04 status is superseded by R2's fixed finding.
-4. [R2 changed files](evidence/r2/changed-files.txt) and [R2 patch](evidence/r2/changes.patch), covering 4f9fba2 through ed67a05. The [earlier patch](evidence/external-audit/changes-since-original-audit.patch) covers db041a0 through 1f67d0d. The manifest describes the entire delivered tree, including later audit documents and tooling; neither patch is the full scope of review.
+## Public review
 
-## Current review priorities
+Reproduce deferred page responses arriving after a poll or explicit refresh, including ignored abort signals. Check retention of expanded lists, honest parent-source versus query health, eligible-empty wording, failed logo recovery and healthy-image persistence. Review the catalogue-bound relay's CDN 300-second fresh/60-second stale policy and measured HIT evidence, plus error no-store and unauthorized-source rejection. Inspect desktop, 375px and 320px layouts, token details, actual catalogue logos and unavailable ledger states.
 
-The public fixes address search retention, capacity warnings, catalogue-bound images, query parity, independent bounded requests, outage reporting and accessibility. Recheck changing observations, failed/slow responses, 320px layouts, actual logos, duplicate symbols and mint identity. Cross-instance pagination still rejects different observations; the configured backend retains its 4 MB export limit and generic error message. Old CDN URLs are not claimed to be purged. Known-catalogue image traffic remains a possible resource-exhaustion vector.
+N-P4 remains open: later/cross-instance pages may not share an observation; mismatch is rejected rather than merged. N-P6 remains open/mitigated: distinct concurrent misses may exceed the per-instance 16-image cap. CDN caching is not global rate limiting. Stale last-good catalogue membership can extend logo availability beyond the CDN window. The configured backend's 4 MB export cap and generic error classification remain open.
 
-Financial findings **F-1 through F-14 remain open**. The funding forecast failure F-3 is independently reproduced, not a claimed fix: the current 23,632,080-lamport forecast fails the eleventh adapter build under the all-new-ATA fixture. F-1 lacks a complete reviewed evidence service; F-2 rejects the audit's live Jupiter instruction variants. F-4/F-6 lack adequate expiry/WSOL lifecycle recovery. The detailed register preserves attribution, reconciliation, caps, developer-cost allowances, quote freshness and pause-boundary findings. Also retain inherited nginx identity, output-price independence, policy publication, database-role and test-oracle concerns.
+## Financial review boundary
 
-Do not infer funded readiness from 258 passing tests. Five high dependency entries remain in the raw production scan. No production database migration, real funded settlement, signer activation or financial-worker deployment occurred.
+This delivery corrects public behavior and evidence only. Financial code, approval rules, migrations, signing and policy are unchanged. F-5 is corrected: valid pool-filtered rows can match, but signature-less sweep rows reject the strict window. F-3's extra-rent comparison has no maximum-fee retry margin. N-M1..N-M6 source-only assessments are not executed race tests. No live financial settlement, chain attribution, keyed Jupiter acceptance or funded-pilot readiness is established.
 
-## Product invariants
+Preserve ten equal purchase budgets, 80/10/10, existing OPS/DEV remainder rules, immutable historical funded records and mint-based identity. Missing evidence is unknown, not passing eligibility. Market ranking is not a funded basket.
 
-- EMBER10 has ten equal purchase budgets. Net creator fees allocate 80% to holder rewards, 10% to buyback/burn and 10% to OPS/DEV; historical five-member funded records remain immutable.
-- OPS/DEV payouts use only the withdrawable remainder after recorded expenses, obligations and retained reserves. No invented destination or automatic sweep of the allocation.
-- Current market rank, verified eligibility and immutable funded membership remain separate. Mint identifies an asset; historical screenshots do not seed rankings.
-- No synthetic public fallback. Missing/stale evidence is unavailable, not zero or an eligibility pass. Public address lookup never requests wallet signing.
+## Evidence and requested result
 
-## Current evidence
+Use evidence/r3 for current tests, validation metadata, deployment verification, cache timings, browser screenshots and exact-revision internal review. R2 reports remain historical; their intermediate review hashes do not attest final R3 bytes. Browser checks use Chrome emulation, not a physical iPhone. Internal reviewers are same-vendor; external re-audit remains pending.
 
-[Packet checks](evidence/audit-ready/checks.json), [separate packet review](evidence/audit-ready/packet-review.md) and [fresh financial failure reproduction](evidence/audit-ready/harness-recheck.json) document this audit-preparation update.
-
-- [Complete test report](evidence/r2/tests.json), [validation metadata](evidence/r2/validation.json), [dependency scan](evidence/r2/dependency-audit.json).
-- [Latest public recheck](evidence/audit-ready/public-proof.json), [candidate proof](evidence/r2/candidate-verification.json), [publication proof](evidence/r2/public-verification.json), [API/logo checks](evidence/r2/public-api-checks.json).
-- [Public browser checks](evidence/r2/public-browser.json), [local checks](evidence/r2/local-browser.json), [fixture interaction checks](evidence/r2/frontend-browser.json).
-- Before: [desktop](evidence/r2/before-1440.png), [mobile](evidence/r2/before-375.png). After: [desktop](evidence/r2/public-1440.png), [375px](evidence/r2/public-375.png), [320px](evidence/r2/public-320.png), [asset details](evidence/r2/public-375-detail.png). These are dated browser emulations, not physical-device tests.
-- Internal specialist reviews: [public/data/UI](evidence/r2/independent-public-review.md), [image relay](evidence/r2/independent-image-review.md), [financial blockers](evidence/r2/FINANCIAL-INDEPENDENT-REVIEW.md). Same-vendor and exact scope limitations are disclosed. External re-audit of this correction is pending.
-- [Financial reproduction source](../scripts/audit/f3-eleven-builds.mts) and [original result](evidence/r2/f3-eleven-builds-results.json). Mocked legacy instructions and RPC establish the local forecast defect, not current provider compatibility or finalized settlement.
-
-Frontend bytes, the observed revision marker and Vercel deployment identity agree. The server function has no cryptographic artifact attestation. The actual host remains prelaunch, paused, broadcast disabled and worker inactive, without a configured project mint or ledger. Unreported amounts are not zero.
-
-## Deliverable and review request
-
-Use [the copy-ready reviewer request](EXTERNAL-AUDIT-REQUEST.md). Return exact revisions and commands, dispositions for all 56 top-level findings, new reproducible findings, desktop/mobile evidence and separate go/no-go decisions for public publication versus funded operation. Distinguish execution from inference and developer claims from independent conclusions. Compound findings need subfinding-level review.
-
-The archive includes all tracked source, tests, migrations, lockfile and audit evidence. It excludes untracked secrets, Vercel credentials, private keys, databases, dependencies and build caches. Verify the ZIP and per-file SHA-256 values. No auditor was contacted or given credentials automatically. Keep financial tests isolated; no live financial or production mutation is authorized by this packet.
+Return exact revisions, commands and results, dispositions for all 70 findings, newly reproduced issues, screenshots and separate decisions for public publication versus funded operation. Report the five high dependency entries. Keep tests in a disposable database; do not supply funds, enable execution, migrate a production database or change a deployment. No auditor has been contacted automatically.

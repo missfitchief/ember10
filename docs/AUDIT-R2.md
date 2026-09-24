@@ -1,3 +1,5 @@
+> Historical R2 correction record. Current conclusions, including corrected F-5 and F-3 evidence, are in [AUDIT-R3.md](AUDIT-R3.md). R2 independent public review hashes describe its intermediate review tree, not a final-byte attestation.
+
 # Round 2 remediation and review handoff
 
 The supplied second audit reviewed source `4f9fba2` and deployed application `1f67d0d`. It confirmed the public source/deployment match and identified further public defects and financial blockers. This round implements public corrections; it does not authorize or enable financial execution. Financial policy, ten equal purchase budgets, 80/10/10 allocation and OPS/DEV rules are unchanged.

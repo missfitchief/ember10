@@ -1,17 +1,17 @@
 # Request for independent EMBER10 review
 
-Audit the complete attached source package. Record its Git commit, tree and manifest checksum before beginning. The deployed application revision is `ed67a05f7b676108a98dcaf29460d2fdc60fecc6`; the package preparation commit may differ. Verify that runtime code matches this application revision and inspect the documentation/tooling delta separately.
+Audit the complete attached source package. Record its Git commit, tree and manifest checksum before beginning. The exact deployed application revision is recorded in deployment.json; the package preparation commit may differ. Verify that runtime code matches this application revision and inspect the documentation/tooling delta separately.
 
 Repository: https://github.com/missfitchief/ember10
 
 Read-only public site: https://ember5-pilot.vercel.app/
 
-Read `AUDIT-START-HERE.md`, `docs/AUDIT-FINDINGS.json`, `docs/AUDIT-R2.md`, `docs/AUDIT-REPRODUCE.md` and both supplied historical audit reports. Treat implementation labels as claims to test, not expected conclusions.
+Read `AUDIT-START-HERE.md`, `docs/AUDIT-FINDINGS.json`, `docs/AUDIT-R3.md`, `docs/AUDIT-R2.md`, `docs/AUDIT-REPRODUCE.md` and all supplied historical audit reports. Treat implementation labels as claims to test, not expected conclusions.
 
 Please return:
 
 1. Exact source/deployment identities, environment, commands, results and unavailable evidence.
-2. A disposition for every inherited and R2 finding: confirmed, resolved, partially resolved, not reproduced or untested. Do not silently drop compound subfindings.
+2. A disposition for all 70 inherited, R2 and R3 findings: confirmed, resolved, partially resolved, not reproduced or untested. Do not silently drop compound subfindings.
 3. Reproductions for new defects, including impact, severity, paths/lines and the conditions required. Separate executed evidence from source-based inference.
 4. Desktop, 375px and 320px UI review: ten real logos, numeric ranking and mint identity, search/pagination across polls and outages, asset details, keyboard interaction, missing/partial ledger responses and truthful prelaunch states.
 5. A critical financial-path review: provider completeness and instruction compatibility, eleven-purchase/buyback cash sufficiency, original transaction accounting, ambiguous expiry, WSOL accounts, receipt attribution, reserves, OPS/DEV obligations, retry allowances, signing authorization and reconciliation.
