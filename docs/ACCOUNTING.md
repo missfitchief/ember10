@@ -8,6 +8,10 @@ A creator fee requires a successful finalized transfer to the configured treasur
 
 The current native-SOL recognizer deliberately does not infer fees from a balance increase, volume, fee estimates or unmatched wrapped-SOL movements. Published ledger windows can be incomplete; the chain cursor drives ingestion, and unmatched candidate fees remain held for review. A missing historical transaction prevents cursor advancement.
 
+R3 F-5 remains open on a reproduced pool-window schema failure: one signature-less sweep makes the strict parser reject the whole window before signature processing. Other real Keep-it pools do publish compatible payout rows, so absence in the historical global fixture cannot establish universal attribution failure. No later re-attribution path exists for receipts already quarantined. See the [dated pool observations and schema execution](evidence/r3/FINANCIAL-EVIDENCE-UPDATE.md).
+
+R3 N-M2 is an additional custody caveat: unsolicited token ingestion currently scans all prior inbound history when it first sees an account owned by the treasury. It does not establish when treasury ownership began or subtract prior outbound movements. A current owner match therefore does not prove the resulting deposit ledger is a valid custody balance. This source finding is open; no authority-transfer scenario was executed in the evidence update.
+
 ## Journal convention
 
 Each event sums to zero **for each asset separately**. Positive postings increase an account; negative postings decrease it. Internal accounts cannot become negative. `external:*` accounts are signed counterparts for receipts, swaps, network fees, rent, deliveries and burn. Corrections are new linked events; old postings and entitlements cannot be edited.
@@ -22,6 +26,8 @@ unexplained delta = verified chain units - expected treasury units
 Internal accounts include free revenue, capital reserve, unclassified deposits, quarantine, per-epoch purchase/buyback/operations/cost/rounding budgets, unpaid liabilities, active payout reservations and acquired units awaiting burn. These are **partitions** of asset ownership, not a second set of amounts to subtract from an already net free balance. Summing different token units is prohibited.
 
 Known in-flight actions cause reconciliation to report `in_flight`, not a fictitious deficit. Reconcile those signatures first, then take another chain observation. A finalized unexplained debit or surplus opens an incident and pauses new commitments. A surplus is not automatically revenue.
+
+The public reconciliation-health timestamp is not a commit-order watermark (open N-M3). It compares reconciliation time with ledger `created_at`, whose database default is the transaction start time. A transaction waiting on the control lock can commit later with an earlier timestamp. The current `reconciled` label cannot independently establish that no journal movement committed after the observation.
 
 ## Funding example
 
@@ -49,7 +55,9 @@ Creating a batch moves its exact liabilities into `reserved:<batch>` and exclusi
 
 ## Costs and burn
 
-R2 F-3 remains open: the current epoch cost forecast lacks one temporary WSOL rent and fails the eleventh all-new-ATA build in the included reproduction. Do not fund an epoch using that forecast. Direct cost forecasts are bounded at 10% of round funding. A minimum unencumbered SOL reserve is preserved; the signing path checks current rent and fee allowance before signing. Unsupported/frozen accounts or failed simulation leave reservations in place. Actual network/rent costs are posted separately. Historical USD payment value is only meaningful when a settlement-time valuation exists; otherwise the application displays raw units and unavailable valuation.
+F-3 remains open: the current 23,632,080-lamport epoch forecast lacks one temporary WSOL rent and fails the eleventh all-new-ATA build in the included reproduction. Do not fund an epoch using that forecast. The comparison forecast of 25,671,360 covers eleven successful swap/buyback transactions plus burn, but has no failed-attempt margin at the 100,000-lamport fee cap. R3 arithmetic and actual cost admission reproduce a 100,000-lamport retry shortfall after ten successes, one failed attempt and a burn. A bounded retry allowance is a proposed design input, not an implemented or chosen policy. See [R3 evidence](evidence/r3/FINANCIAL-EVIDENCE-UPDATE.md).
+
+Direct cost forecasts are bounded at 10% of round funding. A minimum unencumbered SOL reserve is preserved; the signing path checks current rent and fee allowance before signing. Holder deliveries draw from the separate reserve: four new recipient ATAs at 2,039,280 lamports each plus a 100,000-lamport fee cap require 8,257,120 lamports above its floor. That cash is not included in the epoch forecast. Unsupported/frozen accounts or failed simulation leave reservations in place. Actual network/rent costs are posted separately. Historical USD payment value is only meaningful when a settlement-time valuation exists; otherwise the application displays raw units and unavailable valuation.
 
 Buyback acquires our mint into its own `burn-units:<intent>` account. A distinct checked-burn intent can burn only that acquired quantity. Failed burn does not create a new buyback or consume unrelated holdings. Operations have their own reserved budget and deterministic transfer intent, with a fixed approved recipient.
 

@@ -1,5 +1,7 @@
 > Historical implementation handoff. Its revision, test counts and local paths refer to that stage. For the current audit snapshot, use [EXTERNAL-AUDIT.md](EXTERNAL-AUDIT.md) and [VERIFICATION.md](VERIFICATION.md).
 
+> R3 qualification, 24 September 2026: the implementation claims below do not close the approval-generation, custody-baseline, health-timestamp, forced-cache, resend-authorization or lease-timing findings N-M1–N-M6. See the [read-only financial evidence update](evidence/r3/FINANCIAL-EVIDENCE-UPDATE.md). Financial code remains unchanged.
+
 # EMBER10 backend correction handoff
 
 This change continues the existing repository on one PC. Backend specialists used separate Git worktrees; the integrator merged their changes into `backend/corrections`. No frontend visual files were changed. The public deployment and financial worker were not updated by this handoff.
@@ -56,12 +58,25 @@ The migration command uses `DATABASE_URL`; keep it pointed at an isolated test d
 - **005** adds persistent unsigned retry fields and append-only recovery records.
 - **006** adds expense approvals/payments and UTC developer payout identities. Existing OPS accounts remain historical allocation; migration does not transfer money or reclassify operations-wallet funding as profit.
 - **007** adds shared API rate-limit buckets. They are operational counters, not financial journal records.
-- Public contract stays `schemaVersion: 1` with additive fields and truthful state unions. All accounting amounts are decimal-string **lamports** (`accounting.unit = "lamports"`), not SOL decimals. Allocation fields do not claim delivered payments. Empty/unconnected amounts remain null. Current selection, funded basket and settlement states are separate. Reconciliation health only says reconciled for a fresh balanced observation with no later journal movement.
+- Public contract stays `schemaVersion: 1` with additive fields and explicit state unions. All accounting amounts are decimal-string **lamports** (`accounting.unit = "lamports"`), not SOL decimals. Allocation fields do not claim delivered payments. Empty/unconnected amounts remain null. Current selection, funded basket and settlement states are separate. Reconciliation health checks fresh balanced observations against maximum ledger `created_at`; that field is a transaction-start timestamp. A later commit from a transaction already waiting on the control lock can evade this test. The label is not proof of no later committed journal movement (open N-M3).
 - `/operator/recovery` accepts request/intent/signature IDs, reason and evidence reference. It accepts no outcome, replacement transaction, signed payload or reservation-release command. Stop competing worker work to obtain the recovery lease; pausing does not delete liabilities.
 - `/operator/expenses` records an authenticated payable. `/operator/expenses/settlement` fetches and verifies the original finalized transfer, actual genesis, signature, treasury debit, recipient and fee. A caller cannot assert finality. Capital classification also requires a matching positive treasury balance increase; self/circular instruction amounts cannot create reserve.
 - Raw provider bodies, credentials and signed bytes are withheld from public exports. Public source attribution and hashes remain available. Private operator records remain local to the authoritative backend.
 
 Frontend integration should consume these additive API fields and exact units. No frontend visual source was edited. The existing read-only public host remains unchanged until a separate deployment decision.
+
+## R3 qualifications to the historical handoff
+
+The following are source-reviewed open limitations, not newly executed financial tests:
+
+- **N-M1:** reauthorization compares approval reads within its own callback; it does not bind the already-built message to the approval generation used by the builder. B03's checks remain present, but do not cover that change window.
+- **N-M2:** initial unsolicited token ingestion uses current account ownership and full prior inbound history without establishing a custody baseline. A current owner match alone cannot establish the booked deposit balance.
+- **N-M3:** the health timestamp caveat above is distinct from B04's finalized chain-slot watermark and control-locked reconciliation.
+- **N-M4:** the live funding-route helper is forced with TTL 0; the unforced helper uses 45 seconds, even though `EmberClient.read()` defaults to 60 seconds. The financial cache/rate issue remains open.
+- **N-M5:** resending stored bytes still depends on full execution authorization twice; provider failure can prevent resend before blockhash expiry. Conditional resend is not guaranteed delivery or a resolved expiry lifecycle.
+- **N-M6:** an inspection/apply delay beyond the 120-second tick lease can fail settlement fencing and leave a generic incident and pause. The narrowed timing scenario remains unexecuted.
+
+The R3 evidence independently reproduces the pool-specific strict payout-schema failure and the forecast's retry-margin counterexample. These results do not change the 80/10/10 policy, ten equal purchase budgets, OPS/DEV rules, or disabled financial execution.
 
 ## Developer policy and pause semantics
 

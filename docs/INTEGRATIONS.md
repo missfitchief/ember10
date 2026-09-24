@@ -2,15 +2,18 @@
 
 Raw public responses and timestamps are under `docs/evidence/`. These are untrusted source data, never signing instructions. “Observed” means a real read-only request was made. No mainnet transaction was signed or broadcast.
 
+R3 documentation correction, 24 September: the [read-only financial evidence update](evidence/r3/FINANCIAL-EVIDENCE-UPDATE.md) records pool-filtered payout reads executed at 23:30 UTC on 23 September. These observations supersede any inference that a historical global payout window describes every Keep-it pool. Financial adapters remain unchanged.
+
 | Surface | Actual observation | Confidence / execution consequence |
 |---|---|---|
 | Ember developers / how | HTTP 200 application shells; public JS documentation chunks inspected | High for documented routes, not proof of economic execution |
-| `/api/solana/markets` | HTTP 200; initial response 7,876,999 bytes, 3,040 rows; later reads changed | Observed schema; current reader and evidence collector share a 64 MB cap, with a 50,000 row schema bound and warnings at 80% of capacity. All rows remain unverified candidates. |
+| `/api/solana/markets` | HTTP 200; initial response 7,876,999 bytes, 3,040 rows; later reads changed | Runtime reader and evidence collector share only a 64 MB byte cap. The public runtime separately enforces a 50,000-row schema bound and warns at 80% of byte or row capacity. The collector uses one 20-second request, no retries, no row limit and no capacity warnings. All rows remain unverified candidates. |
 | `/api/solana/quotes` | HTTP 200; `economics` and 1,291 `quotes` | `shareByMode.keep.pctOfTax=32`; SOL quote support observed; no project launch attempted |
 | `/api/solana/configs` | HTTP 200; `program`, `partner`, `feeClaimer`, `configs`, `count`, `updatedAt`; 2,949 configs in initial capture | Off-chain list is checked against decoded on-chain config/pool identity before selection |
 | `/api/solana/pools.csv` | HTTP 200; historical CSV with mint, DBC pool/config, DAMM pool and launch metadata | Historical catalogue evidence only |
 | `/api/solana/fees/pool/:pool` | HTTP 200 for the observed platform-token pool; decoded fee-source and tax fields captured | API includes graduation/migration-dependent fee fields; our funding route is not configured |
 | `/api/solana/payouts` | HTTP 200; latest 100 `payouts` in initial default response | Numeric human-unit amounts require exact chain matching; no proven complete cursor/pagination contract |
+| `/api/solana/payouts?pool=…` | R3: one public Keep-it pool returned 100 rows including 37 signed `payout`/`keep`/WSOL rows; another returned two rows, including a signature-less `sweep` | The first window passes the installed schema; the second reproduces `ZodError` before ingestion. Published-row compatibility is not verified project revenue. Compact samples, timestamps and response hashes are in [R3 evidence](evidence/r3/f5-pool-evidence-results.json). |
 | `/api/solana/holders/:pool` | HTTP 200; response reported 22,057 total owners, size 10, pages 5 | Confirms a top-50 display window, **not** a full census |
 | Wallet report | Documented, no project-specific wallet available | Not used as authoritative ledger |
 | Jupiter v2 `/order` | A real unauthenticated quote-only request returned HTTP 200, `transaction:null`, `taker:null` | Actual quote observed, but not an authenticated build or executable transaction |
@@ -22,7 +25,7 @@ Raw public responses and timestamps are under `docs/evidence/`. These are untrus
 
 Market envelope: `{economics, warming, totals, markets:[...]}`. A market contains `mint`, `pool`, `config`, optional `dammPool`, `creator`, `mode`, `quoteMint`, `feeBps`, `createdAt`, `graduated`, and reported price/volume/capitalization/holder fields. `tests/fixtures/ember-market.observed.json` preserves three actual rows with source/date; synthetic eligibility overrides are explicitly separate in tests.
 
-Payout envelope: `{payouts:[{kind, mode, pool, quoteMint, amount, signature, at, ...}]}`. The API amount is human units, not authoritative raw transfer units. The ingestion adapter recognizes only uniquely matched finalized native SOL Keep-it transfers. Other representations or ambiguous aggregation stay out of free revenue.
+Payout envelope: `{payouts:[{kind, mode, pool, quoteMint, amount, signature?, at, ...}]}`. Live windows can include non-transfer records without a signature. The current adapter nevertheless requires a string `signature` on every row: a signature-less sweep rejects the entire pool window and stops that ingestion pass (open F-5). The API amount is human units, not authoritative raw transfer units. The ingestion adapter recognizes only uniquely matched finalized native SOL Keep-it transfers. Other representations or ambiguous aggregation stay out of free revenue; quarantined first-sight receipts currently have no later re-attribution path.
 
 Observed fee state includes `feeSource`, `dammPool`, `graduated`, `taxBps`, `creatorSideBps` and published payouts. The platform token observed in the catalogue is `5dvXTZ5qwgafnHtwu3Ls3QrWx1U4LQsFeCuJgkk4QEC6`; this is a source observation, not a guarantee that it qualifies for our basket.
 
@@ -32,7 +35,9 @@ Jupiter build schema includes quote mints/amounts, `otherAmountThreshold`, `slip
 
 The 32% Keep-it figure is a dated platform observation. Some descriptions still refer to “80%”; this inconsistency is preserved as an uncertainty. No forecast fee percentage creates spendable funds. Our 80/10/10 is a separate versioned project policy applied only after verified funding and direct costs.
 
-Ember's developer documentation says reads are cached for 5–60 seconds and recommends no more than one request per second per endpoint. The financial EmberClient discovery cache is 60 seconds; the separate public MarketDataService cache is normally 45 seconds (bounded to 30–60 seconds); other reads use conservative caches and bounded retries with backoff for 429/5xx. No private RPC proxy is reused. Jupiter documentation says to use `x-api-key`, while the public quote-only probe happened to work without one. The pilot adapter still requires a key. Router `/build` is documented without a Jupiter swap platform fee; network, priority, rent and route-specific trading costs must still be inspected. Metis v2 order/execute has separate platform fees and RFQ expiry rules; the baseline executor uses self-managed `/build` and the original blockhash lifetime.
+Ember's developer documentation says reads are cached for 5–60 seconds and recommends no more than one request per second per endpoint. `EmberClient.read()` defaults to 60 seconds, but the financial funding-route helper explicitly uses 45 seconds when unforced and 0 when forced. The live worker passes `force=true`, bypassing that cache for its route checks; F-9/N-M4 remain open. Pool payout windows use 15 seconds. The separate public `MarketDataService` refreshes normally every 45 seconds (configuration bounded to 30–60 seconds), with longer failure backoff. These timings must not be described as a uniform 60-second financial discovery cache.
+
+No private RPC proxy is reused. Jupiter documentation says to use `x-api-key`, while the public quote-only probe happened to work without one. The pilot adapter still requires a key. Router `/build` is documented without a Jupiter swap platform fee; network, priority, rent and route-specific trading costs must still be inspected. Metis v2 order/execute has separate platform fees and RFQ expiry rules; the baseline executor uses self-managed `/build` and the original blockhash lifetime.
 
 ## Unresolved evidence
 

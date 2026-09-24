@@ -1,0 +1,35 @@
+{
+  "schemaVersion": 1,
+  "reviewedRevision": "ad972e70e0b946eb0c73712ff88a7d6e090f1d1d",
+  "executedAt": "2026-09-23T23:30:23.173Z",
+  "preparedForRepositoryOn": "2026-09-24",
+  "textHashConvention": "SHA-256 of UTF-8 artifact bytes after CRLF-to-LF normalization; upstream body hashes in the results use raw received bytes",
+  "artifacts": [
+    {
+      "path": "FINANCIAL-EVIDENCE-UPDATE.md",
+      "sha256": "d82cc693716b42c2c419495617ae78f104bf22a5dc5303493eb2d9b3a535a67c"
+    },
+    {
+      "path": "f5-pool-evidence-results.json",
+      "sha256": "6cd73731810093f992c77a7431b364a9e9d56bb4e6252a2f3fe8d2d26ef250e2"
+    },
+    {
+      "path": "f5-pool-evidence.source.mts.txt",
+      "sha256": "11dd2d491c988d486d8cc59950105179e9effa8817c2c5851e98e4e930045371"
+    }
+  ],
+  "executed": [
+    "Two public pool-filtered Ember HTTP payout-window reads",
+    "Actual installed EmberClient.payouts schema applied to each full fetched body in memory",
+    "Local BigInt forecast comparisons and actual bindNativeCost admission"
+  ],
+  "notExecuted": [
+    "On-chain creator-fee attribution or account-custody verification",
+    "Financial worker or database settlement",
+    "Signing or broadcasting",
+    "N-M1 through N-M6 timing, custody or failure scenarios",
+    "Financial remediation, funding or deployment"
+  ],
+  "fullUpstreamBodiesSaved": false,
+  "financialPolicyChanged": false
+}

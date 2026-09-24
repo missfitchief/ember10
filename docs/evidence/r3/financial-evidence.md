@@ -1,0 +1,12 @@
+# R3 financial evidence provenance
+
+These compact artifacts preserve the read-only work executed on **23 September 2026 at 23:30 UTC** against repository revision `ad972e70e0b946eb0c73712ff88a7d6e090f1d1d`. They were copied into this documentation update on 24 September, not re-fetched or re-executed then. No financial behavior or policy changed.
+
+- [Financial review](FINANCIAL-EVIDENCE-UPDATE.md): separately labels live HTTP/schema execution, local cost-admission arithmetic, and source-only N-M1–N-M6 findings.
+- [Compact results](f5-pool-evidence-results.json): two public pool URLs, timestamps, raw response byte counts and SHA-256 values, selected rows, counts, actual installed `EmberClient.payouts()` results, and six cost-margin cases using `bindNativeCost`.
+- [Executed helper source](f5-pool-evidence.source.mts.txt): the exact source used for those results, preserved as text. Its imports refer to the original local orchestration layout; it is a historical execution artifact, not a new runnable repository script. The result's `revision` was an explicit label whose value was checked with `git rev-parse HEAD` at execution; it is not runtime-generated attestation.
+- [Artifact manifest](financial-manifest.json): source revision, execution boundaries and SHA-256 hashes of these three artifacts. Text hashes normalize CRLF to LF so they can be checked across Git's Windows line-ending conversion. Hashes of upstream response bodies in the results are over their original received bytes, without text normalization.
+
+The full response bodies were processed in memory but not saved: the 39,487-byte window and the 691-byte window have hashes and compact samples only. The samples cannot reproduce the full-body hashes or independently prove all omitted rows. The helper was executed against the actual full fetched windows; a future live fetch can differ because these are moving windows. The stored signature-less row does preserve the exact schema-rejection input field.
+
+These source windows establish neither project ownership nor finalized creator-fee attribution. No chain sender, destination, instruction uniqueness, account custody, finalized transfer or project funding route was independently verified. N-M1–N-M6 remain source findings with the limitations stated in the review. The extra-rent and retry-budget arithmetic is a comparison, not an implemented forecast, an approved retry policy, or an end-to-end financial execution test.

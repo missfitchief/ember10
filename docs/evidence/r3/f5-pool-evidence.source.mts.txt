@@ -1,0 +1,49 @@
+import {createHash} from 'node:crypto';
+import {writeFileSync} from 'node:fs';
+import assert from 'node:assert/strict';
+import {EmberClient} from '../../work/r2-integration/packages/integrations/ember.ts';
+import {decimalUnits} from '../../work/r2-integration/packages/integrations/http.ts';
+import {epochCostForecast} from '../../work/r2-integration/apps/worker/forecast.ts';
+import {bindNativeCost} from '../../work/r2-integration/packages/core/execution-cost.ts';
+const pools=['4isa4qXav8juubpkUduS93hbr72Pm76dLcYTWRCqnAJQ','6sg6ubMzZKKD5WcpbYDoXTJzzHxSLJ8Huy1agt8cMV9S'];
+const WSOL='So11111111111111111111111111111111111111112';
+const observations=[];
+for(const pool of pools){
+ const url='https://embercurve.fun/api/solana/payouts?pool='+pool;
+ const requestedAt=new Date().toISOString();
+ try{
+  const response=await fetch(url,{headers:{accept:'application/json'},redirect:'error',signal:AbortSignal.timeout(20000)});
+  assert(response.ok&&response.body,'source unavailable');
+  const reader=response.body.getReader(),chunks:Uint8Array[]=[];let bytes=0;
+  while(true){const next=await reader.read();if(next.done)break;bytes+=next.value.byteLength;if(bytes>2_000_000){await reader.cancel();throw Error('Pool response exceeds 2 MB evidence bound');}chunks.push(next.value);}
+  const body=Buffer.concat(chunks),value=JSON.parse(body.toString('utf8'));
+  assert(Array.isArray(value.payouts),'payouts envelope missing');
+  const rows=value.payouts;
+  const compatible=rows.filter((row:any)=>{try{return row.pool===pool&&row.kind==='payout'&&row.mode==='keep'&&row.quoteMint===WSOL&&typeof row.signature==='string'&&decimalUnits(String(row.amount),9)>0n;}catch{return false;}});
+  const malformed=rows.filter((row:any)=>typeof row.signature!=='string');
+  const client=new EmberClient();
+  client.read=async(path:string)=>{assert.equal(path,'/payouts?pool='+pool);return {at:Date.now(),value};};
+  let schema:Record<string,unknown>;
+  try{const parsed=await client.payouts(pool);schema={accepted:true,rows:parsed.value.payouts.length};}
+  catch(error){schema={accepted:false,name:(error as Error).name,issues:(error as any).issues?.map((issue:any)=>({path:issue.path,code:issue.code,expected:issue.expected,message:issue.message}))};}
+  observations.push({url,requestedAt,receivedAt:new Date().toISOString(),httpStatus:response.status,bytes,bodySha256:createHash('sha256').update(body).digest('hex'),rows:rows.length,poolMismatchRows:rows.filter((r:any)=>r.pool!==pool).length,predicateShapeMatches:compatible.length,signaturelessRows:malformed.length,windowAt:{min:Math.min(...rows.map((r:any)=>r.at)),max:Math.max(...rows.map((r:any)=>r.at))},actualEmberClientSchema:schema,samples:{predicateCompatible:compatible.slice(0,3),signatureless:malformed.slice(0,5)},note:'Matching published-row shape is not receipt attribution: no chain transfer, sender, destination, unique instruction, finality or pool route was independently verified.'});
+ }catch(error){observations.push({url,requestedAt,failedAt:new Date().toISOString(),error:(error as Error).message});}
+ await new Promise(resolve=>setTimeout(resolve,1100));
+}
+const rent=2039280n,maxFee=100000n,actual=epochCostForecast(10,maxFee,rent),withFloat=actual+rent;
+function retryCase(retryBudget:number,failedAttempts:number,actualFee:bigint){
+ const forecast=withFloat+BigInt(retryBudget)*maxFee;
+ const afterTen=forecast-10n*(rent+actualFee),afterFailures=afterTen-BigInt(failedAttempts)*actualFee,afterBurn=afterFailures-actualFee;
+ const intent:any={kind:'swap',asset:'SOL',expected:{maxFee:String(maxFee),maxTotalCost:String(afterBurn)}};
+ let retryAllowed=true,reason:string|null=null;
+ try{bindNativeCost(intent,rent,2n*rent);}catch(error){retryAllowed=false;reason=(error as Error).message;}
+ return {retryBudget,failedAttempts,actualFee:String(actualFee),forecast:String(forecast),minimumFundingAtTenPercentCostCap:String(forecast*10n),afterTenSuccesses:String(afterTen),afterFailures:String(afterFailures),afterBurn:String(afterBurn),retryCashRequired:String(2n*rent+maxFee),retryAllowed,shortfall:String(2n*rent+maxFee>afterBurn?2n*rent+maxFee-afterBurn:0n),afterRetry:retryAllowed?String(afterBurn-rent-actualFee):null,reason};
+}
+const marginCases=[retryCase(0,0,maxFee),retryCase(0,1,maxFee),retryCase(1,1,maxFee),retryCase(1,2,maxFee),retryCase(0,209,5000n),retryCase(0,210,5000n)];
+assert.equal(marginCases[0].retryAllowed,true);assert.equal(marginCases[0].afterBurn,marginCases[0].retryCashRequired);
+assert.equal(marginCases[1].retryAllowed,false);assert.equal(marginCases[1].shortfall,'100000');
+assert.equal(marginCases[2].retryAllowed,true);assert.equal(marginCases[3].retryAllowed,false);
+assert.equal(marginCases[4].retryAllowed,true);assert.equal(marginCases[5].retryAllowed,false);
+const output={executedAt:new Date().toISOString(),revision:'ad972e70e0b946eb0c73712ff88a7d6e090f1d1d',kind:'independent_read_only_evidence',financialMutations:0,signaturesCreated:0,broadcasts:0,networkReads:'Two public pool-filtered Ember windows; no catalogue or credentials',observations,forecast:{current:String(actual),plusOneWsolFloat:String(withFloat),marginCases,holderFourNewAtaCashAboveReserveFloor:String(4n*rent+maxFee),limits:'Local arithmetic and actual bindNativeCost admission only, no eleven-transaction ledger/chain execution; retry budget remains an undecided policy input.'}};
+writeFileSync(new URL('f5-pool-evidence-results.json',import.meta.url),JSON.stringify(output,null,2)+'\n');
+console.log(JSON.stringify(output,null,2));

@@ -1,0 +1,232 @@
+{
+  "executedAt": "2026-09-23T23:30:23.173Z",
+  "revision": "ad972e70e0b946eb0c73712ff88a7d6e090f1d1d",
+  "kind": "independent_read_only_evidence",
+  "financialMutations": 0,
+  "signaturesCreated": 0,
+  "broadcasts": 0,
+  "networkReads": "Two public pool-filtered Ember windows; no catalogue or credentials",
+  "observations": [
+    {
+      "url": "https://embercurve.fun/api/solana/payouts?pool=4isa4qXav8juubpkUduS93hbr72Pm76dLcYTWRCqnAJQ",
+      "requestedAt": "2026-09-23T23:30:20.434Z",
+      "receivedAt": "2026-09-23T23:30:20.801Z",
+      "httpStatus": 200,
+      "bytes": 39487,
+      "bodySha256": "45579861c39e62da963cca63b4dda6607138d2ea7f18ff89dcb378435c97f149",
+      "rows": 100,
+      "poolMismatchRows": 0,
+      "predicateShapeMatches": 37,
+      "signaturelessRows": 0,
+      "windowAt": {
+        "min": 1790174124,
+        "max": 1790206223
+      },
+      "actualEmberClientSchema": {
+        "accepted": true,
+        "rows": 100
+      },
+      "samples": {
+        "predicateCompatible": [
+          {
+            "mode": "keep",
+            "pool": "4isa4qXav8juubpkUduS93hbr72Pm76dLcYTWRCqnAJQ",
+            "symbol": "EMBER5",
+            "quoteMint": "So11111111111111111111111111111111111111112",
+            "quoteTicker": "SOL",
+            "quoteDecimals": 9,
+            "quoteUsd": 114.923317,
+            "kind": "payout",
+            "creator": "B7Xo4eXyatQQhhZgS9k3vJKtoHZiKMYkdq7FNchsUMg3",
+            "amount": 0.07506072,
+            "claimed": 0,
+            "signature": "5zrEFhwVncn7Dz146wDf7Go6qDBBpHy7AveDKKaqsSV1Wm6DeVvAQs2B7iPXiE8r2qczaJ8aN2P1cUk5k6Rn5Thc",
+            "at": 1790206223
+          },
+          {
+            "mode": "keep",
+            "pool": "4isa4qXav8juubpkUduS93hbr72Pm76dLcYTWRCqnAJQ",
+            "symbol": "EMBER5",
+            "quoteMint": "So11111111111111111111111111111111111111112",
+            "quoteTicker": "SOL",
+            "quoteDecimals": 9,
+            "quoteUsd": 115.009226,
+            "kind": "payout",
+            "creator": "B7Xo4eXyatQQhhZgS9k3vJKtoHZiKMYkdq7FNchsUMg3",
+            "amount": 0.032856361,
+            "claimed": 0,
+            "signature": "kGpadgRE6oPtxhC5chSgPK2XmaLpYYALZvHisewd2UySZ3A9CE8sAegmCcMwBYbgGh4kopSCj6Dg14d54x21Zdn",
+            "at": 1790205332
+          },
+          {
+            "mode": "keep",
+            "pool": "4isa4qXav8juubpkUduS93hbr72Pm76dLcYTWRCqnAJQ",
+            "symbol": "EMBER5",
+            "quoteMint": "So11111111111111111111111111111111111111112",
+            "quoteTicker": "SOL",
+            "quoteDecimals": 9,
+            "quoteUsd": 115.069765,
+            "kind": "payout",
+            "creator": "B7Xo4eXyatQQhhZgS9k3vJKtoHZiKMYkdq7FNchsUMg3",
+            "amount": 0.162494816,
+            "claimed": 0,
+            "signature": "2243GXyzjbWej4Kj1hWh25MkGs2v67MXyiKcWVGHf4TVgQ5oFP8ozdQyxPSx4euJdHwzuv9YYiApaWqVvx1Ctqs5",
+            "at": 1790204423
+          }
+        ],
+        "signatureless": []
+      },
+      "note": "Matching published-row shape is not receipt attribution: no chain transfer, sender, destination, unique instruction, finality or pool route was independently verified."
+    },
+    {
+      "url": "https://embercurve.fun/api/solana/payouts?pool=6sg6ubMzZKKD5WcpbYDoXTJzzHxSLJ8Huy1agt8cMV9S",
+      "requestedAt": "2026-09-23T23:30:21.909Z",
+      "receivedAt": "2026-09-23T23:30:22.072Z",
+      "httpStatus": 200,
+      "bytes": 691,
+      "bodySha256": "dd328330c69e7cc9ec14dee63562fa205a4b8686bb432780612aedc22a8e3a3f",
+      "rows": 2,
+      "poolMismatchRows": 0,
+      "predicateShapeMatches": 0,
+      "signaturelessRows": 1,
+      "windowAt": {
+        "min": 1790190050,
+        "max": 1790198150
+      },
+      "actualEmberClientSchema": {
+        "accepted": false,
+        "name": "ZodError",
+        "issues": [
+          {
+            "path": [
+              "payouts",
+              0,
+              "signature"
+            ],
+            "code": "invalid_type",
+            "expected": "string",
+            "message": "Invalid input: expected string, received undefined"
+          }
+        ]
+      },
+      "samples": {
+        "predicateCompatible": [],
+        "signatureless": [
+          {
+            "mode": "keep",
+            "pool": "6sg6ubMzZKKD5WcpbYDoXTJzzHxSLJ8Huy1agt8cMV9S",
+            "symbol": "MDOXX",
+            "quoteMint": "So11111111111111111111111111111111111111112",
+            "quoteTicker": "SOL",
+            "quoteDecimals": 9,
+            "quoteUsd": 114.332307,
+            "kind": "sweep",
+            "amount": 0.0072,
+            "claimed": 0,
+            "at": 1790198150,
+            "note": "10 rounds under $1, dust booked to the platform treasury"
+          }
+        ]
+      },
+      "note": "Matching published-row shape is not receipt attribution: no chain transfer, sender, destination, unique instruction, finality or pool route was independently verified."
+    }
+  ],
+  "forecast": {
+    "current": "23632080",
+    "plusOneWsolFloat": "25671360",
+    "marginCases": [
+      {
+        "retryBudget": 0,
+        "failedAttempts": 0,
+        "actualFee": "100000",
+        "forecast": "25671360",
+        "minimumFundingAtTenPercentCostCap": "256713600",
+        "afterTenSuccesses": "4278560",
+        "afterFailures": "4278560",
+        "afterBurn": "4178560",
+        "retryCashRequired": "4178560",
+        "retryAllowed": true,
+        "shortfall": "0",
+        "afterRetry": "2039280",
+        "reason": null
+      },
+      {
+        "retryBudget": 0,
+        "failedAttempts": 1,
+        "actualFee": "100000",
+        "forecast": "25671360",
+        "minimumFundingAtTenPercentCostCap": "256713600",
+        "afterTenSuccesses": "4278560",
+        "afterFailures": "4178560",
+        "afterBurn": "4078560",
+        "retryCashRequired": "4178560",
+        "retryAllowed": false,
+        "shortfall": "100000",
+        "afterRetry": null,
+        "reason": "rent/fee allowance insufficient; defer before signing"
+      },
+      {
+        "retryBudget": 1,
+        "failedAttempts": 1,
+        "actualFee": "100000",
+        "forecast": "25771360",
+        "minimumFundingAtTenPercentCostCap": "257713600",
+        "afterTenSuccesses": "4378560",
+        "afterFailures": "4278560",
+        "afterBurn": "4178560",
+        "retryCashRequired": "4178560",
+        "retryAllowed": true,
+        "shortfall": "0",
+        "afterRetry": "2039280",
+        "reason": null
+      },
+      {
+        "retryBudget": 1,
+        "failedAttempts": 2,
+        "actualFee": "100000",
+        "forecast": "25771360",
+        "minimumFundingAtTenPercentCostCap": "257713600",
+        "afterTenSuccesses": "4378560",
+        "afterFailures": "4178560",
+        "afterBurn": "4078560",
+        "retryCashRequired": "4178560",
+        "retryAllowed": false,
+        "shortfall": "100000",
+        "afterRetry": null,
+        "reason": "rent/fee allowance insufficient; defer before signing"
+      },
+      {
+        "retryBudget": 0,
+        "failedAttempts": 209,
+        "actualFee": "5000",
+        "forecast": "25671360",
+        "minimumFundingAtTenPercentCostCap": "256713600",
+        "afterTenSuccesses": "5228560",
+        "afterFailures": "4183560",
+        "afterBurn": "4178560",
+        "retryCashRequired": "4178560",
+        "retryAllowed": true,
+        "shortfall": "0",
+        "afterRetry": "2134280",
+        "reason": null
+      },
+      {
+        "retryBudget": 0,
+        "failedAttempts": 210,
+        "actualFee": "5000",
+        "forecast": "25671360",
+        "minimumFundingAtTenPercentCostCap": "256713600",
+        "afterTenSuccesses": "5228560",
+        "afterFailures": "4178560",
+        "afterBurn": "4173560",
+        "retryCashRequired": "4178560",
+        "retryAllowed": false,
+        "shortfall": "5000",
+        "afterRetry": null,
+        "reason": "rent/fee allowance insufficient; defer before signing"
+      }
+    ],
+    "holderFourNewAtaCashAboveReserveFloor": "8257120",
+    "limits": "Local arithmetic and actual bindNativeCost admission only, no eleven-transaction ledger/chain execution; retry budget remains an undecided policy input."
+  }
+}
