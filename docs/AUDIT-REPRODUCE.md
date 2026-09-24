@@ -23,7 +23,7 @@ Then run:
 npm.cmd test -- --reporter=json --outputFile=../tests-audit.json
 ```
 
-The included complete result is 258 passing tests in 20 files at application revision `ed67a05`. Tests use isolated schemas in `ember5_test`; set `TEST_DATABASE_URL` only to a disposable database if using a different server. No production migration is part of this procedure. The native ESM regression runs without a TypeScript loader and covers the first candidate's JSON-import failure.
+The historical R2 result was 258 passing tests in20files at ed67a05; see VERIFICATION.md and evidence/r3/tests.json for the current run. Tests use isolated schemas in `ember5_test`; set `TEST_DATABASE_URL` only to a disposable database if using a different server. No production migration is part of this procedure. The native ESM regression runs without a TypeScript loader and covers the first candidate's JSON-import failure.
 
 ## Read-only preview and deployment identity
 
@@ -43,15 +43,17 @@ The verifier compares index HTML and all seven referenced/static build assets, c
 
 ## Browser tests without changing the project lockfile
 
-Playwright is reviewer tooling, not a project dependency. The recorded runs used Playwright 1.61.1 with Chromium. Install it in a separate tooling directory if unavailable:
+Playwright is reviewer tooling, not a project dependency. R3 runs use Playwright1.61.1 with installed Chrome (BROWSER_CHANNEL=chrome); R2 used bundled Chromium. Install it in a separate tooling directory if unavailable:
 
 ```powershell
 npm.cmd install --prefix ../ember10-audit-tools --no-save --package-lock=false playwright@1.61.1
 node ../ember10-audit-tools/node_modules/playwright/cli.js install chromium
 $env:PLAYWRIGHT_MODULE = ([System.Uri](Resolve-Path ../ember10-audit-tools/node_modules/playwright/index.mjs).Path).AbsoluteUri
+$env:BROWSER_CHANNEL = 'chrome' # omit to use an installed Playwright Chromium
 $env:BASE_URL = 'http://127.0.0.1:5180'
 $env:EVIDENCE_DIR = [System.IO.Path]::GetFullPath('../ember10-audit-results')
 node --import tsx tests/ui-r2.browser.mjs
+node --import tsx tests/ui-r3.browser.mjs
 node scripts/audit/public-browser.mjs http://127.0.0.1:5180 ../ember10-audit-results local
 node scripts/audit/public-browser.mjs https://ember5-pilot.vercel.app ../ember10-audit-results public
 ```
@@ -83,3 +85,9 @@ node scripts/package-audit.mjs ../audit-delivery
 ```
 
 Packaging exports all tracked source bytes with LF Git content, excludes untracked secrets/runtime state, and refuses application drift from the recorded deployment revision. It does not deploy or contact an auditor. Original audit reports, test captures and screenshots remain dated historical evidence; do not overwrite them to imply a new execution.
+
+## R3 cache and corrected financial evidence
+
+Run `node scripts/audit/logo-latency.mjs https://ember5-pilot.vercel.app 3 ../logo-latency.json` for two successive ten-logo request batches. Record CDN HIT/MISS, status, bytes, hashes and measured times; results are observations, not latency guarantees.
+
+See `evidence/r3/FINANCIAL-EVIDENCE-UPDATE.md` for pool-filtered schema reproduction and retry-margin arithmetic. The extra-rent F3 comparison above covers successful builds only; it is not a retry-ready budget. No financial remediation or funded execution was performed.
