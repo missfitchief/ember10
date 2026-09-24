@@ -1,4 +1,4 @@
-# EMBER10 external audit brief ? R3
+# EMBER10 external audit brief - R3
 
 Review the complete frozen source package. Record its manifest commit, tree and per-file hashes. Compare its runtime/test/config files with the application revision in deployment.json; later package commits should change only documentation, evidence or reviewer tooling. Verify the actual public revision and assets rather than relying solely on the revision marker. No cryptographic server artifact attestation is claimed.
 

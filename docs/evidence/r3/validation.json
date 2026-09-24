@@ -30,7 +30,8 @@
     "high": 5,
     "critical": 0,
     "moderate": 0,
-    "clean": false
+    "clean": false,
+    "encoding": "PowerShell UTF-16 capture converted to UTF-8 JSON without changing values"
   },
   "externalReaudit": "pending"
 }

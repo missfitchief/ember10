@@ -8,7 +8,7 @@ Backend corrections are documented in [BACKEND-CORRECTIONS.md](docs/BACKEND-CORR
 
 ## External audit
 
-Start with [AUDIT-START-HERE.md](AUDIT-START-HERE.md) and [the external audit brief](docs/EXTERNAL-AUDIT.md), [current verification](docs/VERIFICATION.md) and [Round 2 findings](docs/AUDIT-R2.md). All source, migration and test files are included in the repository snapshot. The exact public runtime and documentation/reviewer-tooling package revision are recorded separately in `docs/deployment.json` and the package manifest. Financial operation is blocked by the confirmed R2 findings. Known open findings are not represented as resolved.
+Start with [AUDIT-START-HERE.md](AUDIT-START-HERE.md) and [the external audit brief](docs/EXTERNAL-AUDIT.md), [current verification](docs/VERIFICATION.md) and [Round 3 findings and corrections](docs/AUDIT-R3.md). All source, migration and test files are included in the repository snapshot. The exact public runtime and documentation/reviewer-tooling package revision are recorded separately in `docs/deployment.json` and the package manifest. Financial operation is blocked by the open R2/R3 findings. Known open findings are not represented as resolved.
 
 ## Run locally
 

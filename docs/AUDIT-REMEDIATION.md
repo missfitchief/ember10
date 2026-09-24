@@ -1,4 +1,4 @@
-> Historical first-round claims below are superseded where noted by [Round 2](AUDIT-R2.md). In particular, S1-06 is **open**: the forecast is one WSOL float short; do not fund an epoch.
+> Historical first-round claims below are superseded where noted by [Round 3](AUDIT-R3.md). In particular, S1-06/F-3 is **open**: the forecast and retry-margin requirements remain unresolved; do not fund an epoch.
 
 # Historical first-round remediation — 23 September 2026
 

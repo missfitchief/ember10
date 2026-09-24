@@ -19,7 +19,7 @@ N-P4 remains open: cross-instance or later pages can have different observation 
 
 N-P6 remains open/mitigated: the per-instance 16-image work cap can still return 503 for distinct concurrent misses. CDN caching reduces repeat work, but cold instances, valid unique URLs and high concurrency can still cause upstream load. No global request coordinator, global Ember rate limit or denial-of-service immunity is claimed. Retry success depends on upstream recovery.
 
-Capacity documentation now distinguishes the runtime 64 MB/50,000-row bounds from the collector's byte-only bound and single20-second request. At 2.6KB/row, byte capacity (~24,600rows) is reached first;80% warnings are logs/coverage notes, not externally delivered alerts.
+Capacity documentation now distinguishes the runtime 64 MB/50, 000-row bounds from the collector's byte-only bound and single20-second request. At 2.6 KB/row, byte capacity (~24,600 rows) is reached first; 80% warnings are logs/coverage notes, not externally delivered alerts.
 
 The cache semantics follow [Vercel's Cache-Control documentation](https://vercel.com/docs/caching/cache-control-headers): s-maxage and stale-while-revalidate are consumed by the CDN. Public latency evidence must include actual x-vercel-cache HIT/MISS results; headers alone do not prove caching. First-miss timing remains dependent on catalogue and image upstreams.
 
@@ -27,10 +27,10 @@ The cache semantics follow [Vercel's Cache-Control documentation](https://vercel
 
 F-5 remains open with corrected mechanism. A real pool produced 37 matching keep/payout/WSOL rows; a second pool's signature-less sweep causes the actual strict EmberClient.payouts schema to throw. The previous global-window absence does not establish that attribution can never match. Compact public responses and schema execution are recorded under evidence/r3.
 
-F-3 remains open. 25,671,360lamports is a successful-build-only comparison, not a retry-ready fix. At the 100,000 fee cap, one failed attempt followed by burn leaves 4,078,560 against 4,178,560 required for the retry. The retry count/reserve policy is undecided, and new holder ATA creation requires separate reserve. No financial implementation changed.
+F-3 remains open. 25,671,360 lamports is a successful-build-only comparison, not a retry-ready fix. At the 100, 000 fee cap, one failed attempt followed by burn leaves 4, 078,560 against 4,178,560 required for the retry. The retry count/reserve policy is undecided, and new holder ATA creation requires separate reserve. No financial implementation changed.
 
 N-M1 through N-M6 are retained in the70-item register. Read-only source assessments are explicitly distinguished from executed race tests. All F-1 through F-14 remain open. Passing public checks does not make the financial service safe to fund.
 
 ## Verified publication
 
-Application e55be0f8f26e637ef5771d18df42604183a5c5f9 is deployed as dpl_2iLSDkviTkDdtXB8o4cjEcYFkDsk. Candidate and public proof matched all 8 files and decoded 10 logos. The second logo batch was10/10 CDN HIT with median 54ms; first misses remained slower (3342ms median in that batch). The first Vercel attempt returned Not authorized; selecting the existing plavi scope explicitly succeeded. No project/permission change was made. All258 tests, both controlled browser suites and independent exact-byte review passed. External re-audit remains pending.
+Application e55be0f8f26e637ef5771d18df42604183a5c5f9 is deployed as dpl_2iLSDkviTkDdtXB8o4cjEcYFkDsk. Candidate and public proof matched all 8 files and decoded 10 logos. The second logo batch was10/10 CDN HIT with median 54 ms; first misses remained slower (3342 ms median in that batch). The first Vercel attempt returned Not authorized; selecting the existing plavi scope explicitly succeeded. No project/permission change was made. All258 tests, both controlled browser suites and independent exact-byte review passed. External re-audit remains pending.
