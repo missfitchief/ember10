@@ -115,9 +115,11 @@ export function createTokenImageHandler(fetchImage: typeof fetch = (...args) => 
       }
       // A refresh may have removed membership while image I/O was in flight.
       if (!await within(authorize(requested), deadline, request.signal)) return error(404);
+      // Catalogue authorization runs on origin misses. CDN entries may remain
+      // fresh for 5 minutes, then stale for up to 1 minute while revalidating.
       const headers = {
         'content-type': image.type, 'content-length': String(image.bytes.length),
-        'cache-control': 'public, max-age=0, s-maxage=0, must-revalidate',
+        'cache-control': 'public, max-age=0, s-maxage=300, stale-while-revalidate=60',
         'x-content-type-options': 'nosniff', 'content-security-policy': "default-src 'none'; sandbox",
         'cross-origin-resource-policy': 'same-origin', etag: image.etag
       };

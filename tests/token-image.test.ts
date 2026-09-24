@@ -23,7 +23,7 @@ const catalogue = (markets: unknown[], warming = false) => ({ markets, warming, 
 afterEach(() => { vi.unstubAllGlobals(); vi.useRealTimers(); vi.restoreAllMocks(); });
 
 it('uses a same-origin URL for approved content-addressed images', () => {
-  expect(tokenImageUrl(source)).toBe(`/api/token-image?source=${encodeURIComponent(source)}&v=2`);
+  expect(tokenImageUrl(source)).toBe(`/api/token-image?source=${encodeURIComponent(source)}&v=3`);
   expect(tokenImageSource(source.replace('embercurve.fun', 'www.embercurve.fun'))?.url).toBe(source);
   expect(tokenImageSource(`https://ipfs.io/ipfs/${cid}`)?.cid).toBe(cid);
   expect(tokenImageSource(`https://gateway.pinata.cloud/ipfs/${cid}`)?.cid).toBe(cid);
@@ -50,7 +50,7 @@ it('decodes and resizes real raster bytes, strips upstream headers and caches su
   const result = await handler(request()), bytes = Buffer.from(await result.arrayBuffer());
   expect(result.status).toBe(200); expect(result.headers.get('content-type')).toBe('image/webp');
   expect(result.headers.get('set-cookie')).toBeNull(); expect(result.headers.get('x-content-type-options')).toBe('nosniff');
-  expect(result.headers.get('cache-control')).toBe('public, max-age=0, s-maxage=0, must-revalidate');
+  expect(result.headers.get('cache-control')).toBe('public, max-age=0, s-maxage=300, stale-while-revalidate=60');
   expect(await sharp(bytes).metadata()).toMatchObject({ width: 160, height: 80, format: 'webp' });
   expect(bytes.length).toBeLessThan(png.length);
   const options = fetcher.mock.calls[0] as unknown as [string, RequestInit];

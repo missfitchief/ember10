@@ -1,12 +1,12 @@
 {
-  "schemaVersion": 2,
+  "schemaVersion": 3,
   "applicationRevision": "ed67a05f7b676108a98dcaf29460d2fdc60fecc6",
   "externalReaudit": "pending",
   "financialExecutionEnabled": false,
-  "totalFindings": 56,
+  "totalFindings": 70,
   "inheritedFindings": 37,
   "r2Findings": 19,
-  "precedence": "This register supersedes current-use interpretations of the frozen first-round register. Prior external dispositions apply to 4f9fba2, not automatically to this corrected snapshot.",
+  "precedence": "R3 supersedes interpretations of R2 financial evidence and adds14 findings. Supplied audit dispositions apply to ad972e7/ed67a05. New implementation claims await external re-audit.",
   "findings": [
     {
       "id": "S1-01",
@@ -707,7 +707,12 @@
       "evidence": "AUDIT-R2.md; evidence/r2/; AUDIT-REPRODUCE.md",
       "remaining": null,
       "group": "r2",
-      "currentStatus": "implemented_pending_external_reaudit"
+      "currentStatus": "implemented_pending_external_reaudit",
+      "r3ExternalReview": {
+        "revision": "ad972e7",
+        "report": "evidence/r3/supplied-audit.md",
+        "disposition": "confirmed on reviewed revision; see new N-P findings"
+      }
     },
     {
       "id": "P-2",
@@ -715,7 +720,12 @@
       "evidence": "AUDIT-R2.md; evidence/r2/; AUDIT-REPRODUCE.md",
       "remaining": null,
       "group": "r2",
-      "currentStatus": "implemented_pending_external_reaudit"
+      "currentStatus": "implemented_pending_external_reaudit",
+      "r3ExternalReview": {
+        "revision": "ad972e7",
+        "report": "evidence/r3/supplied-audit.md",
+        "disposition": "confirmed on reviewed revision; see new N-P findings"
+      }
     },
     {
       "id": "P-3",
@@ -723,7 +733,12 @@
       "evidence": "AUDIT-R2.md; evidence/r2/; AUDIT-REPRODUCE.md",
       "remaining": "Existing old CDN entries are not claimed purged; known-catalogue flooding remains possible.",
       "group": "r2",
-      "currentStatus": "implemented_pending_external_reaudit"
+      "currentStatus": "implemented_pending_external_reaudit",
+      "r3ExternalReview": {
+        "revision": "ad972e7",
+        "report": "evidence/r3/supplied-audit.md",
+        "disposition": "confirmed on reviewed revision; see new N-P findings"
+      }
     },
     {
       "id": "P-4",
@@ -731,7 +746,12 @@
       "evidence": "AUDIT-R2.md; evidence/r2/; AUDIT-REPRODUCE.md",
       "remaining": null,
       "group": "r2",
-      "currentStatus": "implemented_pending_external_reaudit"
+      "currentStatus": "implemented_pending_external_reaudit",
+      "r3ExternalReview": {
+        "revision": "ad972e7",
+        "report": "evidence/r3/supplied-audit.md",
+        "disposition": "confirmed on reviewed revision; see new N-P findings"
+      }
     },
     {
       "id": "P-5",
@@ -739,7 +759,12 @@
       "evidence": "AUDIT-R2.md; evidence/r2/; AUDIT-REPRODUCE.md",
       "remaining": "Server artifact attestation, backend export size and generic proxy errors remain open.",
       "group": "r2",
-      "currentStatus": "partially_remediated"
+      "currentStatus": "partially_remediated",
+      "r3ExternalReview": {
+        "revision": "ad972e7",
+        "report": "evidence/r3/supplied-audit.md",
+        "disposition": "confirmed on reviewed revision; see new N-P findings"
+      }
     },
     {
       "id": "F-1",
@@ -760,8 +785,8 @@
     {
       "id": "F-3",
       "status": "open",
-      "validation": "Independently reproduced through eleven real adapter builds using mocked RPC/legacy route",
-      "evidence": "AUDIT-R2.md; evidence/r2/; AUDIT-REPRODUCE.md",
+      "validation": "Real cost-binding arithmetic confirms no one-failure margin at maximum fee",
+      "evidence": "AUDIT-R2.md; evidence/r2/; AUDIT-REPRODUCE.md; evidence/r3/FINANCIAL-EVIDENCE-UPDATE.md",
       "group": "r2",
       "currentStatus": "open"
     },
@@ -776,8 +801,8 @@
     {
       "id": "F-5",
       "status": "open",
-      "validation": "Independent source review; external prerequisites documented",
-      "evidence": "AUDIT-R2.md; evidence/r2/; AUDIT-REPRODUCE.md",
+      "validation": "Actual pool-filtered responses and strict schema reproduction; no chain attribution established",
+      "evidence": "AUDIT-R2.md; evidence/r2/; AUDIT-REPRODUCE.md; evidence/r3/FINANCIAL-EVIDENCE-UPDATE.md",
       "group": "r2",
       "currentStatus": "open"
     },
@@ -852,6 +877,133 @@
       "evidence": "AUDIT-R2.md; evidence/r2/; AUDIT-REPRODUCE.md",
       "group": "r2",
       "currentStatus": "open"
+    },
+    {
+      "id": "N-P1",
+      "group": "r3",
+      "severity": "S2",
+      "summary": "Pending page response overwrites newer poll/refresh",
+      "currentStatus": "implemented_pending_verification",
+      "validation": "See AUDIT-R3.md and evidence/r3; external re-audit pending",
+      "evidence": "evidence/r3/supplied-audit.md"
+    },
+    {
+      "id": "N-P2",
+      "group": "r3",
+      "severity": "S2",
+      "summary": "Logo relay disables CDN reuse",
+      "currentStatus": "implemented_pending_verification",
+      "validation": "See AUDIT-R3.md and evidence/r3; external re-audit pending",
+      "evidence": "evidence/r3/supplied-audit.md"
+    },
+    {
+      "id": "N-P3",
+      "group": "r3",
+      "severity": "S3",
+      "summary": "Failed avatars do not recover after source recovery",
+      "currentStatus": "implemented_pending_verification",
+      "validation": "See AUDIT-R3.md and evidence/r3; external re-audit pending",
+      "evidence": "evidence/r3/supplied-audit.md"
+    },
+    {
+      "id": "N-P4",
+      "group": "r3",
+      "severity": "S3",
+      "summary": "Pagination lacks a stable cross-instance snapshot",
+      "currentStatus": "open",
+      "validation": "See AUDIT-R3.md and evidence/r3; external re-audit pending",
+      "evidence": "evidence/r3/supplied-audit.md"
+    },
+    {
+      "id": "N-P5",
+      "group": "r3",
+      "severity": "S3",
+      "summary": "Parent failure mislabels a successful query",
+      "currentStatus": "implemented_pending_verification",
+      "validation": "See AUDIT-R3.md and evidence/r3; external re-audit pending",
+      "evidence": "evidence/r3/supplied-audit.md"
+    },
+    {
+      "id": "N-P6",
+      "group": "r3",
+      "severity": "S3",
+      "summary": "Concurrent distinct logo misses can exceed work cap",
+      "currentStatus": "open_mitigated_by_cache",
+      "validation": "See AUDIT-R3.md and evidence/r3; external re-audit pending",
+      "evidence": "evidence/r3/supplied-audit.md"
+    },
+    {
+      "id": "N-P7",
+      "group": "r3",
+      "severity": "S3",
+      "summary": "Eligible-empty view shows misleading search-empty copy",
+      "currentStatus": "implemented_pending_verification",
+      "validation": "See AUDIT-R3.md and evidence/r3; external re-audit pending",
+      "evidence": "evidence/r3/supplied-audit.md"
+    },
+    {
+      "id": "N-P8",
+      "group": "r3",
+      "severity": "S3",
+      "summary": "Independent review hashes predate final integrated files",
+      "currentStatus": "pending_final_revision_review",
+      "validation": "See AUDIT-R3.md and evidence/r3; external re-audit pending",
+      "evidence": "evidence/r3/supplied-audit.md"
+    },
+    {
+      "id": "N-M1",
+      "group": "r3",
+      "severity": "S2",
+      "summary": "Built transaction not bound to the approval generation",
+      "currentStatus": "open",
+      "validation": "See AUDIT-R3.md and evidence/r3; external re-audit pending",
+      "evidence": "evidence/r3/supplied-audit.md"
+    },
+    {
+      "id": "N-M2",
+      "group": "r3",
+      "severity": "S2",
+      "summary": "Pre-custody token history can produce fabricated deposit deficit",
+      "currentStatus": "open",
+      "validation": "See AUDIT-R3.md and evidence/r3; external re-audit pending",
+      "evidence": "evidence/r3/supplied-audit.md"
+    },
+    {
+      "id": "N-M3",
+      "group": "r3",
+      "severity": "S3",
+      "summary": "Transaction-start reconciliation timestamp can misstate freshness",
+      "currentStatus": "open",
+      "validation": "See AUDIT-R3.md and evidence/r3; external re-audit pending",
+      "evidence": "evidence/r3/supplied-audit.md"
+    },
+    {
+      "id": "N-M4",
+      "group": "r3",
+      "severity": "S3",
+      "summary": "Financial cache documentation differs from forced route reads",
+      "currentStatus": "open",
+      "validation": "See AUDIT-R3.md and evidence/r3; external re-audit pending",
+      "evidence": "evidence/r3/supplied-audit.md"
+    },
+    {
+      "id": "N-M5",
+      "group": "r3",
+      "severity": "S2",
+      "summary": "Stored-byte rebroadcast gated on upstream reauthorization",
+      "currentStatus": "open",
+      "validation": "See AUDIT-R3.md and evidence/r3; external re-audit pending",
+      "evidence": "evidence/r3/supplied-audit.md"
+    },
+    {
+      "id": "N-M6",
+      "group": "r3",
+      "severity": "S3",
+      "summary": "Unrenewed worker lease may expire during RPC settlement",
+      "currentStatus": "open",
+      "validation": "See AUDIT-R3.md and evidence/r3; external re-audit pending",
+      "evidence": "evidence/r3/supplied-audit.md"
     }
-  ]
+  ],
+  "r3Findings": 14
 }

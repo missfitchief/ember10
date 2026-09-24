@@ -28,5 +28,5 @@ export function tokenImageUrl(value: string | null): string | null {
   const source = tokenImageSource(value);
   // Change the URL when authorization/cache policy changes, so existing browsers
   // do not reuse the old year-long immutable proxy response.
-  return source ? `/api/token-image?source=${encodeURIComponent(source.url)}&v=2` : null;
+  return source ? `/api/token-image?source=${encodeURIComponent(source.url)}&v=3` : null;
 }

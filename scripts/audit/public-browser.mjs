@@ -6,7 +6,7 @@ const { chromium } = await import(process.env.PLAYWRIGHT_MODULE ?? 'playwright')
 const [base, output, stage = 'public'] = process.argv.slice(2);
 if (!base || !output) throw Error('Supply origin and output directory');
 await mkdir(output, { recursive: true });
-const browser = await chromium.launch({ headless: true });
+const browser = await chromium.launch({ headless: true, channel: process.env.BROWSER_CHANNEL || undefined });
 const result = { at: new Date().toISOString(), base, stage, checks: [], errors: [], passed: false };
 try {
   for (const width of [1440, 375, ...(stage === 'before' ? [] : [320])]) {
