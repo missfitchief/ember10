@@ -20,7 +20,7 @@ const source = { refreshSeconds: 45, read: async () => ({ status: sourceStatus, 
     markets, evidenceHash: `fixture-${poll}`, coverage: { status: 'unverified', rawRows: 250, uniqueMints: 250, rankedMints: 250, duplicateRows: 0, invalidRows: 0, warming: false, complete: true, note: 'Browser test fixture' },
   },
 } }) };
-const browser = await chromium.launch({ headless: true });
+const browser = await chromium.launch({ headless: true, ...(process.env.BROWSER_CHANNEL ? { channel: process.env.BROWSER_CHANNEL } : {}) });
 const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
 const errors = [];
 page.on('pageerror', error => errors.push(error.message));
@@ -82,7 +82,7 @@ try {
     sourceStatus = health;
     await page.clock.fastForward(45_000);
     await waitFor(() => poll > beforeHealthPoll, 'source health poll');
-    await waitFor(() => page.getByText(/^Stale observation\. Last successful fetch:/).isVisible(), 'retained source failure warning');
+    await waitFor(() => page.getByText(/^The latest background source check is (stale|unavailable)/).isVisible(), 'retained source failure warning');
     assert.equal(await rowCount(), 140, 'outage retains expanded rows');
     assert.equal(await page.locator('.source-time').innerText(), originalTime, 'outage retains original provenance');
   }
