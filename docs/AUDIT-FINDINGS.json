@@ -1,6 +1,6 @@
 {
   "schemaVersion": 3,
-  "applicationRevision": "ed67a05f7b676108a98dcaf29460d2fdc60fecc6",
+  "applicationRevision": "e55be0f8f26e637ef5771d18df42604183a5c5f9",
   "externalReaudit": "pending",
   "financialExecutionEnabled": false,
   "totalFindings": 70,
@@ -883,27 +883,27 @@
       "group": "r3",
       "severity": "S2",
       "summary": "Pending page response overwrites newer poll/refresh",
-      "currentStatus": "implemented_pending_verification",
-      "validation": "See AUDIT-R3.md and evidence/r3; external re-audit pending",
-      "evidence": "evidence/r3/supplied-audit.md"
+      "currentStatus": "implemented_and_internally_verified_external_reaudit_pending",
+      "validation": "Exact revision review,258 unit/integration tests,5 R3 browser scenarios,11 R2 assertions and deployed proof; N-P4/N-P6 residuals remain",
+      "evidence": "AUDIT-R3.md; evidence/r3/validation.json; evidence/r3/independent-public-review-hashes.json; evidence/r3/public-verification.json"
     },
     {
       "id": "N-P2",
       "group": "r3",
       "severity": "S2",
       "summary": "Logo relay disables CDN reuse",
-      "currentStatus": "implemented_pending_verification",
-      "validation": "See AUDIT-R3.md and evidence/r3; external re-audit pending",
-      "evidence": "evidence/r3/supplied-audit.md"
+      "currentStatus": "implemented_and_internally_verified_external_reaudit_pending",
+      "validation": "Exact revision review,258 unit/integration tests,5 R3 browser scenarios,11 R2 assertions and deployed proof; N-P4/N-P6 residuals remain",
+      "evidence": "AUDIT-R3.md; evidence/r3/validation.json; evidence/r3/independent-public-review-hashes.json; evidence/r3/public-verification.json"
     },
     {
       "id": "N-P3",
       "group": "r3",
       "severity": "S3",
       "summary": "Failed avatars do not recover after source recovery",
-      "currentStatus": "implemented_pending_verification",
-      "validation": "See AUDIT-R3.md and evidence/r3; external re-audit pending",
-      "evidence": "evidence/r3/supplied-audit.md"
+      "currentStatus": "implemented_and_internally_verified_external_reaudit_pending",
+      "validation": "Exact revision review,258 unit/integration tests,5 R3 browser scenarios,11 R2 assertions and deployed proof; N-P4/N-P6 residuals remain",
+      "evidence": "AUDIT-R3.md; evidence/r3/validation.json; evidence/r3/independent-public-review-hashes.json; evidence/r3/public-verification.json"
     },
     {
       "id": "N-P4",
@@ -911,17 +911,17 @@
       "severity": "S3",
       "summary": "Pagination lacks a stable cross-instance snapshot",
       "currentStatus": "open",
-      "validation": "See AUDIT-R3.md and evidence/r3; external re-audit pending",
-      "evidence": "evidence/r3/supplied-audit.md"
+      "validation": "Exact revision review,258 unit/integration tests,5 R3 browser scenarios,11 R2 assertions and deployed proof; N-P4/N-P6 residuals remain",
+      "evidence": "AUDIT-R3.md; evidence/r3/validation.json; evidence/r3/independent-public-review-hashes.json; evidence/r3/public-verification.json"
     },
     {
       "id": "N-P5",
       "group": "r3",
       "severity": "S3",
       "summary": "Parent failure mislabels a successful query",
-      "currentStatus": "implemented_pending_verification",
-      "validation": "See AUDIT-R3.md and evidence/r3; external re-audit pending",
-      "evidence": "evidence/r3/supplied-audit.md"
+      "currentStatus": "implemented_and_internally_verified_external_reaudit_pending",
+      "validation": "Exact revision review,258 unit/integration tests,5 R3 browser scenarios,11 R2 assertions and deployed proof; N-P4/N-P6 residuals remain",
+      "evidence": "AUDIT-R3.md; evidence/r3/validation.json; evidence/r3/independent-public-review-hashes.json; evidence/r3/public-verification.json"
     },
     {
       "id": "N-P6",
@@ -929,26 +929,26 @@
       "severity": "S3",
       "summary": "Concurrent distinct logo misses can exceed work cap",
       "currentStatus": "open_mitigated_by_cache",
-      "validation": "See AUDIT-R3.md and evidence/r3; external re-audit pending",
-      "evidence": "evidence/r3/supplied-audit.md"
+      "validation": "Exact revision review,258 unit/integration tests,5 R3 browser scenarios,11 R2 assertions and deployed proof; N-P4/N-P6 residuals remain",
+      "evidence": "AUDIT-R3.md; evidence/r3/validation.json; evidence/r3/independent-public-review-hashes.json; evidence/r3/public-verification.json"
     },
     {
       "id": "N-P7",
       "group": "r3",
       "severity": "S3",
       "summary": "Eligible-empty view shows misleading search-empty copy",
-      "currentStatus": "implemented_pending_verification",
-      "validation": "See AUDIT-R3.md and evidence/r3; external re-audit pending",
-      "evidence": "evidence/r3/supplied-audit.md"
+      "currentStatus": "implemented_and_internally_verified_external_reaudit_pending",
+      "validation": "Exact revision review,258 unit/integration tests,5 R3 browser scenarios,11 R2 assertions and deployed proof; N-P4/N-P6 residuals remain",
+      "evidence": "AUDIT-R3.md; evidence/r3/validation.json; evidence/r3/independent-public-review-hashes.json; evidence/r3/public-verification.json"
     },
     {
       "id": "N-P8",
       "group": "r3",
       "severity": "S3",
       "summary": "Independent review hashes predate final integrated files",
-      "currentStatus": "pending_final_revision_review",
-      "validation": "See AUDIT-R3.md and evidence/r3; external re-audit pending",
-      "evidence": "evidence/r3/supplied-audit.md"
+      "currentStatus": "exact_revision_internal_review_recorded_external_reaudit_pending",
+      "validation": "Exact revision review,258 unit/integration tests,5 R3 browser scenarios,11 R2 assertions and deployed proof; N-P4/N-P6 residuals remain",
+      "evidence": "AUDIT-R3.md; evidence/r3/validation.json; evidence/r3/independent-public-review-hashes.json; evidence/r3/public-verification.json"
     },
     {
       "id": "N-M1",
@@ -982,7 +982,7 @@
       "group": "r3",
       "severity": "S3",
       "summary": "Financial cache documentation differs from forced route reads",
-      "currentStatus": "open",
+      "currentStatus": "documentation_corrected_financial_behavior_unchanged",
       "validation": "See AUDIT-R3.md and evidence/r3; external re-audit pending",
       "evidence": "evidence/r3/supplied-audit.md"
     },

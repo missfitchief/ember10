@@ -1,0 +1,220 @@
+{
+  "at": "2026-09-24T10:58:10.860Z",
+  "origin": "https://ember5-pilot.vercel.app",
+  "version": "3",
+  "passes": [
+    {
+      "pass": 0,
+      "medianMs": 3342,
+      "rows": [
+        {
+          "mint": "5dvXTZ5qwgafnHtwu3Ls3QrWx1U4LQsFeCuJgkk4QEC6",
+          "status": 200,
+          "ms": 977,
+          "cache": "MISS",
+          "age": "0",
+          "cacheControl": "public, max-age=0",
+          "bytes": 1318,
+          "sha256": "9cc4520e8fad4f1ee0a03e6994b765173dff6aed9313073eb7e1c0aad404166a"
+        },
+        {
+          "mint": "9oXA1VWKNiYDYa6VKHBFFBBvZdvuhw1b2eD5Aka7YrVt",
+          "status": 200,
+          "ms": 238,
+          "cache": "MISS",
+          "age": "0",
+          "cacheControl": "public, max-age=0",
+          "bytes": 7278,
+          "sha256": "b37f792053d2e25a9cd90272fb1931a4e3fa04d214dfa04b09fbb08984a99b0b"
+        },
+        {
+          "mint": "26d5rwV5emnGJSzr5CKpgq66LmYqqddk33ybUMioYLTU",
+          "status": 200,
+          "ms": 4194,
+          "cache": "MISS",
+          "age": "0",
+          "cacheControl": "public, max-age=0",
+          "bytes": 3458,
+          "sha256": "6d68e5073fbc7ef95b4e10f5f01f85e8e5f324e959a6ca8b2c4891e0b3df3123"
+        },
+        {
+          "mint": "AbkkkbRU8SZ69sZWsykkeutL1sf1Ds1fiu1yDQ8mMVo7",
+          "status": 200,
+          "ms": 3196,
+          "cache": "MISS",
+          "age": "0",
+          "cacheControl": "public, max-age=0",
+          "bytes": 9046,
+          "sha256": "f894ae0ba7fcaa6780962dff2fc7530f3a611d3db630fdfcf73552b8cf722d7b"
+        },
+        {
+          "mint": "8iYPW781jBDu8zkC6PFY8WpvtbHxSVMgBX8aPnNmRY3z",
+          "status": 200,
+          "ms": 2937,
+          "cache": "MISS",
+          "age": "0",
+          "cacheControl": "public, max-age=0",
+          "bytes": 1606,
+          "sha256": "be7d61628fc1fd6960a2e76e0cc06dfe189a797f03be5f34fa19fd04f6434ba2"
+        },
+        {
+          "mint": "4MjrGwD4SpjVN6JPZJfmHCUmnJynoTz56tbzCX71SxE9",
+          "status": 200,
+          "ms": 3634,
+          "cache": "MISS",
+          "age": "0",
+          "cacheControl": "public, max-age=0",
+          "bytes": 5700,
+          "sha256": "47064716461afea88935fcdaf289d6aca4920ef955f99f229b1432846fafc4d8"
+        },
+        {
+          "mint": "26Kg27kpPHBN2MHqgrsJh3LzMZboxZyUpbeVonmpZwVm",
+          "status": 200,
+          "ms": 3633,
+          "cache": "MISS",
+          "age": "0",
+          "cacheControl": "public, max-age=0",
+          "bytes": 7790,
+          "sha256": "cbab326d76024345b9aa64e69ceee1adb3626596b08f97a17f28f1f5e7a832ce"
+        },
+        {
+          "mint": "9LYpEqkpgCoZ99NsrPuoobDZsShteajdqtCtpKscStq7",
+          "status": 200,
+          "ms": 3713,
+          "cache": "MISS",
+          "age": "0",
+          "cacheControl": "public, max-age=0",
+          "bytes": 2266,
+          "sha256": "e36a2e2c3c1110f283eadd94dc4081dad0898d4d8516d7dff793443876139d07"
+        },
+        {
+          "mint": "2Lt9MAeEdVyVCviZnEsDj9H3qn8KGjExaGud6yHT5ekj",
+          "status": 200,
+          "ms": 3112,
+          "cache": "MISS",
+          "age": "0",
+          "cacheControl": "public, max-age=0",
+          "bytes": 3336,
+          "sha256": "089011b97ebbb2b9120b41edda3fea8447f59f540e47832d89b313c2c7b76b51"
+        },
+        {
+          "mint": "GHcha5wmPV629D2aUnXsAz8x5EgEXTwPzC2YvuFJua5u",
+          "status": 200,
+          "ms": 3488,
+          "cache": "MISS",
+          "age": "0",
+          "cacheControl": "public, max-age=0",
+          "bytes": 3478,
+          "sha256": "619b99462422c7aa76ffd74aac19bdfebc375338f1b94dec1ee5c3465a4e4b83"
+        }
+      ]
+    },
+    {
+      "pass": 1,
+      "medianMs": 54,
+      "rows": [
+        {
+          "mint": "5dvXTZ5qwgafnHtwu3Ls3QrWx1U4LQsFeCuJgkk4QEC6",
+          "status": 200,
+          "ms": 54,
+          "cache": "HIT",
+          "age": "4",
+          "cacheControl": "public, max-age=0",
+          "bytes": 1318,
+          "sha256": "9cc4520e8fad4f1ee0a03e6994b765173dff6aed9313073eb7e1c0aad404166a"
+        },
+        {
+          "mint": "9oXA1VWKNiYDYa6VKHBFFBBvZdvuhw1b2eD5Aka7YrVt",
+          "status": 200,
+          "ms": 57,
+          "cache": "HIT",
+          "age": "4",
+          "cacheControl": "public, max-age=0",
+          "bytes": 7278,
+          "sha256": "b37f792053d2e25a9cd90272fb1931a4e3fa04d214dfa04b09fbb08984a99b0b"
+        },
+        {
+          "mint": "26d5rwV5emnGJSzr5CKpgq66LmYqqddk33ybUMioYLTU",
+          "status": 200,
+          "ms": 51,
+          "cache": "HIT",
+          "age": "0",
+          "cacheControl": "public, max-age=0",
+          "bytes": 3458,
+          "sha256": "6d68e5073fbc7ef95b4e10f5f01f85e8e5f324e959a6ca8b2c4891e0b3df3123"
+        },
+        {
+          "mint": "AbkkkbRU8SZ69sZWsykkeutL1sf1Ds1fiu1yDQ8mMVo7",
+          "status": 200,
+          "ms": 58,
+          "cache": "HIT",
+          "age": "1",
+          "cacheControl": "public, max-age=0",
+          "bytes": 9046,
+          "sha256": "f894ae0ba7fcaa6780962dff2fc7530f3a611d3db630fdfcf73552b8cf722d7b"
+        },
+        {
+          "mint": "8iYPW781jBDu8zkC6PFY8WpvtbHxSVMgBX8aPnNmRY3z",
+          "status": 200,
+          "ms": 54,
+          "cache": "HIT",
+          "age": "1",
+          "cacheControl": "public, max-age=0",
+          "bytes": 1606,
+          "sha256": "be7d61628fc1fd6960a2e76e0cc06dfe189a797f03be5f34fa19fd04f6434ba2"
+        },
+        {
+          "mint": "4MjrGwD4SpjVN6JPZJfmHCUmnJynoTz56tbzCX71SxE9",
+          "status": 200,
+          "ms": 54,
+          "cache": "HIT",
+          "age": "1",
+          "cacheControl": "public, max-age=0",
+          "bytes": 5700,
+          "sha256": "47064716461afea88935fcdaf289d6aca4920ef955f99f229b1432846fafc4d8"
+        },
+        {
+          "mint": "26Kg27kpPHBN2MHqgrsJh3LzMZboxZyUpbeVonmpZwVm",
+          "status": 200,
+          "ms": 52,
+          "cache": "HIT",
+          "age": "0",
+          "cacheControl": "public, max-age=0",
+          "bytes": 7790,
+          "sha256": "cbab326d76024345b9aa64e69ceee1adb3626596b08f97a17f28f1f5e7a832ce"
+        },
+        {
+          "mint": "9LYpEqkpgCoZ99NsrPuoobDZsShteajdqtCtpKscStq7",
+          "status": 200,
+          "ms": 50,
+          "cache": "HIT",
+          "age": "1",
+          "cacheControl": "public, max-age=0",
+          "bytes": 2266,
+          "sha256": "e36a2e2c3c1110f283eadd94dc4081dad0898d4d8516d7dff793443876139d07"
+        },
+        {
+          "mint": "2Lt9MAeEdVyVCviZnEsDj9H3qn8KGjExaGud6yHT5ekj",
+          "status": 200,
+          "ms": 53,
+          "cache": "HIT",
+          "age": "1",
+          "cacheControl": "public, max-age=0",
+          "bytes": 3336,
+          "sha256": "089011b97ebbb2b9120b41edda3fea8447f59f540e47832d89b313c2c7b76b51"
+        },
+        {
+          "mint": "GHcha5wmPV629D2aUnXsAz8x5EgEXTwPzC2YvuFJua5u",
+          "status": 200,
+          "ms": 132,
+          "cache": "HIT",
+          "age": "1",
+          "cacheControl": "public, max-age=0",
+          "bytes": 3478,
+          "sha256": "619b99462422c7aa76ffd74aac19bdfebc375338f1b94dec1ee5c3465a4e4b83"
+        }
+      ]
+    }
+  ],
+  "summaryDerivation": "Arithmetic median of the two middle sorted durations for10 samples; recalculated from unchanged captured rows."
+}

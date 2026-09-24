@@ -1,0 +1,43 @@
+{
+  "at": "2026-09-24T10:58:31.553Z",
+  "origin": "https://ember5-pilot.vercel.app",
+  "checks": [
+    {
+      "path": "/api/token-image?source=https%3A%2F%2Fembercurve.fun%2Fimg%2Fbaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa&v=3",
+      "method": "GET",
+      "status": 404,
+      "cacheControl": "no-store"
+    },
+    {
+      "path": "/api/token-image?source=http%3A%2F%2F127.0.0.1%2Fa",
+      "method": "GET",
+      "status": 400,
+      "cacheControl": "no-store"
+    },
+    {
+      "path": "/api/overview?limit=101",
+      "method": "GET",
+      "status": 400,
+      "cacheControl": "no-store"
+    },
+    {
+      "path": "/api/status",
+      "method": "POST",
+      "status": 405,
+      "cacheControl": "no-store"
+    },
+    {
+      "path": "/api/operator/pause",
+      "method": "POST",
+      "status": 405,
+      "cacheControl": "no-store"
+    },
+    {
+      "path": "/api/operator/pause",
+      "method": "GET",
+      "status": 404,
+      "cacheControl": "no-store"
+    }
+  ],
+  "passed": true
+}

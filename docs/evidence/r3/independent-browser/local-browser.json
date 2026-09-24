@@ -1,0 +1,15 @@
+{
+  "at": "2026-09-24T10:53:51.700Z",
+  "base": "http://127.0.0.1:5196",
+  "stage": "local",
+  "checks": [
+    "1440: all ten catalogue logos decoded; no horizontal overflow",
+    "1440: token details, unavailable ledger and keyboard skip verified",
+    "375: all ten catalogue logos decoded; no horizontal overflow",
+    "375: token details, unavailable ledger and keyboard skip verified",
+    "320: all ten catalogue logos decoded; no horizontal overflow",
+    "320: token details, unavailable ledger and keyboard skip verified"
+  ],
+  "errors": [],
+  "passed": true
+}

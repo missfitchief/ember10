@@ -1,0 +1,32 @@
+{
+  "at": "2026-09-24T10:58:15.180Z",
+  "origin": "https://ember5-pilot.vercel.app",
+  "checks": [
+    {
+      "path": "/api/token-image?source=https%3A%2F%2Fembercurve.fun%2Fimg%2Fbaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa&v=3",
+      "method": "GET",
+      "status": 404,
+      "cacheControl": "no-store"
+    },
+    {
+      "path": "/api/token-image?source=http%3A%2F%2F127.0.0.1%2Fa",
+      "method": "GET",
+      "status": 400,
+      "cacheControl": "no-store"
+    },
+    {
+      "path": "/api/overview?limit=101",
+      "method": "GET",
+      "status": 400,
+      "cacheControl": "no-store"
+    },
+    {
+      "path": "/api/status",
+      "method": "POST",
+      "status": 405,
+      "cacheControl": "no-store"
+    }
+  ],
+  "passed": false,
+  "failure": "AssertionError [ERR_ASSERTION]: /api/operator/pause\n\n405 !== 404\n\n    at file:///C:/Users/akki/Documents/Codex/2026-09-23/bu/outputs/EMBER10-r3-review/public-api-checks.mjs:6:107\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)"
+}

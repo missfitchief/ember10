@@ -30,3 +30,7 @@ F-5 remains open with corrected mechanism. A real pool produced 37 matching keep
 F-3 remains open. 25,671,360lamports is a successful-build-only comparison, not a retry-ready fix. At the 100,000 fee cap, one failed attempt followed by burn leaves 4,078,560 against 4,178,560 required for the retry. The retry count/reserve policy is undecided, and new holder ATA creation requires separate reserve. No financial implementation changed.
 
 N-M1 through N-M6 are retained in the70-item register. Read-only source assessments are explicitly distinguished from executed race tests. All F-1 through F-14 remain open. Passing public checks does not make the financial service safe to fund.
+
+## Verified publication
+
+Application e55be0f8f26e637ef5771d18df42604183a5c5f9 is deployed as dpl_2iLSDkviTkDdtXB8o4cjEcYFkDsk. Candidate and public proof matched all 8 files and decoded 10 logos. The second logo batch was10/10 CDN HIT with median 54ms; first misses remained slower (3342ms median in that batch). The first Vercel attempt returned Not authorized; selecting the existing plavi scope explicitly succeeded. No project/permission change was made. All258 tests, both controlled browser suites and independent exact-byte review passed. External re-audit remains pending.

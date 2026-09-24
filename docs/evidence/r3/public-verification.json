@@ -1,0 +1,178 @@
+{
+  "at": "2026-09-24T10:58:10.623Z",
+  "origin": "https://ember5-pilot.vercel.app",
+  "revision": "e55be0f8f26e637ef5771d18df42604183a5c5f9",
+  "assets": [
+    {
+      "path": "/index.html",
+      "sha256": "9656675fb9d59ad4c356f63cba0308c8667326e8f53a9e3259c59532b3e10247",
+      "bytes": 2134
+    },
+    {
+      "path": "/assets/figtree-latin-D_ZTVpCC.woff2",
+      "sha256": "4ba7d3d096695818fe0686be4f1e82c6b05134e18a22260336130335027462dd",
+      "bytes": 20156
+    },
+    {
+      "path": "/assets/bricolage-grotesque-latin-Cre6nC2_.woff2",
+      "sha256": "a79fdb52d4a5c76552452f69202add96e287401fff03d3e8c0e38b4dcb5a99cd",
+      "bytes": 76888
+    },
+    {
+      "path": "/favicon.svg",
+      "sha256": "f145c96f2424bfdf519b92ab27f1b7a0e7e547bb5514674584b674b1ec3cd6d5",
+      "bytes": 384
+    },
+    {
+      "path": "/assets/index-EjoWDp4l.css",
+      "sha256": "a901f09c44a2d4b1833edfbb0db5f212407161f236f88ec5fa68fe1118372571",
+      "bytes": 67482
+    },
+    {
+      "path": "/assets/index-BnTx3EAd.js",
+      "sha256": "15b58850ecd43e666bd5995539e995477286c2baa04dd23e95d8ef10517a5698",
+      "bytes": 326674
+    },
+    {
+      "path": "/ember10-share.svg",
+      "sha256": "108535db3bafcb6f7cf655fe87c393c01b639150674c00f57734d857bdea43e7",
+      "bytes": 4917
+    },
+    {
+      "path": "/ember10-share.png",
+      "sha256": "d574b61678b809966986242b9a49dbbf71e70a61d7532a8d019fe8c2dddcc784",
+      "bytes": 163001
+    }
+  ],
+  "logos": [
+    {
+      "mint": "9oXA1VWKNiYDYa6VKHBFFBBvZdvuhw1b2eD5Aka7YrVt",
+      "symbol": "FLAME",
+      "source": "https://embercurve.fun/img/bafkreiapqmcv2tpidxzv4esazarlhxueek7znazvyt5tsotck5vitzcfqy",
+      "path": "/api/token-image?source=https%3A%2F%2Fembercurve.fun%2Fimg%2Fbafkreiapqmcv2tpidxzv4esazarlhxueek7znazvyt5tsotck5vitzcfqy&v=3",
+      "bytes": 7278,
+      "width": 160,
+      "height": 94,
+      "format": "webp",
+      "sha256": "b37f792053d2e25a9cd90272fb1931a4e3fa04d214dfa04b09fbb08984a99b0b"
+    },
+    {
+      "mint": "5dvXTZ5qwgafnHtwu3Ls3QrWx1U4LQsFeCuJgkk4QEC6",
+      "symbol": "EMBER",
+      "source": "https://embercurve.fun/img/bafybeiacpflqennfh67t6vctwx3sie43drsenrme6i75sa7jmgi2cjy77y",
+      "path": "/api/token-image?source=https%3A%2F%2Fembercurve.fun%2Fimg%2Fbafybeiacpflqennfh67t6vctwx3sie43drsenrme6i75sa7jmgi2cjy77y&v=3",
+      "bytes": 1318,
+      "width": 160,
+      "height": 160,
+      "format": "webp",
+      "sha256": "9cc4520e8fad4f1ee0a03e6994b765173dff6aed9313073eb7e1c0aad404166a"
+    },
+    {
+      "mint": "26d5rwV5emnGJSzr5CKpgq66LmYqqddk33ybUMioYLTU",
+      "symbol": "BASKET",
+      "source": "https://embercurve.fun/img/bafybeig2jx4wabch2xppgen6t2nqcj7f3xqb2kdjzt6yreltjby4hewafu",
+      "path": "/api/token-image?source=https%3A%2F%2Fembercurve.fun%2Fimg%2Fbafybeig2jx4wabch2xppgen6t2nqcj7f3xqb2kdjzt6yreltjby4hewafu&v=3",
+      "bytes": 3458,
+      "width": 160,
+      "height": 160,
+      "format": "webp",
+      "sha256": "6d68e5073fbc7ef95b4e10f5f01f85e8e5f324e959a6ca8b2c4891e0b3df3123"
+    },
+    {
+      "mint": "8iYPW781jBDu8zkC6PFY8WpvtbHxSVMgBX8aPnNmRY3z",
+      "symbol": "EMBERCAT",
+      "source": "https://embercurve.fun/img/bafkreiecpvjfn4g2k7kraoeghipjwc3vdloeixm2goktexxvqcch7xxpua",
+      "path": "/api/token-image?source=https%3A%2F%2Fembercurve.fun%2Fimg%2Fbafkreiecpvjfn4g2k7kraoeghipjwc3vdloeixm2goktexxvqcch7xxpua&v=3",
+      "bytes": 1606,
+      "width": 160,
+      "height": 160,
+      "format": "webp",
+      "sha256": "be7d61628fc1fd6960a2e76e0cc06dfe189a797f03be5f34fa19fd04f6434ba2"
+    },
+    {
+      "mint": "4MjrGwD4SpjVN6JPZJfmHCUmnJynoTz56tbzCX71SxE9",
+      "symbol": "FINE",
+      "source": "https://embercurve.fun/img/bafkreidi425lipehj66qpbzwvbo4czzhhzgwluxilkes5okt26meb4bbse",
+      "path": "/api/token-image?source=https%3A%2F%2Fembercurve.fun%2Fimg%2Fbafkreidi425lipehj66qpbzwvbo4czzhhzgwluxilkes5okt26meb4bbse&v=3",
+      "bytes": 5700,
+      "width": 160,
+      "height": 113,
+      "format": "webp",
+      "sha256": "47064716461afea88935fcdaf289d6aca4920ef955f99f229b1432846fafc4d8"
+    },
+    {
+      "mint": "AbkkkbRU8SZ69sZWsykkeutL1sf1Ds1fiu1yDQ8mMVo7",
+      "symbol": "WALTER",
+      "source": "https://embercurve.fun/img/bafybeib7xezgznnlfacypbajwvg466rljxeeag7nl6sjygc4vdo6txyy7e",
+      "path": "/api/token-image?source=https%3A%2F%2Fembercurve.fun%2Fimg%2Fbafybeib7xezgznnlfacypbajwvg466rljxeeag7nl6sjygc4vdo6txyy7e&v=3",
+      "bytes": 9046,
+      "width": 160,
+      "height": 160,
+      "format": "webp",
+      "sha256": "f894ae0ba7fcaa6780962dff2fc7530f3a611d3db630fdfcf73552b8cf722d7b"
+    },
+    {
+      "mint": "9LYpEqkpgCoZ99NsrPuoobDZsShteajdqtCtpKscStq7",
+      "symbol": "EMBER5",
+      "source": "https://embercurve.fun/img/bafybeidprle6gxj4ypb6gesfwqozg67ftxn5vylv73nn5w5czonievrjga",
+      "path": "/api/token-image?source=https%3A%2F%2Fembercurve.fun%2Fimg%2Fbafybeidprle6gxj4ypb6gesfwqozg67ftxn5vylv73nn5w5czonievrjga&v=3",
+      "bytes": 2266,
+      "width": 160,
+      "height": 160,
+      "format": "webp",
+      "sha256": "e36a2e2c3c1110f283eadd94dc4081dad0898d4d8516d7dff793443876139d07"
+    },
+    {
+      "mint": "2Lt9MAeEdVyVCviZnEsDj9H3qn8KGjExaGud6yHT5ekj",
+      "symbol": "ZECBALL",
+      "source": "https://embercurve.fun/img/bafybeie33wtdtrgkh2f2f34b5f3cdfukcfes7lcksfr3fcixevmqyvso2m",
+      "path": "/api/token-image?source=https%3A%2F%2Fembercurve.fun%2Fimg%2Fbafybeie33wtdtrgkh2f2f34b5f3cdfukcfes7lcksfr3fcixevmqyvso2m&v=3",
+      "bytes": 3336,
+      "width": 160,
+      "height": 120,
+      "format": "webp",
+      "sha256": "089011b97ebbb2b9120b41edda3fea8447f59f540e47832d89b313c2c7b76b51"
+    },
+    {
+      "mint": "26Kg27kpPHBN2MHqgrsJh3LzMZboxZyUpbeVonmpZwVm",
+      "symbol": "UCAT",
+      "source": "https://embercurve.fun/img/bafybeibiftc6yjl6jzhbk5nm7jjzykuv76nw7ap75m5h5rd25a74et4zdu",
+      "path": "/api/token-image?source=https%3A%2F%2Fembercurve.fun%2Fimg%2Fbafybeibiftc6yjl6jzhbk5nm7jjzykuv76nw7ap75m5h5rd25a74et4zdu&v=3",
+      "bytes": 7790,
+      "width": 160,
+      "height": 160,
+      "format": "webp",
+      "sha256": "cbab326d76024345b9aa64e69ceee1adb3626596b08f97a17f28f1f5e7a832ce"
+    },
+    {
+      "mint": "GHcha5wmPV629D2aUnXsAz8x5EgEXTwPzC2YvuFJua5u",
+      "symbol": "METCAT",
+      "source": "https://embercurve.fun/img/bafkreif2udvyksa6sxbc7eeuohhrhpo7qwxqamsqerkikk3grxzzd77yxa",
+      "path": "/api/token-image?source=https%3A%2F%2Fembercurve.fun%2Fimg%2Fbafkreif2udvyksa6sxbc7eeuohhrhpo7qwxqamsqerkikk3grxzzd77yxa&v=3",
+      "bytes": 3478,
+      "width": 160,
+      "height": 156,
+      "format": "webp",
+      "sha256": "619b99462422c7aa76ffd74aac19bdfebc375338f1b94dec1ee5c3465a4e4b83"
+    }
+  ],
+  "checks": [
+    "exact deployed revision and paused read-only state",
+    "eight build assets match local hashes",
+    "ten real catalogue logos fetched through same-origin API and decoded as bounded WebP"
+  ],
+  "status": {
+    "mode": "prelaunch",
+    "phase": "prelaunch",
+    "dataMode": "real",
+    "hostedSnapshot": false,
+    "broadcastEnabled": false,
+    "workerActive": false,
+    "paused": true,
+    "revision": "e55be0f8f26e637ef5771d18df42604183a5c5f9",
+    "waitingReason": "Contract not deployed; settlement not configured."
+  },
+  "observedAt": "2026-09-24T10:58:24.157Z",
+  "totalLogoBytes": 45276,
+  "passed": true
+}

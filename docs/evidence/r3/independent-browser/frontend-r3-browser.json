@@ -1,0 +1,11 @@
+{
+  "passed": true,
+  "results": [
+    "Late matching page cannot overwrite a replacing parent poll, even when fetch ignores abort",
+    "Default Refresh list cancels/invalidate pending paging and late mismatch cannot undo it",
+    "Successful query stays correctly labelled despite parent failure; eligibility-empty policy takes priority over query",
+    "Exhausted real image failures recover in hero, homepage list and detail after good poll; healthy image DOM persists",
+    "Exhausted real market-table image failure recovers after a successful observation"
+  ],
+  "scope": "Application UI with browser-only controlled API/image fixtures, deferred fetches deliberately ignoring abort; no live financial data or execution."
+}

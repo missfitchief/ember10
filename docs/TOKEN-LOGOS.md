@@ -1,3 +1,5 @@
+> Current R3 policy: version 3 URLs, CDN 300s fresh +60s stale-while-revalidate, browser max-age=0; errors no-store. Successful observations retry failed avatars without resetting healthy ones. See [R3](AUDIT-R3.md) and [verification](VERIFICATION.md). The validation counts below describe the original logo correction, not the latest run.
+
 # Token logo delivery correction
 
 The public Orbit frontend previously loaded full-size Ember images directly in each visitor's browser. A failed request permanently switched the mounted avatar to initials. The user's iPhone screenshot showed this for every hero token. Thirty independent upstream checks with desktop/iPhone headers succeeded, so a particular carrier, browser restriction or upstream outage is not established as the original cause.

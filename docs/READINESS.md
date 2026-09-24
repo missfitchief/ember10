@@ -1,14 +1,14 @@
-> Current deployed revision: see [deployment identity](deployment.json). Read [Round 2 blockers](AUDIT-R2.md) before any financial work. External re-audit of this public correction is pending.
+> Current deployed revision: see [deployment identity](deployment.json). Read [Round 3 corrections and blockers](AUDIT-R3.md) before any financial work. External re-audit of this public correction is pending.
 
-# Readiness as of 23 September 2026
+# Readiness as of 24 September 2026
 
 | Area | Status |
 |---|---|
 | Public UI | Implemented; desktop and mobile inspected, real prelaunch discovery, empty/error/unavailable states checked; ordinary UI refuses demo financial records |
-| Vercel deployment | Published and verified on the existing URL at ed67a05; see deployment.json and the latest public proof. No financial worker or signing |
+| Vercel deployment | Published and verified on the existing URL at e55be0f; see deployment.json and the latest public proof. No financial worker or signing |
 | API and operator boundary | Implemented; address/limit validation, rate limiting, bearer authentication and public write rejection tested |
-| Core accounting | Existing PostgreSQL tests pass, but R2 identifies open reconciliation, attribution and recovery defects; not financially ready |
-| Durable worker | Not deployed; open R2 forecast, expiry, WSOL and commitment-lifecycle blockers prevent a funded pilot |
+| Core accounting | Existing PostgreSQL tests pass, but R2/R3 identify open reconciliation, attribution and recovery defects; not financially ready |
+| Durable worker | Not deployed; open R2/R3 forecast, expiry, WSOL and commitment-lifecycle blockers prevent a funded pilot |
 | Local/test-chain settlement | Real transfer/burn/signer adapters and executable exercise included; **not executed to settlement** here because validator initialization and devnet faucet failed |
 | Live market reads | Real Ember catalogue/config/quotes/payout/fee/holder responses observed and recorded; discovery works in the prelaunch UI |
 | Live authenticated quote/build | **Blocked:** audit-reported live build instruction variants are rejected. No keyed project build acceptance test has passed |

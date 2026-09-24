@@ -1,0 +1,1835 @@
+diff --git a/AUDIT-START-HERE.md b/AUDIT-START-HERE.md
+index e8f7fb9..19c8c72 100644
+--- a/AUDIT-START-HERE.md
++++ b/AUDIT-START-HERE.md
+@@ -1,18 +1,13 @@
+-# EMBER10 external review package
++# EMBER10 external review package ? R3
+ 
+-This is the complete source repository, including tests, migrations and recorded evidence. The package manifest identifies the exact source commit and per-file hashes. The deployed application is `ed67a05f7b676108a98dcaf29460d2fdc60fecc6`; later audit-preparation commits change documentation and reviewer tooling, not financial or public application behavior.
++This is the complete source repository, including tests, migrations and recorded evidence. The package manifest identifies the source commit and per-file hashes. [deployment.json](docs/deployment.json) identifies the exact deployed application revision separately from later documentation/evidence commits.
+ 
+-- [Review brief](docs/EXTERNAL-AUDIT.md): scope, priorities and requested deliverables.
+-- [Current findings](docs/AUDIT-FINDINGS.json): all 37 inherited findings plus 19 R2 findings, with prior auditor dispositions distinguished from current implementation claims.
+-- [Reproduce the checks](docs/AUDIT-REPRODUCE.md): exact source, test, browser and financial-failure commands.
+-- [Verification](docs/VERIFICATION.md) and [deployment identity](docs/deployment.json).
+-- [R2 correction and open financial blockers](docs/AUDIT-R2.md).
+-- [Latest publication recheck](docs/evidence/audit-ready/public-proof.json): eight asset hashes and ten actual catalogue logos.
+-- [Desktop/mobile and before/after screenshots](docs/evidence/r2/).
+-- [Packet verification](docs/evidence/audit-ready/checks.json) and [separate packet review](docs/evidence/audit-ready/packet-review.md).
++- [Review brief](docs/EXTERNAL-AUDIT.md) and [copy-ready external review request](docs/EXTERNAL-AUDIT-REQUEST.md).
++- [Current findings](docs/AUDIT-FINDINGS.json): all 70 findings ? 37 inherited, 19 R2 and 14 R3. Prior external conclusions and new implementation claims are distinct.
++- [R3 correction and residual limits](docs/AUDIT-R3.md), [verification](docs/VERIFICATION.md) and [reproduction commands](docs/AUDIT-REPRODUCE.md).
++- [Supplied R3 audit](docs/evidence/r3/supplied-audit.md), [R2 history](docs/AUDIT-R2.md), and [corrected financial evidence](docs/evidence/r3/financial-evidence.md).
++- Current tests, deployed byte comparisons, measured logo cache behavior, before/after desktop/mobile screenshots and exact-revision review are under [R3 evidence](docs/evidence/r3/).
+ 
+-The last complete test run passed 258 tests in 20 files against isolated PostgreSQL schemas. Its date, source and limits are recorded; preparing this package does not imply a newer full test run. Real funded settlement was not performed. Signing, broadcast and the financial worker remain disabled on the public host.
++Financial code and OPS/DEV rules are unchanged. F-1 through F-14 and the new financial findings remain blockers. Signing, broadcast and the financial worker remain disabled on the public host. No funded settlement or production database migration was performed. Five high production dependency entries remain disclosed.
+ 
+-Financial findings F-1 through F-14 remain open, including the independently reproduced forecast shortfall. Five high production dependency entries remain disclosed. Passing public-site checks is not approval to fund or launch the financial service. Internal specialist reviews are included with scope and same-vendor caveats; external re-audit of the correction is pending.
+-
+-Start an external review with [this copy-ready request](docs/EXTERNAL-AUDIT-REQUEST.md). No credentials, signer keys, private runtime state or node_modules are included. No auditor has been contacted automatically. This is an audit delivery, not a two-PC development transfer.
++Internal specialist reviews are same-vendor reviews, not external audit approval. External re-audit of this correction is pending. No auditor has been contacted automatically. The package excludes credentials, private runtime state and dependencies; this is a one-PC audit delivery, not a two-PC transfer.
+diff --git a/apps/api/token-image.ts b/apps/api/token-image.ts
+index 9d6e672..4c765c0 100644
+--- a/apps/api/token-image.ts
++++ b/apps/api/token-image.ts
+@@ -115,9 +115,11 @@ export function createTokenImageHandler(fetchImage: typeof fetch = (...args) =>
+       }
+       // A refresh may have removed membership while image I/O was in flight.
+       if (!await within(authorize(requested), deadline, request.signal)) return error(404);
++      // Catalogue authorization runs on origin misses. CDN entries may remain
++      // fresh for 5 minutes, then stale for up to 1 minute while revalidating.
+       const headers = {
+         'content-type': image.type, 'content-length': String(image.bytes.length),
+-        'cache-control': 'public, max-age=0, s-maxage=0, must-revalidate',
++        'cache-control': 'public, max-age=0, s-maxage=300, stale-while-revalidate=60',
+         'x-content-type-options': 'nosniff', 'content-security-policy': "default-src 'none'; sandbox",
+         'cross-origin-resource-policy': 'same-origin', etag: image.etag
+       };
+diff --git a/apps/web/market.tsx b/apps/web/market.tsx
+index ac9a4cb..b4b334a 100644
+--- a/apps/web/market.tsx
++++ b/apps/web/market.tsx
+@@ -1,11 +1,16 @@
+-﻿import React, { useEffect, useRef, useState } from 'react';
++import React, { createContext, useContext, useEffect, useRef, useState } from 'react';
+ import type { PublicMarket, PublicOverview } from '../../packages/shared/public.js';
+ import { api, assertOverview, change, dateTime, eligibilityLabel, filterMarkets, logoUrl, marketCounts, marketRequestState, marketView, mergeMarketPages, money, short, sourceUrl } from './view-model.js';
+ import { Empty, Icon, Skeleton } from './components.js';
+ 
+ const logoRetryDelays = [800, 2200];
++export const LogoRecoveryContext = createContext<string | null>(null);
+ function LogoImage({ src, symbol, loading }: { src: string; symbol: string; loading: 'eager' | 'lazy' }) {
+   const [{ attempt, failed }, setRequest] = useState({ attempt: 0, failed: false });
++  const successfulObservation = useContext(LogoRecoveryContext);
++  useEffect(() => {
++    if (successfulObservation) setRequest(current => current.failed ? { attempt: 0, failed: false } : current);
++  }, [successfulObservation]);
+   useEffect(() => {
+     if (!failed || attempt >= logoRetryDelays.length) return;
+     const timer = window.setTimeout(() => setRequest(current => current.failed && current.attempt === attempt ? { attempt: attempt + 1, failed: false } : current), logoRetryDelays[attempt]);
+@@ -36,6 +41,9 @@ export function MarketPanel({ data, loading, error, retry }: { data?: PublicOver
+   const [page, setPage] = useState<MarketPage>();
+   const cache = useRef(new Map<string, PublicOverview>());
+   const requestVersion = useRef(0);
++  const activeRequest = useRef<AbortController | undefined>(undefined);
++  const pageRef = useRef(page);
++  pageRef.current = page;
+   const requestView = view === 'selection' ? 'selection' : 'all';
+   const requestKey = JSON.stringify([requestView, query.trim()]);
+   const defaultRanking = view === 'ranking' && !query.trim();
+@@ -44,10 +52,9 @@ export function MarketPanel({ data, loading, error, retry }: { data?: PublicOver
+   // The app already owns a valid observation. Read it on the first render, before any effect.
+   const current = view === 'funded' ? data : matchingPage?.snapshot ?? (defaultRanking ? data : cache.current.get(requestKey));
+   const pending = view !== 'funded' && (defaultRanking ? loading || !!matchingPage?.busy : !matchingPage || matchingPage.busy);
+-  const requestError = matchingPage?.error || error;
++  const requestError = matchingPage?.error || (!current && defaultRanking ? error : '');
+   const retainedSourceHealth = current && current !== data && data?.discovery.status !== 'ready' ? data?.discovery.status : undefined;
+-  const sourceFailed = retainedSourceHealth === 'stale' || retainedSourceHealth === 'unavailable';
+-  const state = marketRequestState(current, pending, requestError || (sourceFailed ? 'Latest source check failed' : ''));
++  const state = marketRequestState(current, pending, requestError);
+   const model = current ? marketView(current) : null;
+   const counts = current ? marketCounts(current) : null;
+   const rows = current ? filterMarkets(current.markets, query, view === 'selection') : [];
+@@ -56,14 +63,25 @@ export function MarketPanel({ data, loading, error, retry }: { data?: PublicOver
+     if (cache.current.size >= 12 && !cache.current.has(key)) cache.current.delete(cache.current.keys().next().value!);
+     cache.current.set(key, snapshot);
+   }
++  function invalidateRequest() {
++    ++requestVersion.current;
++    activeRequest.current?.abort();
++    activeRequest.current = undefined;
++  }
++  function startRequest() {
++    invalidateRequest();
++    const controller = new AbortController();
++    activeRequest.current = controller;
++    return { controller, version: requestVersion.current };
++  }
+   useEffect(() => { setLimit(20); }, [requestKey, view]);
+   // Only a new query or view starts a page request. Parent polls are handled below.
+   useEffect(() => {
+-    const version = ++requestVersion.current;
+-    const controller = new AbortController();
++    const { version, controller } = startRequest();
+     if (view === 'funded' || defaultRanking) {
+       setPage({ key: requestKey, snapshot: data, busy: false, error: '', notice: '' });
+-      return () => { controller.abort(); ++requestVersion.current; };
++      activeRequest.current = undefined;
++      return invalidateRequest;
+     }
+     setPage({ key: requestKey, snapshot: cache.current.get(requestKey), busy: true, error: '', notice: '' });
+     const timer = setTimeout(() => {
+@@ -73,40 +91,44 @@ export function MarketPanel({ data, loading, error, retry }: { data?: PublicOver
+         setPage({ key: requestKey, snapshot: value, busy: false, error: '', notice: '' });
+       }).catch(e => {
+         if (version === requestVersion.current) setPage(previous => ({ key: requestKey, snapshot: previous?.key === requestKey ? previous.snapshot : undefined, busy: false, error: (e as Error).message, notice: '' }));
+-      });
++      }).finally(() => { if (activeRequest.current === controller) activeRequest.current = undefined; });
+     }, 300);
+-    return () => { clearTimeout(timer); controller.abort(); ++requestVersion.current; };
++    return () => { clearTimeout(timer); invalidateRequest(); };
+   }, [requestKey, view]);
+ 
+   useEffect(() => {
+     if (view === 'funded') return;
+-    setPage(previous => {
+-      if (previous?.key !== requestKey || !previous.snapshot) return defaultRanking ? { key: requestKey, snapshot: data, busy: false, error: '', notice: '' } : previous;
+-      const snapshot = previous.snapshot;
+-      if (defaultRanking && snapshot.markets.length <= (data?.markets.length ?? 0)) return { key: requestKey, snapshot: data, busy: false, error: '', notice: '' };
++    const previous = pageRef.current;
++    const snapshot = previous?.key === requestKey ? previous.snapshot : undefined;
++    if (defaultRanking && (!snapshot || snapshot.markets.length <= (data?.markets.length ?? 0))) {
++      // Invalidate outside a React state updater: replayed updaters must be pure.
++      // Old paging completions cannot restore the snapshot that this poll replaces.
++      invalidateRequest();
++      setPage({ key: requestKey, snapshot: data, busy: false, error: '', notice: '' });
++    } else if (snapshot) {
+       const changed = snapshot.discovery.fetchedAt !== data?.discovery.fetchedAt || snapshot.discovery.evidenceHash !== data?.discovery.evidenceHash || snapshot.discovery.status !== data?.discovery.status || snapshot.revision !== data?.revision;
+-      return changed ? { ...previous, notice: 'A newer observation may be available. Your current list is retained until you refresh it.' } : previous;
+-    });
++      if (changed) setPage(currentPage => currentPage?.key === requestKey ? { ...currentPage, notice: 'A newer observation may be available. Your current list is retained until you refresh it.' } : currentPage);
++    }
+   }, [data]);
+ 
+   async function more() {
+     if (limit < rows.length) { setLimit(n => n + 30); return; }
+-    if (!current?.marketPage.hasMore) return;
+-    const version = requestVersion.current;
+-    setPage({ key: requestKey, snapshot: current, busy: true, error: '', notice: '' });
++    if (!current?.marketPage.hasMore || activeRequest.current) return;
++    const { version, controller } = startRequest();
++    setPage({ key: requestKey, snapshot: current, busy: true, error: '', notice: matchingPage?.notice ?? '' });
+     try {
+-      const next = assertOverview(await api<PublicOverview>(path(current.marketPage.offset + current.marketPage.returned)));
++      const next = assertOverview(await api<PublicOverview>(path(current.marketPage.offset + current.marketPage.returned), controller.signal));
+       if (version !== requestVersion.current) return;
+       const merged = mergeMarketPages(current, next);
+       if (merged) {
+         remember(requestKey, merged);
+-        setPage({ key: requestKey, snapshot: merged, busy: false, error: '', notice: '' }); setLimit(n => n + 30);
++        setPage(previous => ({ key: requestKey, snapshot: merged, busy: false, error: '', notice: previous?.key === requestKey ? previous.notice : '' })); setLimit(n => n + 30);
+       } else {
+         setPage({ key: requestKey, snapshot: current, busy: false, error: '', notice: 'The catalogue changed while paging. Your current list is retained. Refresh the list to start from the newest observation.' });
+       }
+     } catch (e) {
+-      if (version === requestVersion.current) setPage({ key: requestKey, snapshot: current, busy: false, error: (e as Error).message, notice: '' });
+-    }
++      if (version === requestVersion.current) setPage(previous => ({ key: requestKey, snapshot: current, busy: false, error: (e as Error).message, notice: previous?.key === requestKey ? previous.notice : '' }));
++    } finally { if (activeRequest.current === controller) activeRequest.current = undefined; }
+   }
+   function tabKey(event: React.KeyboardEvent<HTMLButtonElement>) {
+     if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
+@@ -118,29 +140,30 @@ export function MarketPanel({ data, loading, error, retry }: { data?: PublicOver
+   }
+   const open = (asset: PublicMarket) => { if (current) setDetail({ asset, snapshot: current }); };
+   const retryRequest = () => {
+-    if (defaultRanking) { setPage(undefined); setLimit(20); retry(); return; }
++    if (defaultRanking) { invalidateRequest(); setPage(undefined); setLimit(20); retry(); return; }
+     // Retry the exact query without mutating the canonical selection or clearing last-good rows.
+-    const version = ++requestVersion.current;
++    const { version, controller } = startRequest();
+     setPage({ key: requestKey, snapshot: current, busy: true, error: '', notice: '' });
+-    api<PublicOverview>(path()).then(assertOverview).then(snapshot => {
++    api<PublicOverview>(path(), controller.signal).then(assertOverview).then(snapshot => {
+       if (version !== requestVersion.current) return;
+       remember(requestKey, snapshot); setLimit(20); setPage({ key: requestKey, snapshot, busy: false, error: '', notice: '' });
+-    }).catch(e => { if (version === requestVersion.current) setPage({ key: requestKey, snapshot: current, busy: false, error: (e as Error).message, notice: '' }); });
++    }).catch(e => { if (version === requestVersion.current) setPage({ key: requestKey, snapshot: current, busy: false, error: (e as Error).message, notice: '' }); }).finally(() => { if (activeRequest.current === controller) activeRequest.current = undefined; });
+   };
+   return <section className="market-panel" aria-label="Market and reward basket">
+     <div className="market-toolbar"><div className="tabs" role="tablist" aria-label="Market and basket views">{([['ranking', 'Market ranking'], ['selection', 'Eligibility'], ['funded', 'Funded basket']] as const).map(([key, label]) => <button type="button" className="tab" key={key} id={`tab-${key}`} role="tab" aria-selected={view === key} aria-controls="market-content" tabIndex={view === key ? 0 : -1} onKeyDown={tabKey} onClick={() => setView(key)}>{label}{key === 'selection' && data && <span>{data.selection.selectedCount}/10</span>}</button>)}</div>{view !== 'funded' && <label className="table-search"><Icon name="search"/><span className="sr">Search markets by name, symbol or mint</span><input maxLength={100} value={query} onChange={e => setQuery(e.target.value)} placeholder="Find a token or mint" autoComplete="off" spellCheck={false}/></label>}</div>
+     <div className="market-source"><span><i className="dot"/>{view === 'funded' ? 'Frozen round membership' : state === 'loading' ? 'Loading observations' : state === 'stale' ? 'Stale observation' : model?.sourceLabel ?? 'Request failed'}{model && view !== 'funded' && <span className="source-time"> · {model.observedLabel}</span>}</span><span>{view === 'funded' ? 'Immutable funded record' : 'Market cap · USD'}</span></div>
+     <div id="market-content" role="tabpanel" aria-labelledby={`tab-${view}`} tabIndex={0} aria-busy={pending}>
+       {view === 'funded' ? data ? <FundedBasket data={data}/> : loading ? <Skeleton/> : <Empty title="Funded basket unavailable." text={error || 'No verified funded record is available.'}/> : state === 'loading' ? <Skeleton/> : state === 'failed' ? <Empty title="Market request failed." text={requestError || error || 'We could not read the source. No substitute assets are shown.'}><button className="btn" onClick={retryRequest}>Try again</button></Empty> : <>
+-        {requestError && current && <div className="inline-notice" role="alert">Refresh failed. The visible observations retain their last successful fetch time. <button className="btn small" onClick={retryRequest}>Retry</button></div>}
++        {requestError && current && <div className="inline-notice" role="alert">This list request failed. Its previous successful observations retain their original fetch time. <button className="btn small" onClick={retryRequest}>Retry</button></div>}
+         {matchingPage?.notice && <div className="inline-notice" role="status">{matchingPage.notice} <button className="btn small" onClick={retryRequest}>Refresh list</button></div>}
+         {pending && <div className="search-feedback" role="status">Refreshing these observations…</div>}
+         {view === 'selection' && current && <div className="selection-summary"><strong>{model?.selectedLabel}</strong><p>{current.selection.reason}</p><span className="muted">Policy {current.selection.policyVersion}. Market rank alone does not establish eligibility.</span></div>}
+         {state === 'stale' && <div className="inline-notice" role="status">Stale observation. Last successful fetch: {dateTime(current?.discovery.lastSuccessfulAt ?? current?.discovery.fetchedAt)}. New purchase commitments remain blocked.</div>}
++        {(error || retainedSourceHealth === 'stale' || retainedSourceHealth === 'unavailable') && current && <div className="inline-notice" role="status">The latest background source check {error ? 'failed' : `is ${retainedSourceHealth}`}. This list keeps its own successful observation and original fetch time; this is separate from its search or page request.</div>}
+         {retainedSourceHealth === 'warming' && <div className="inline-notice" role="status">The latest source check is warming or incomplete. Your retained list keeps its original observation time; new purchase commitments remain blocked.</div>}
+         {current?.discovery.status === 'warming' && <div className="inline-notice" role="status">The catalogue is warming or incomplete. Rows are observations; new purchase commitments remain blocked.</div>}
+         {counts && state !== 'unavailable' && <div className="market-counts"><span><strong>{counts.catalogue.toLocaleString()}</strong> catalogue mints</span><span><strong>{counts.ranked.toLocaleString()}</strong> ranked by market cap</span>{counts.filtered && <span><strong>{counts.matches.toLocaleString()}</strong> {view === 'selection' ? 'selection matches' : 'search matches'}</span>}<p>Unranked and excluded assets stay searchable for inspection. Search never changes selection or funded membership.</p></div>}
+-        {!rows.length ? <Empty title={state === 'unavailable' ? 'Market data is unavailable.' : query ? 'No matching token.' : view === 'selection' ? 'No eligible selection yet.' : state === 'warming' ? 'Waiting for market observations.' : 'No market observations reported.'} text={state === 'unavailable' ? current?.discovery.message ?? 'The source has not supplied a valid observation.' : query ? 'No catalogue mint matches this search. Try a name, symbol or full mint address.' : view === 'selection' ? current?.selection.reason ?? 'No assets passed the selection policy in this observation.' : current?.discovery.message ?? 'The source returned a valid empty result.'}>{view === 'selection' && <button className="btn" onClick={() => setView('ranking')}>Inspect market observations <Icon name="arrow"/></button>}{state === 'unavailable' && <button className="btn" onClick={retryRequest}>Try again</button>}</Empty> : <>
++        {!rows.length ? <Empty title={state === 'unavailable' ? 'Market data is unavailable.' : view === 'selection' ? current?.selection.selectedCount ? 'No selected asset matches this search.' : 'No eligible selection yet.' : query ? 'No matching token.' : state === 'warming' ? 'Waiting for market observations.' : 'No market observations reported.'} text={state === 'unavailable' ? current?.discovery.message ?? 'The source has not supplied a valid observation.' : view === 'selection' ? current?.selection.selectedCount ? 'No currently selected asset matches this query. Inspect all market observations to search the wider catalogue.' : current?.selection.reason ?? 'No assets passed the selection policy in this observation.' : query ? 'No catalogue mint matches this search. Try a name, symbol or full mint address.' : current?.discovery.message ?? 'The source returned a valid empty result.'}>{view === 'selection' && <button className="btn" onClick={() => setView('ranking')}>Inspect market observations <Icon name="arrow"/></button>}{state === 'unavailable' && <button className="btn" onClick={retryRequest}>Try again</button>}</Empty> : <>
+           <div className="market-table-wrap"><table className="market-table"><caption className="sr">Observed market-cap ranking. Eligibility and funded membership are separate records.</caption><thead><tr><th scope="col">#</th><th scope="col">Token</th><th scope="col" className="right">Market cap ↓</th><th scope="col" className="right hide-mobile">24h change</th><th scope="col" className="right hide-mid">24h volume</th><th scope="col" className="hide-mobile">Eligibility</th><th scope="col" className="detail-cell"><span className="sr">Details</span></th></tr></thead><tbody>{rows.slice(0, limit).map(asset => <tr key={asset.mint}><td className="rank num">{asset.rank ? String(asset.rank).padStart(2, '0') : '—'}</td><td><button className="token-button" onClick={() => open(asset)} aria-label={`Inspect ${asset.symbol} ${short(asset.mint)}`}><Avatar asset={asset}/><span className="token-identity"><span className="token-title">{asset.symbol}</span><span className="token-sub">{asset.name}</span><code className="token-mint">{short(asset.mint)}</code><span className="token-mobile-status status-small">{eligibilityLabel(asset)}</span></span></button></td><td className="right num market-cap" title={asset.marketCapUsd ? `${asset.marketCapUsd} USD` : 'Not reported'}>{money(asset.marketCapUsd)}<span className={`mobile-change ${asset.change24hPct?.startsWith('-') ? 'negative' : 'positive'}`}>{change(asset.change24hPct)}</span></td><td className={`right num hide-mobile ${asset.change24hPct?.startsWith('-') ? 'negative' : 'positive'}`}>{change(asset.change24hPct)}</td><td className="right num hide-mid">{money(asset.volume24hUsd)}</td><td className="hide-mobile"><span className="status-small">{eligibilityLabel(asset)}</span></td><td className="detail-cell"><button className="row-open" aria-label={`Details for ${asset.symbol} ${short(asset.mint)}`} onClick={() => open(asset)}><span>Details</span><Icon name="arrow"/></button></td></tr>)}</tbody></table></div>
+           <div className="more-rows"><span>{Math.min(limit, rows.length)} shown · {counts?.matches.toLocaleString()} {counts?.filtered ? 'matches' : 'catalogue mints'}{counts && !counts.filtered ? ` · ${counts.ranked.toLocaleString()} ranked` : ''}</span>{(rows.length > limit || current?.marketPage.hasMore) && view === 'ranking' && <button className="btn small" disabled={pending || !!matchingPage?.busy} onClick={() => void more()}>Show more markets</button>}</div>
+         </>}
+diff --git a/apps/web/src.tsx b/apps/web/src.tsx
+index 7b27d14..a675fc9 100644
+--- a/apps/web/src.tsx
++++ b/apps/web/src.tsx
+@@ -4,7 +4,7 @@ import type { PublicOverview } from '../../packages/shared/public.js';
+ import { api, assertOverview, phaseLabel, routeFromHash, routes, type Route } from './view-model.js';
+ import { Allocation, Brand, Icon, Intro } from './components.js';
+ import { Homepage } from './homepage.js';
+-import { MarketPanel } from './market.js';
++import { LogoRecoveryContext, MarketPanel } from './market.js';
+ import { Rewards, Transparency, Wallet } from './records.js';
+ import './style.css';
+ import './orbit.css';
+@@ -43,18 +43,19 @@ function App() {
+     const destination = key as Route;
+     return <a key={destination} href={`#${destination}`} onClick={() => setMenu(false)} aria-current={route === destination ? 'page' : undefined} className={`nav-item ${route === destination ? 'active' : ''}`}>{mobile && <Icon name={destination} />}{routes[destination]}</a>;
+   });
+-  return <>
++  const logoRecovery = data && ['ready', 'warming'].includes(data.discovery.status) ? data.discovery.fetchedAt : null;
++  return <LogoRecoveryContext.Provider value={logoRecovery}>
+     <a className="skip" href="#main" onClick={event=>{event.preventDefault();const main=document.getElementById('main');main?.focus({preventScroll:true});main?.scrollIntoView({behavior:'instant'});}}>Skip to content</a>
+     <header className="site-header"><div className="header-inner"><Brand /><nav className="desktop-navigation" aria-label="Main navigation">{navigation()}</nav><div className="header-actions"><span className="pill gold"><i className="dot" />{phaseLabel(data)}</span><a className="btn small desktop-action" href="#wallet" aria-current={route === 'wallet' ? 'page' : undefined}>My rewards <Icon name="arrow" /></a><div className="mobile-menu"><button ref={menuButton} aria-label={menu ? 'Close navigation menu' : 'Open navigation menu'} aria-expanded={menu} aria-controls="mobile-menu-links" className="menu-button" onClick={() => setMenu(!menu)}><Icon name={menu ? 'close' : 'menu'} /></button><nav id="mobile-menu-links" aria-label="Mobile navigation" hidden={!menu}>{navigation(true)}</nav></div></div></div></header>
+     <div className="sr" role="status" aria-live="polite" aria-atomic="true">{announcement}</div>
+     <main id="main" tabIndex={-1}>
+-      {error && <div className="connection-error" role="alert"><span><strong>{data ? 'Refresh unavailable.' : 'Connection unavailable.'}</strong> {data ? 'Showing the last real observation with its original fetch time.' : error}</span><button className="btn small" onClick={() => void reload()}>Retry</button></div>}
++      {error && <div className="connection-error" role="alert"><span><strong>{data ? 'Background market check failed.' : 'Connection unavailable.'}</strong> {data ? 'Each displayed list retains its own successful observation and original fetch time.' : error}</span><button className="btn small" onClick={() => void reload()}>Retry</button></div>}
+       {route === 'overview' && <Homepage data={data} loading={loading} error={error} retry={() => void reload()} />}
+       {route === 'basket' && <><Intro eyebrow="THE EMBER ECOSYSTEM" title="Explore the ten." text="Inspect market observations, eligibility and funded rounds." /><MarketPanel data={data} loading={loading} error={error} retry={() => void reload()} /></>}
+       {route === 'rewards' && <Rewards data={data} />}{route === 'wallet' && <Wallet data={data} />}{route === 'transparency' && <Transparency data={data} />}
+       {route === 'how' && <><Intro eyebrow="A simple idea. A visible process." title="From creator fees to holder rewards." text="The proposed system turns received creator fees into ten equal purchase budgets. Rewards depend on actual funding and verified eligibility; holding EMBER10 does not guarantee a return." /><div className="rule-list">{[['01 / RECEIVE', 'Start with received fees.', 'Verified creator fees enter the treasury. Direct execution costs and existing obligations are accounted for first.'], ['02 / PURCHASE', 'Ten budgets. Equal weight.', '80% of net new creator fees funds equal purchases of ten eligible Ember tokens. All ten must pass the policy before new commitments.'], ['03 / CREDIT', 'Account for every share.', 'Actual acquired units are credited by eligible snapshot balance. Small rewards accumulate until economical to deliver.']].map(([number, title, text]) => <article className="panel" key={number}><span className="rule-index">{number}</span><h3>{title}</h3><p>{text}</p></article>)}</div><div className="lower-grid"><Allocation /><article className="panel how-dev"><div className="eyebrow muted">Operations & developer</div><h3>A remainder, never an extra fee.</h3><p>The final 10% covers operations and developer compensation. Only the available OPS/DEV remainder after recorded costs, obligations and retained reserves may be paid to a configured receiving wallet.</p><p>Holder rewards and buyback funds stay separate. Existing credits remain owed after selling.</p><a className="link-inline panel-link" href="#transparency">Inspect accounting rules <Icon name="arrow" /></a></article></div></>}
+       <footer className="footer"><div className="footer-brand"><Brand /><span className="contract-state">{data ? data.project.mint ? 'Contract verification pending' : 'Prelaunch · not deployed' : 'Project identity pending'}</span></div><div className="footer-copy"><p>Independent of Ember. Rewards depend on received fees; EMBER10 controls the treasury. No guaranteed returns or redemption.</p>{data?.project.mint && <p className="mono break">Project mint: {data.project.mint}</p>}</div><div className="footer-links"><a href="#transparency">Rules & transparency <Icon name="external" /></a><a href="https://embercurve.fun/" target="_blank" rel="noopener noreferrer">Explore Ember <Icon name="external" /></a></div></footer>
+     </main>
+-  </>;
++  </LogoRecoveryContext.Provider>;
+ }
+ createRoot(document.getElementById('root')!).render(<App />);
+diff --git a/docs/ACCOUNTING.md b/docs/ACCOUNTING.md
+index a264672..0ae132c 100644
+--- a/docs/ACCOUNTING.md
++++ b/docs/ACCOUNTING.md
+@@ -8,6 +8,10 @@ A creator fee requires a successful finalized transfer to the configured treasur
+ 
+ The current native-SOL recognizer deliberately does not infer fees from a balance increase, volume, fee estimates or unmatched wrapped-SOL movements. Published ledger windows can be incomplete; the chain cursor drives ingestion, and unmatched candidate fees remain held for review. A missing historical transaction prevents cursor advancement.
+ 
++R3 F-5 remains open on a reproduced pool-window schema failure: one signature-less sweep makes the strict parser reject the whole window before signature processing. Other real Keep-it pools do publish compatible payout rows, so absence in the historical global fixture cannot establish universal attribution failure. No later re-attribution path exists for receipts already quarantined. See the [dated pool observations and schema execution](evidence/r3/FINANCIAL-EVIDENCE-UPDATE.md).
++
++R3 N-M2 is an additional custody caveat: unsolicited token ingestion currently scans all prior inbound history when it first sees an account owned by the treasury. It does not establish when treasury ownership began or subtract prior outbound movements. A current owner match therefore does not prove the resulting deposit ledger is a valid custody balance. This source finding is open; no authority-transfer scenario was executed in the evidence update.
++
+ ## Journal convention
+ 
+ Each event sums to zero **for each asset separately**. Positive postings increase an account; negative postings decrease it. Internal accounts cannot become negative. `external:*` accounts are signed counterparts for receipts, swaps, network fees, rent, deliveries and burn. Corrections are new linked events; old postings and entitlements cannot be edited.
+@@ -23,6 +27,8 @@ Internal accounts include free revenue, capital reserve, unclassified deposits,
+ 
+ Known in-flight actions cause reconciliation to report `in_flight`, not a fictitious deficit. Reconcile those signatures first, then take another chain observation. A finalized unexplained debit or surplus opens an incident and pauses new commitments. A surplus is not automatically revenue.
+ 
++The public reconciliation-health timestamp is not a commit-order watermark (open N-M3). It compares reconciliation time with ledger `created_at`, whose database default is the transaction start time. A transaction waiting on the control lock can commit later with an earlier timestamp. The current `reconciled` label cannot independently establish that no journal movement committed after the observation.
++
+ ## Funding example
+ 
+ The deterministic demo has 1,000,000,000 synthetic receipt lamports and a separate 200,000,000-lamport capital reserve. Its round reserves 20,000,000 lamports for direct costs. The remaining 980,000,000 is split into:
+@@ -49,7 +55,9 @@ Creating a batch moves its exact liabilities into `reserved:<batch>` and exclusi
+ 
+ ## Costs and burn
+ 
+-R2 F-3 remains open: the current epoch cost forecast lacks one temporary WSOL rent and fails the eleventh all-new-ATA build in the included reproduction. Do not fund an epoch using that forecast. Direct cost forecasts are bounded at 10% of round funding. A minimum unencumbered SOL reserve is preserved; the signing path checks current rent and fee allowance before signing. Unsupported/frozen accounts or failed simulation leave reservations in place. Actual network/rent costs are posted separately. Historical USD payment value is only meaningful when a settlement-time valuation exists; otherwise the application displays raw units and unavailable valuation.
++F-3 remains open: the current 23,632,080-lamport epoch forecast lacks one temporary WSOL rent and fails the eleventh all-new-ATA build in the included reproduction. Do not fund an epoch using that forecast. The comparison forecast of 25,671,360 covers eleven successful swap/buyback transactions plus burn, but has no failed-attempt margin at the 100,000-lamport fee cap. R3 arithmetic and actual cost admission reproduce a 100,000-lamport retry shortfall after ten successes, one failed attempt and a burn. A bounded retry allowance is a proposed design input, not an implemented or chosen policy. See [R3 evidence](evidence/r3/FINANCIAL-EVIDENCE-UPDATE.md).
++
++Direct cost forecasts are bounded at 10% of round funding. A minimum unencumbered SOL reserve is preserved; the signing path checks current rent and fee allowance before signing. Holder deliveries draw from the separate reserve: four new recipient ATAs at 2,039,280 lamports each plus a 100,000-lamport fee cap require 8,257,120 lamports above its floor. That cash is not included in the epoch forecast. Unsupported/frozen accounts or failed simulation leave reservations in place. Actual network/rent costs are posted separately. Historical USD payment value is only meaningful when a settlement-time valuation exists; otherwise the application displays raw units and unavailable valuation.
+ 
+ Buyback acquires our mint into its own `burn-units:<intent>` account. A distinct checked-burn intent can burn only that acquired quantity. Failed burn does not create a new buyback or consume unrelated holdings. Operations have their own reserved budget and deterministic transfer intent, with a fixed approved recipient.
+ 
+diff --git a/docs/AUDIT-FINDINGS.json b/docs/AUDIT-FINDINGS.json
+index ec2c533..9d4fb23 100644
+--- a/docs/AUDIT-FINDINGS.json
++++ b/docs/AUDIT-FINDINGS.json
+@@ -1,12 +1,12 @@
+ {
+-  "schemaVersion": 2,
++  "schemaVersion": 3,
+   "applicationRevision": "ed67a05f7b676108a98dcaf29460d2fdc60fecc6",
+   "externalReaudit": "pending",
+   "financialExecutionEnabled": false,
+-  "totalFindings": 56,
++  "totalFindings": 70,
+   "inheritedFindings": 37,
+   "r2Findings": 19,
+-  "precedence": "This register supersedes current-use interpretations of the frozen first-round register. Prior external dispositions apply to 4f9fba2, not automatically to this corrected snapshot.",
++  "precedence": "R3 supersedes interpretations of R2 financial evidence and adds14 findings. Supplied audit dispositions apply to ad972e7/ed67a05. New implementation claims await external re-audit.",
+   "findings": [
+     {
+       "id": "S1-01",
+@@ -707,7 +707,12 @@
+       "evidence": "AUDIT-R2.md; evidence/r2/; AUDIT-REPRODUCE.md",
+       "remaining": null,
+       "group": "r2",
+-      "currentStatus": "implemented_pending_external_reaudit"
++      "currentStatus": "implemented_pending_external_reaudit",
++      "r3ExternalReview": {
++        "revision": "ad972e7",
++        "report": "evidence/r3/supplied-audit.md",
++        "disposition": "confirmed on reviewed revision; see new N-P findings"
++      }
+     },
+     {
+       "id": "P-2",
+@@ -715,7 +720,12 @@
+       "evidence": "AUDIT-R2.md; evidence/r2/; AUDIT-REPRODUCE.md",
+       "remaining": null,
+       "group": "r2",
+-      "currentStatus": "implemented_pending_external_reaudit"
++      "currentStatus": "implemented_pending_external_reaudit",
++      "r3ExternalReview": {
++        "revision": "ad972e7",
++        "report": "evidence/r3/supplied-audit.md",
++        "disposition": "confirmed on reviewed revision; see new N-P findings"
++      }
+     },
+     {
+       "id": "P-3",
+@@ -723,7 +733,12 @@
+       "evidence": "AUDIT-R2.md; evidence/r2/; AUDIT-REPRODUCE.md",
+       "remaining": "Existing old CDN entries are not claimed purged; known-catalogue flooding remains possible.",
+       "group": "r2",
+-      "currentStatus": "implemented_pending_external_reaudit"
++      "currentStatus": "implemented_pending_external_reaudit",
++      "r3ExternalReview": {
++        "revision": "ad972e7",
++        "report": "evidence/r3/supplied-audit.md",
++        "disposition": "confirmed on reviewed revision; see new N-P findings"
++      }
+     },
+     {
+       "id": "P-4",
+@@ -731,7 +746,12 @@
+       "evidence": "AUDIT-R2.md; evidence/r2/; AUDIT-REPRODUCE.md",
+       "remaining": null,
+       "group": "r2",
+-      "currentStatus": "implemented_pending_external_reaudit"
++      "currentStatus": "implemented_pending_external_reaudit",
++      "r3ExternalReview": {
++        "revision": "ad972e7",
++        "report": "evidence/r3/supplied-audit.md",
++        "disposition": "confirmed on reviewed revision; see new N-P findings"
++      }
+     },
+     {
+       "id": "P-5",
+@@ -739,7 +759,12 @@
+       "evidence": "AUDIT-R2.md; evidence/r2/; AUDIT-REPRODUCE.md",
+       "remaining": "Server artifact attestation, backend export size and generic proxy errors remain open.",
+       "group": "r2",
+-      "currentStatus": "partially_remediated"
++      "currentStatus": "partially_remediated",
++      "r3ExternalReview": {
++        "revision": "ad972e7",
++        "report": "evidence/r3/supplied-audit.md",
++        "disposition": "confirmed on reviewed revision; see new N-P findings"
++      }
+     },
+     {
+       "id": "F-1",
+@@ -760,8 +785,8 @@
+     {
+       "id": "F-3",
+       "status": "open",
+-      "validation": "Independently reproduced through eleven real adapter builds using mocked RPC/legacy route",
+-      "evidence": "AUDIT-R2.md; evidence/r2/; AUDIT-REPRODUCE.md",
++      "validation": "Real cost-binding arithmetic confirms no one-failure margin at maximum fee",
++      "evidence": "AUDIT-R2.md; evidence/r2/; AUDIT-REPRODUCE.md; evidence/r3/FINANCIAL-EVIDENCE-UPDATE.md",
+       "group": "r2",
+       "currentStatus": "open"
+     },
+@@ -776,8 +801,8 @@
+     {
+       "id": "F-5",
+       "status": "open",
+-      "validation": "Independent source review; external prerequisites documented",
+-      "evidence": "AUDIT-R2.md; evidence/r2/; AUDIT-REPRODUCE.md",
++      "validation": "Actual pool-filtered responses and strict schema reproduction; no chain attribution established",
++      "evidence": "AUDIT-R2.md; evidence/r2/; AUDIT-REPRODUCE.md; evidence/r3/FINANCIAL-EVIDENCE-UPDATE.md",
+       "group": "r2",
+       "currentStatus": "open"
+     },
+@@ -852,6 +877,133 @@
+       "evidence": "AUDIT-R2.md; evidence/r2/; AUDIT-REPRODUCE.md",
+       "group": "r2",
+       "currentStatus": "open"
++    },
++    {
++      "id": "N-P1",
++      "group": "r3",
++      "severity": "S2",
++      "summary": "Pending page response overwrites newer poll/refresh",
++      "currentStatus": "implemented_pending_verification",
++      "validation": "See AUDIT-R3.md and evidence/r3; external re-audit pending",
++      "evidence": "evidence/r3/supplied-audit.md"
++    },
++    {
++      "id": "N-P2",
++      "group": "r3",
++      "severity": "S2",
++      "summary": "Logo relay disables CDN reuse",
++      "currentStatus": "implemented_pending_verification",
++      "validation": "See AUDIT-R3.md and evidence/r3; external re-audit pending",
++      "evidence": "evidence/r3/supplied-audit.md"
++    },
++    {
++      "id": "N-P3",
++      "group": "r3",
++      "severity": "S3",
++      "summary": "Failed avatars do not recover after source recovery",
++      "currentStatus": "implemented_pending_verification",
++      "validation": "See AUDIT-R3.md and evidence/r3; external re-audit pending",
++      "evidence": "evidence/r3/supplied-audit.md"
++    },
++    {
++      "id": "N-P4",
++      "group": "r3",
++      "severity": "S3",
++      "summary": "Pagination lacks a stable cross-instance snapshot",
++      "currentStatus": "open",
++      "validation": "See AUDIT-R3.md and evidence/r3; external re-audit pending",
++      "evidence": "evidence/r3/supplied-audit.md"
++    },
++    {
++      "id": "N-P5",
++      "group": "r3",
++      "severity": "S3",
++      "summary": "Parent failure mislabels a successful query",
++      "currentStatus": "implemented_pending_verification",
++      "validation": "See AUDIT-R3.md and evidence/r3; external re-audit pending",
++      "evidence": "evidence/r3/supplied-audit.md"
++    },
++    {
++      "id": "N-P6",
++      "group": "r3",
++      "severity": "S3",
++      "summary": "Concurrent distinct logo misses can exceed work cap",
++      "currentStatus": "open_mitigated_by_cache",
++      "validation": "See AUDIT-R3.md and evidence/r3; external re-audit pending",
++      "evidence": "evidence/r3/supplied-audit.md"
++    },
++    {
++      "id": "N-P7",
++      "group": "r3",
++      "severity": "S3",
++      "summary": "Eligible-empty view shows misleading search-empty copy",
++      "currentStatus": "implemented_pending_verification",
++      "validation": "See AUDIT-R3.md and evidence/r3; external re-audit pending",
++      "evidence": "evidence/r3/supplied-audit.md"
++    },
++    {
++      "id": "N-P8",
++      "group": "r3",
++      "severity": "S3",
++      "summary": "Independent review hashes predate final integrated files",
++      "currentStatus": "pending_final_revision_review",
++      "validation": "See AUDIT-R3.md and evidence/r3; external re-audit pending",
++      "evidence": "evidence/r3/supplied-audit.md"
++    },
++    {
++      "id": "N-M1",
++      "group": "r3",
++      "severity": "S2",
++      "summary": "Built transaction not bound to the approval generation",
++      "currentStatus": "open",
++      "validation": "See AUDIT-R3.md and evidence/r3; external re-audit pending",
++      "evidence": "evidence/r3/supplied-audit.md"
++    },
++    {
++      "id": "N-M2",
++      "group": "r3",
++      "severity": "S2",
++      "summary": "Pre-custody token history can produce fabricated deposit deficit",
++      "currentStatus": "open",
++      "validation": "See AUDIT-R3.md and evidence/r3; external re-audit pending",
++      "evidence": "evidence/r3/supplied-audit.md"
++    },
++    {
++      "id": "N-M3",
++      "group": "r3",
++      "severity": "S3",
++      "summary": "Transaction-start reconciliation timestamp can misstate freshness",
++      "currentStatus": "open",
++      "validation": "See AUDIT-R3.md and evidence/r3; external re-audit pending",
++      "evidence": "evidence/r3/supplied-audit.md"
++    },
++    {
++      "id": "N-M4",
++      "group": "r3",
++      "severity": "S3",
++      "summary": "Financial cache documentation differs from forced route reads",
++      "currentStatus": "open",
++      "validation": "See AUDIT-R3.md and evidence/r3; external re-audit pending",
++      "evidence": "evidence/r3/supplied-audit.md"
++    },
++    {
++      "id": "N-M5",
++      "group": "r3",
++      "severity": "S2",
++      "summary": "Stored-byte rebroadcast gated on upstream reauthorization",
++      "currentStatus": "open",
++      "validation": "See AUDIT-R3.md and evidence/r3; external re-audit pending",
++      "evidence": "evidence/r3/supplied-audit.md"
++    },
++    {
++      "id": "N-M6",
++      "group": "r3",
++      "severity": "S3",
++      "summary": "Unrenewed worker lease may expire during RPC settlement",
++      "currentStatus": "open",
++      "validation": "See AUDIT-R3.md and evidence/r3; external re-audit pending",
++      "evidence": "evidence/r3/supplied-audit.md"
+     }
+-  ]
++  ],
++  "r3Findings": 14
+ }
+diff --git a/docs/AUDIT-R2.md b/docs/AUDIT-R2.md
+index 2a9395d..b88d1fc 100644
+--- a/docs/AUDIT-R2.md
++++ b/docs/AUDIT-R2.md
+@@ -1,3 +1,5 @@
++> Historical R2 correction record. Current conclusions, including corrected F-5 and F-3 evidence, are in [AUDIT-R3.md](AUDIT-R3.md). R2 independent public review hashes describe its intermediate review tree, not a final-byte attestation.
++
+ # Round 2 remediation and review handoff
+ 
+ The supplied second audit reviewed source `4f9fba2` and deployed application `1f67d0d`. It confirmed the public source/deployment match and identified further public defects and financial blockers. This round implements public corrections; it does not authorize or enable financial execution. Financial policy, ten equal purchase budgets, 80/10/10 allocation and OPS/DEV rules are unchanged.
+diff --git a/docs/AUDIT-R3.md b/docs/AUDIT-R3.md
+new file mode 100644
+index 0000000..9c7c121
+--- /dev/null
++++ b/docs/AUDIT-R3.md
+@@ -0,0 +1,32 @@
++# R3 public correction and audit evidence
++
++Scope approved by the owner: public fixes and audit evidence only. Financial code, policy, migrations, OPS/DEV rules and execution remain unchanged. No funded pilot is approved. The supplied R3 audit reviewed ad972e7 and the public runtime ed67a05; its findings are evidence about those revisions, not automatic approval of this correction.
++
++## Public corrections
++
++- N-P1: invalidate and abort pending page requests when an actual parent snapshot replacement or explicit default refresh occurs. A response from an old generation must not overwrite the replacement, even if cancellation is ignored.
++- N-P2: successful authorized thumbnails use browser max-age=0, CDN s-maxage=300 and stale-while-revalidate=60. Version 3 URLs separate the cache policy from prior entries. Origin authorization still precedes cache/conditional responses and upstream work; error responses remain no-store. CDN hits intentionally bypass origin authorization for up to the cache window. Removal is not immediate revocation, and stale last-good catalogue membership can extend availability during a source outage.
++- N-P3: a successful parent observation permits failed avatars to retry, without resetting healthy images. Browser regressions cover recovery after exhausting initial retries.
++- N-P5: parent source health and query/page request failures are shown separately; a successful search is not mislabeled as a failed search because the background parent poll failed.
++- N-P7: an empty eligible selection is described as such, independently of search text.
++- N-P8: final independent review must identify the exact committed runtime bytes. Earlier R2 review hashes describe an earlier intermediate tree and are not an attestation of final R2 or R3 bytes.
++
++These implementation claims require the recorded tests and final deployment evidence. See VERIFICATION.md and deployment.json for completed checks.
++
++## Residual public limitations
++
++N-P4 remains open: cross-instance or later pages can have different observation identities. Mismatched pages are rejected; there is no stable server-side snapshot pagination. The 45-second instance cache is not a guaranteed browsing session.
++
++N-P6 remains open/mitigated: the per-instance 16-image work cap can still return 503 for distinct concurrent misses. CDN caching reduces repeat work, but cold instances, valid unique URLs and high concurrency can still cause upstream load. No global request coordinator, global Ember rate limit or denial-of-service immunity is claimed. Retry success depends on upstream recovery.
++
++Capacity documentation now distinguishes the runtime 64 MB/50,000-row bounds from the collector's byte-only bound and single20-second request. At 2.6KB/row, byte capacity (~24,600rows) is reached first;80% warnings are logs/coverage notes, not externally delivered alerts.
++
++The cache semantics follow [Vercel's Cache-Control documentation](https://vercel.com/docs/caching/cache-control-headers): s-maxage and stale-while-revalidate are consumed by the CDN. Public latency evidence must include actual x-vercel-cache HIT/MISS results; headers alone do not prove caching. First-miss timing remains dependent on catalogue and image upstreams.
++
++## Corrected financial evidence; no remediation
++
++F-5 remains open with corrected mechanism. A real pool produced 37 matching keep/payout/WSOL rows; a second pool's signature-less sweep causes the actual strict EmberClient.payouts schema to throw. The previous global-window absence does not establish that attribution can never match. Compact public responses and schema execution are recorded under evidence/r3.
++
++F-3 remains open. 25,671,360lamports is a successful-build-only comparison, not a retry-ready fix. At the 100,000 fee cap, one failed attempt followed by burn leaves 4,078,560 against 4,178,560 required for the retry. The retry count/reserve policy is undecided, and new holder ATA creation requires separate reserve. No financial implementation changed.
++
++N-M1 through N-M6 are retained in the70-item register. Read-only source assessments are explicitly distinguished from executed race tests. All F-1 through F-14 remain open. Passing public checks does not make the financial service safe to fund.
+diff --git a/docs/AUDIT-REPRODUCE.md b/docs/AUDIT-REPRODUCE.md
+index 2f9ba88..23b8abd 100644
+--- a/docs/AUDIT-REPRODUCE.md
++++ b/docs/AUDIT-REPRODUCE.md
+@@ -23,7 +23,7 @@ Then run:
+ npm.cmd test -- --reporter=json --outputFile=../tests-audit.json
+ ```
+ 
+-The included complete result is 258 passing tests in 20 files at application revision `ed67a05`. Tests use isolated schemas in `ember5_test`; set `TEST_DATABASE_URL` only to a disposable database if using a different server. No production migration is part of this procedure. The native ESM regression runs without a TypeScript loader and covers the first candidate's JSON-import failure.
++The historical R2 result was 258 passing tests in 20 files at ed67a05; see VERIFICATION.md and evidence/r3/tests.json for the current run. Tests use isolated schemas in `ember5_test`; set `TEST_DATABASE_URL` only to a disposable database if using a different server. No production migration is part of this procedure. The native ESM regression runs without a TypeScript loader and covers the first candidate's JSON-import failure.
+ 
+ ## Read-only preview and deployment identity
+ 
+@@ -43,15 +43,17 @@ The verifier compares index HTML and all seven referenced/static build assets, c
+ 
+ ## Browser tests without changing the project lockfile
+ 
+-Playwright is reviewer tooling, not a project dependency. The recorded runs used Playwright 1.61.1 with Chromium. Install it in a separate tooling directory if unavailable:
++Playwright is reviewer tooling, not a project dependency. R3 runs use Playwright 1.61.1 with installed Chrome (BROWSER_CHANNEL=chrome); R2 used bundled Chromium. Install it in a separate tooling directory if unavailable:
+ 
+ ```powershell
+ npm.cmd install --prefix ../ember10-audit-tools --no-save --package-lock=false playwright@1.61.1
+ node ../ember10-audit-tools/node_modules/playwright/cli.js install chromium
+ $env:PLAYWRIGHT_MODULE = ([System.Uri](Resolve-Path ../ember10-audit-tools/node_modules/playwright/index.mjs).Path).AbsoluteUri
++$env:BROWSER_CHANNEL = 'chrome' # omit to use an installed Playwright Chromium
+ $env:BASE_URL = 'http://127.0.0.1:5180'
+ $env:EVIDENCE_DIR = [System.IO.Path]::GetFullPath('../ember10-audit-results')
+ node --import tsx tests/ui-r2.browser.mjs
++node --import tsx tests/ui-r3.browser.mjs
+ node scripts/audit/public-browser.mjs http://127.0.0.1:5180 ../ember10-audit-results local
+ node scripts/audit/public-browser.mjs https://ember5-pilot.vercel.app ../ember10-audit-results public
+ ```
+@@ -83,3 +85,9 @@ node scripts/package-audit.mjs ../audit-delivery
+ ```
+ 
+ Packaging exports all tracked source bytes with LF Git content, excludes untracked secrets/runtime state, and refuses application drift from the recorded deployment revision. It does not deploy or contact an auditor. Original audit reports, test captures and screenshots remain dated historical evidence; do not overwrite them to imply a new execution.
++
++## R3 cache and corrected financial evidence
++
++Run `node scripts/audit/logo-latency.mjs https://ember5-pilot.vercel.app 3 ../logo-latency.json` for two successive ten-logo request batches. Record CDN HIT/MISS, status, bytes, hashes and measured times; results are observations, not latency guarantees.
++
++See `evidence/r3/FINANCIAL-EVIDENCE-UPDATE.md` for pool-filtered schema reproduction and retry-margin arithmetic. The extra-rent F3 comparison above covers successful builds only; it is not a retry-ready budget. No financial remediation or funded execution was performed.
+diff --git a/docs/BACKEND-CORRECTIONS.md b/docs/BACKEND-CORRECTIONS.md
+index f315fde..739737d 100644
+--- a/docs/BACKEND-CORRECTIONS.md
++++ b/docs/BACKEND-CORRECTIONS.md
+@@ -1,5 +1,7 @@
+ > Historical implementation handoff. Its revision, test counts and local paths refer to that stage. For the current audit snapshot, use [EXTERNAL-AUDIT.md](EXTERNAL-AUDIT.md) and [VERIFICATION.md](VERIFICATION.md).
+ 
++> R3 qualification, 24 September 2026: the implementation claims below do not close the approval-generation, custody-baseline, health-timestamp, forced-cache, resend-authorization or lease-timing findings N-M1–N-M6. See the [read-only financial evidence update](evidence/r3/FINANCIAL-EVIDENCE-UPDATE.md). Financial code remains unchanged.
++
+ # EMBER10 backend correction handoff
+ 
+ This change continues the existing repository on one PC. Backend specialists used separate Git worktrees; the integrator merged their changes into `backend/corrections`. No frontend visual files were changed. The public deployment and financial worker were not updated by this handoff.
+@@ -56,13 +58,26 @@ The migration command uses `DATABASE_URL`; keep it pointed at an isolated test d
+ - **005** adds persistent unsigned retry fields and append-only recovery records.
+ - **006** adds expense approvals/payments and UTC developer payout identities. Existing OPS accounts remain historical allocation; migration does not transfer money or reclassify operations-wallet funding as profit.
+ - **007** adds shared API rate-limit buckets. They are operational counters, not financial journal records.
+-- Public contract stays `schemaVersion: 1` with additive fields and truthful state unions. All accounting amounts are decimal-string **lamports** (`accounting.unit = "lamports"`), not SOL decimals. Allocation fields do not claim delivered payments. Empty/unconnected amounts remain null. Current selection, funded basket and settlement states are separate. Reconciliation health only says reconciled for a fresh balanced observation with no later journal movement.
++- Public contract stays `schemaVersion: 1` with additive fields and explicit state unions. All accounting amounts are decimal-string **lamports** (`accounting.unit = "lamports"`), not SOL decimals. Allocation fields do not claim delivered payments. Empty/unconnected amounts remain null. Current selection, funded basket and settlement states are separate. Reconciliation health checks fresh balanced observations against maximum ledger `created_at`; that field is a transaction-start timestamp. A later commit from a transaction already waiting on the control lock can evade this test. The label is not proof of no later committed journal movement (open N-M3).
+ - `/operator/recovery` accepts request/intent/signature IDs, reason and evidence reference. It accepts no outcome, replacement transaction, signed payload or reservation-release command. Stop competing worker work to obtain the recovery lease; pausing does not delete liabilities.
+ - `/operator/expenses` records an authenticated payable. `/operator/expenses/settlement` fetches and verifies the original finalized transfer, actual genesis, signature, treasury debit, recipient and fee. A caller cannot assert finality. Capital classification also requires a matching positive treasury balance increase; self/circular instruction amounts cannot create reserve.
+ - Raw provider bodies, credentials and signed bytes are withheld from public exports. Public source attribution and hashes remain available. Private operator records remain local to the authoritative backend.
+ 
+ Frontend integration should consume these additive API fields and exact units. No frontend visual source was edited. The existing read-only public host remains unchanged until a separate deployment decision.
+ 
++## R3 qualifications to the historical handoff
++
++The following are source-reviewed open limitations, not newly executed financial tests:
++
++- **N-M1:** reauthorization compares approval reads within its own callback; it does not bind the already-built message to the approval generation used by the builder. B03's checks remain present, but do not cover that change window.
++- **N-M2:** initial unsolicited token ingestion uses current account ownership and full prior inbound history without establishing a custody baseline. A current owner match alone cannot establish the booked deposit balance.
++- **N-M3:** the health timestamp caveat above is distinct from B04's finalized chain-slot watermark and control-locked reconciliation.
++- **N-M4:** the live funding-route helper is forced with TTL 0; the unforced helper uses 45 seconds, even though `EmberClient.read()` defaults to 60 seconds. The financial cache/rate issue remains open.
++- **N-M5:** resending stored bytes still depends on full execution authorization twice; provider failure can prevent resend before blockhash expiry. Conditional resend is not guaranteed delivery or a resolved expiry lifecycle.
++- **N-M6:** an inspection/apply delay beyond the 120-second tick lease can fail settlement fencing and leave a generic incident and pause. The narrowed timing scenario remains unexecuted.
++
++The R3 evidence independently reproduces the pool-specific strict payout-schema failure and the forecast's retry-margin counterexample. These results do not change the 80/10/10 policy, ten equal purchase budgets, OPS/DEV rules, or disabled financial execution.
++
+ ## Developer policy and pause semantics
+ 
+ `DEV_PAYOUT_ENABLED=false` remains the default. `DEVELOPER_PAYOUT_WALLET` is a destination, never a signing key. Configurable minimum, retained reserve, payout-cost allowance and UTC hour are in `.env.example`; enabling requires matching approval fields and a holder-reward exclusion for the developer destination, treasury and operations wallets. The treasury/approved remote signer signs payments. The allocation remains 80% rewards / 10% buyback and burn / 10% OPS/DEV after bounded direct costs.
+diff --git a/docs/DATA-SCHEMA-MAPPING.md b/docs/DATA-SCHEMA-MAPPING.md
+index 02b6275..4895aba 100644
+--- a/docs/DATA-SCHEMA-MAPPING.md
++++ b/docs/DATA-SCHEMA-MAPPING.md
+@@ -44,6 +44,6 @@ Public funded-basket and accounting data are unavailable without a verified proj
+ 
+ ## Resource bounds
+ 
+-Read timeout 8 seconds per attempt, 2 attempts, 1 second backoff, no redirects, 64 MB streaming source cap, and 50,000 row schema cap. These bounds are shared with the evidence collector through `packages/shared/catalogue-limits.json`. At 80% of either capacity, a structured `catalogue_capacity` warning and public coverage note request operator review. Breaches remain failures, never truncated catalogues; stale last-good data remains explicitly stale. Concurrent reads share one in-flight request and a 45 second instance cache. Unavailable initial reads return no markets, and the hosted basket does not label an unavailable or partial projection complete. Cold starts do not import a seed fixture.
++Read timeout 8 seconds per attempt, 2 attempts, 1 second backoff, no redirects, 64 MB streaming source cap, and 50,000 row schema cap. Only the byte cap is shared with the evidence collector through `packages/shared/catalogue-limits.json`; the collector performs one 20-second request, without runtime retries or a row cap. At roughly 2.6 KB per row, the byte cap is reached near 24,600 rows, before the 50,000-row cap. At 80% of either runtime capacity, a structured `catalogue_capacity` warning and public coverage note request operator review; these are not an externally delivered alert. Breaches remain failures, never truncated catalogues; stale last-good data remains explicitly stale. Concurrent reads share one in-flight request and a 45 second instance cache. Unavailable initial reads return no markets, and the hosted basket does not label an unavailable or partial projection complete. Cold starts do not import a seed fixture.
+ 
+ `/api/overview?q=&offset=&limit=` searches/ranks the full normalized catalogue before returning at most100rows and explicit `marketPage` counts. No selection is limited to the first page. This avoids Vercel's response-size limit; the full per-mint proof remains an operator artifact. Currency values retain source JSON precision (binary numeric values already rounded upstream); no claim of arbitrary original-source precision is made.
+diff --git a/docs/EXTERNAL-AUDIT-REQUEST.md b/docs/EXTERNAL-AUDIT-REQUEST.md
+index ab7aa5d..53c07c0 100644
+--- a/docs/EXTERNAL-AUDIT-REQUEST.md
++++ b/docs/EXTERNAL-AUDIT-REQUEST.md
+@@ -1,17 +1,17 @@
+ # Request for independent EMBER10 review
+ 
+-Audit the complete attached source package. Record its Git commit, tree and manifest checksum before beginning. The deployed application revision is `ed67a05f7b676108a98dcaf29460d2fdc60fecc6`; the package preparation commit may differ. Verify that runtime code matches this application revision and inspect the documentation/tooling delta separately.
++Audit the complete attached source package. Record its Git commit, tree and manifest checksum before beginning. The exact deployed application revision is recorded in deployment.json; the package preparation commit may differ. Verify that runtime code matches this application revision and inspect the documentation/tooling delta separately.
+ 
+ Repository: https://github.com/missfitchief/ember10
+ 
+ Read-only public site: https://ember5-pilot.vercel.app/
+ 
+-Read `AUDIT-START-HERE.md`, `docs/AUDIT-FINDINGS.json`, `docs/AUDIT-R2.md`, `docs/AUDIT-REPRODUCE.md` and both supplied historical audit reports. Treat implementation labels as claims to test, not expected conclusions.
++Read `AUDIT-START-HERE.md`, `docs/AUDIT-FINDINGS.json`, `docs/AUDIT-R3.md`, `docs/AUDIT-R2.md`, `docs/AUDIT-REPRODUCE.md` and all supplied historical audit reports. Treat implementation labels as claims to test, not expected conclusions.
+ 
+ Please return:
+ 
+ 1. Exact source/deployment identities, environment, commands, results and unavailable evidence.
+-2. A disposition for every inherited and R2 finding: confirmed, resolved, partially resolved, not reproduced or untested. Do not silently drop compound subfindings.
++2. A disposition for all 70 inherited, R2 and R3 findings: confirmed, resolved, partially resolved, not reproduced or untested. Do not silently drop compound subfindings.
+ 3. Reproductions for new defects, including impact, severity, paths/lines and the conditions required. Separate executed evidence from source-based inference.
+ 4. Desktop, 375px and 320px UI review: ten real logos, numeric ranking and mint identity, search/pagination across polls and outages, asset details, keyboard interaction, missing/partial ledger responses and truthful prelaunch states.
+ 5. A critical financial-path review: provider completeness and instruction compatibility, eleven-purchase/buyback cash sufficiency, original transaction accounting, ambiguous expiry, WSOL accounts, receipt attribution, reserves, OPS/DEV obligations, retry allowances, signing authorization and reconciliation.
+diff --git a/docs/EXTERNAL-AUDIT.md b/docs/EXTERNAL-AUDIT.md
+index 518d990..bffc2db 100644
+--- a/docs/EXTERNAL-AUDIT.md
++++ b/docs/EXTERNAL-AUDIT.md
+@@ -1,48 +1,27 @@
+-# EMBER10 external audit brief
++# EMBER10 external audit brief ? R3
+ 
+-Review the complete frozen source package. The manifest identifies the package commit and per-file hashes. The deployed application is **ed67a05f7b676108a98dcaf29460d2fdc60fecc6**; subsequent audit preparation changes documentation and reviewer tooling only. Public application, financial code, policy and migrations remain byte-identical to that application revision.
++Review the complete frozen source package. Record its manifest commit, tree and per-file hashes. Compare its runtime/test/config files with the application revision in deployment.json; later package commits should change only documentation, evidence or reviewer tooling. Verify the actual public revision and assets rather than relying solely on the revision marker. No cryptographic server artifact attestation is claimed.
+ 
+ Repository: https://github.com/missfitchief/ember10
+ 
+ Read-only pilot: https://ember5-pilot.vercel.app/
+ 
+-## Start here
++Start with AUDIT-R3.md, AUDIT-FINDINGS.json, VERIFICATION.md, AUDIT-REPRODUCE.md and the supplied R3 audit. Retain prior audits as historical evidence. Review all 70 top-level findings and compound subfindings; do not infer closure from developer labels.
+ 
+-1. [Package entry point](../AUDIT-START-HERE.md), [current findings register](AUDIT-FINDINGS.json) and [R2 correction](AUDIT-R2.md).
+-2. [Reproduction commands](AUDIT-REPRODUCE.md), [verification](VERIFICATION.md), [deployment identity](deployment.json) and [readiness](READINESS.md).
+-3. [Supplied R2 audit](evidence/r2/supplied-audit.md), plus [the original audit](evidence/external-audit/original-audit-redacted.md). The [first-round register](evidence/external-audit/findings.json) describes application 1f67d0d and is historical. Its S1-06 implementation claim is superseded by open F-3; its D-04 status is superseded by R2's fixed finding.
+-4. [R2 changed files](evidence/r2/changed-files.txt) and [R2 patch](evidence/r2/changes.patch), covering 4f9fba2 through ed67a05. The [earlier patch](evidence/external-audit/changes-since-original-audit.patch) covers db041a0 through 1f67d0d. The manifest describes the entire delivered tree, including later audit documents and tooling; neither patch is the full scope of review.
++## Public review
+ 
+-## Current review priorities
++Reproduce deferred page responses arriving after a poll or explicit refresh, including ignored abort signals. Check retention of expanded lists, honest parent-source versus query health, eligible-empty wording, failed logo recovery and healthy-image persistence. Review the catalogue-bound relay's CDN 300-second fresh/60-second stale policy and measured HIT evidence, plus error no-store and unauthorized-source rejection. Inspect desktop, 375px and 320px layouts, token details, actual catalogue logos and unavailable ledger states.
+ 
+-The public fixes address search retention, capacity warnings, catalogue-bound images, query parity, independent bounded requests, outage reporting and accessibility. Recheck changing observations, failed/slow responses, 320px layouts, actual logos, duplicate symbols and mint identity. Cross-instance pagination still rejects different observations; the configured backend retains its 4 MB export limit and generic error message. Old CDN URLs are not claimed to be purged. Known-catalogue image traffic remains a possible resource-exhaustion vector.
++N-P4 remains open: later/cross-instance pages may not share an observation; mismatch is rejected rather than merged. N-P6 remains open/mitigated: distinct concurrent misses may exceed the per-instance 16-image cap. CDN caching is not global rate limiting. Stale last-good catalogue membership can extend logo availability beyond the CDN window. The configured backend's 4 MB export cap and generic error classification remain open.
+ 
+-Financial findings **F-1 through F-14 remain open**. The funding forecast failure F-3 is independently reproduced, not a claimed fix: the current 23,632,080-lamport forecast fails the eleventh adapter build under the all-new-ATA fixture. F-1 lacks a complete reviewed evidence service; F-2 rejects the audit's live Jupiter instruction variants. F-4/F-6 lack adequate expiry/WSOL lifecycle recovery. The detailed register preserves attribution, reconciliation, caps, developer-cost allowances, quote freshness and pause-boundary findings. Also retain inherited nginx identity, output-price independence, policy publication, database-role and test-oracle concerns.
++## Financial review boundary
+ 
+-Do not infer funded readiness from 258 passing tests. Five high dependency entries remain in the raw production scan. No production database migration, real funded settlement, signer activation or financial-worker deployment occurred.
++This delivery corrects public behavior and evidence only. Financial code, approval rules, migrations, signing and policy are unchanged. F-5 is corrected: valid pool-filtered rows can match, but signature-less sweep rows reject the strict window. F-3's extra-rent comparison has no maximum-fee retry margin. N-M1..N-M6 source-only assessments are not executed race tests. No live financial settlement, chain attribution, keyed Jupiter acceptance or funded-pilot readiness is established.
+ 
+-## Product invariants
++Preserve ten equal purchase budgets, 80/10/10, existing OPS/DEV remainder rules, immutable historical funded records and mint-based identity. Missing evidence is unknown, not passing eligibility. Market ranking is not a funded basket.
+ 
+-- EMBER10 has ten equal purchase budgets. Net creator fees allocate 80% to holder rewards, 10% to buyback/burn and 10% to OPS/DEV; historical five-member funded records remain immutable.
+-- OPS/DEV payouts use only the withdrawable remainder after recorded expenses, obligations and retained reserves. No invented destination or automatic sweep of the allocation.
+-- Current market rank, verified eligibility and immutable funded membership remain separate. Mint identifies an asset; historical screenshots do not seed rankings.
+-- No synthetic public fallback. Missing/stale evidence is unavailable, not zero or an eligibility pass. Public address lookup never requests wallet signing.
++## Evidence and requested result
+ 
+-## Current evidence
++Use evidence/r3 for current tests, validation metadata, deployment verification, cache timings, browser screenshots and exact-revision internal review. R2 reports remain historical; their intermediate review hashes do not attest final R3 bytes. Browser checks use Chrome emulation, not a physical iPhone. Internal reviewers are same-vendor; external re-audit remains pending.
+ 
+-[Packet checks](evidence/audit-ready/checks.json), [separate packet review](evidence/audit-ready/packet-review.md) and [fresh financial failure reproduction](evidence/audit-ready/harness-recheck.json) document this audit-preparation update.
+-
+-- [Complete test report](evidence/r2/tests.json), [validation metadata](evidence/r2/validation.json), [dependency scan](evidence/r2/dependency-audit.json).
+-- [Latest public recheck](evidence/audit-ready/public-proof.json), [candidate proof](evidence/r2/candidate-verification.json), [publication proof](evidence/r2/public-verification.json), [API/logo checks](evidence/r2/public-api-checks.json).
+-- [Public browser checks](evidence/r2/public-browser.json), [local checks](evidence/r2/local-browser.json), [fixture interaction checks](evidence/r2/frontend-browser.json).
+-- Before: [desktop](evidence/r2/before-1440.png), [mobile](evidence/r2/before-375.png). After: [desktop](evidence/r2/public-1440.png), [375px](evidence/r2/public-375.png), [320px](evidence/r2/public-320.png), [asset details](evidence/r2/public-375-detail.png). These are dated browser emulations, not physical-device tests.
+-- Internal specialist reviews: [public/data/UI](evidence/r2/independent-public-review.md), [image relay](evidence/r2/independent-image-review.md), [financial blockers](evidence/r2/FINANCIAL-INDEPENDENT-REVIEW.md). Same-vendor and exact scope limitations are disclosed. External re-audit of this correction is pending.
+-- [Financial reproduction source](../scripts/audit/f3-eleven-builds.mts) and [original result](evidence/r2/f3-eleven-builds-results.json). Mocked legacy instructions and RPC establish the local forecast defect, not current provider compatibility or finalized settlement.
+-
+-Frontend bytes, the observed revision marker and Vercel deployment identity agree. The server function has no cryptographic artifact attestation. The actual host remains prelaunch, paused, broadcast disabled and worker inactive, without a configured project mint or ledger. Unreported amounts are not zero.
+-
+-## Deliverable and review request
+-
+-Use [the copy-ready reviewer request](EXTERNAL-AUDIT-REQUEST.md). Return exact revisions and commands, dispositions for all 56 top-level findings, new reproducible findings, desktop/mobile evidence and separate go/no-go decisions for public publication versus funded operation. Distinguish execution from inference and developer claims from independent conclusions. Compound findings need subfinding-level review.
+-
+-The archive includes all tracked source, tests, migrations, lockfile and audit evidence. It excludes untracked secrets, Vercel credentials, private keys, databases, dependencies and build caches. Verify the ZIP and per-file SHA-256 values. No auditor was contacted or given credentials automatically. Keep financial tests isolated; no live financial or production mutation is authorized by this packet.
++Return exact revisions, commands and results, dispositions for all 70 findings, newly reproduced issues, screenshots and separate decisions for public publication versus funded operation. Report the five high dependency entries. Keep tests in a disposable database; do not supply funds, enable execution, migrate a production database or change a deployment. No auditor has been contacted automatically.
+diff --git a/docs/INTEGRATIONS.md b/docs/INTEGRATIONS.md
+index ceb3fbf..631d52e 100644
+--- a/docs/INTEGRATIONS.md
++++ b/docs/INTEGRATIONS.md
+@@ -2,15 +2,18 @@
+ 
+ Raw public responses and timestamps are under `docs/evidence/`. These are untrusted source data, never signing instructions. “Observed” means a real read-only request was made. No mainnet transaction was signed or broadcast.
+ 
++R3 documentation correction, 24 September: the [read-only financial evidence update](evidence/r3/FINANCIAL-EVIDENCE-UPDATE.md) records pool-filtered payout reads executed at 23:30 UTC on 23 September. These observations supersede any inference that a historical global payout window describes every Keep-it pool. Financial adapters remain unchanged.
++
+ | Surface | Actual observation | Confidence / execution consequence |
+ |---|---|---|
+ | Ember developers / how | HTTP 200 application shells; public JS documentation chunks inspected | High for documented routes, not proof of economic execution |
+-| `/api/solana/markets` | HTTP 200; initial response 7,876,999 bytes, 3,040 rows; later reads changed | Observed schema; current reader and evidence collector share a 64 MB cap, with a 50,000 row schema bound and warnings at 80% of capacity. All rows remain unverified candidates. |
++| `/api/solana/markets` | HTTP 200; initial response 7,876,999 bytes, 3,040 rows; later reads changed | Runtime reader and evidence collector share only a 64 MB byte cap. The public runtime separately enforces a 50,000-row schema bound and warns at 80% of byte or row capacity. The collector uses one 20-second request, no retries, no row limit and no capacity warnings. All rows remain unverified candidates. |
+ | `/api/solana/quotes` | HTTP 200; `economics` and 1,291 `quotes` | `shareByMode.keep.pctOfTax=32`; SOL quote support observed; no project launch attempted |
+ | `/api/solana/configs` | HTTP 200; `program`, `partner`, `feeClaimer`, `configs`, `count`, `updatedAt`; 2,949 configs in initial capture | Off-chain list is checked against decoded on-chain config/pool identity before selection |
+ | `/api/solana/pools.csv` | HTTP 200; historical CSV with mint, DBC pool/config, DAMM pool and launch metadata | Historical catalogue evidence only |
+ | `/api/solana/fees/pool/:pool` | HTTP 200 for the observed platform-token pool; decoded fee-source and tax fields captured | API includes graduation/migration-dependent fee fields; our funding route is not configured |
+ | `/api/solana/payouts` | HTTP 200; latest 100 `payouts` in initial default response | Numeric human-unit amounts require exact chain matching; no proven complete cursor/pagination contract |
++| `/api/solana/payouts?pool=…` | R3: one public Keep-it pool returned 100 rows including 37 signed `payout`/`keep`/WSOL rows; another returned two rows, including a signature-less `sweep` | The first window passes the installed schema; the second reproduces `ZodError` before ingestion. Published-row compatibility is not verified project revenue. Compact samples, timestamps and response hashes are in [R3 evidence](evidence/r3/f5-pool-evidence-results.json). |
+ | `/api/solana/holders/:pool` | HTTP 200; response reported 22,057 total owners, size 10, pages 5 | Confirms a top-50 display window, **not** a full census |
+ | Wallet report | Documented, no project-specific wallet available | Not used as authoritative ledger |
+ | Jupiter v2 `/order` | A real unauthenticated quote-only request returned HTTP 200, `transaction:null`, `taker:null` | Actual quote observed, but not an authenticated build or executable transaction |
+@@ -22,7 +25,7 @@ Raw public responses and timestamps are under `docs/evidence/`. These are untrus
+ 
+ Market envelope: `{economics, warming, totals, markets:[...]}`. A market contains `mint`, `pool`, `config`, optional `dammPool`, `creator`, `mode`, `quoteMint`, `feeBps`, `createdAt`, `graduated`, and reported price/volume/capitalization/holder fields. `tests/fixtures/ember-market.observed.json` preserves three actual rows with source/date; synthetic eligibility overrides are explicitly separate in tests.
+ 
+-Payout envelope: `{payouts:[{kind, mode, pool, quoteMint, amount, signature, at, ...}]}`. The API amount is human units, not authoritative raw transfer units. The ingestion adapter recognizes only uniquely matched finalized native SOL Keep-it transfers. Other representations or ambiguous aggregation stay out of free revenue.
++Payout envelope: `{payouts:[{kind, mode, pool, quoteMint, amount, signature?, at, ...}]}`. Live windows can include non-transfer records without a signature. The current adapter nevertheless requires a string `signature` on every row: a signature-less sweep rejects the entire pool window and stops that ingestion pass (open F-5). The API amount is human units, not authoritative raw transfer units. The ingestion adapter recognizes only uniquely matched finalized native SOL Keep-it transfers. Other representations or ambiguous aggregation stay out of free revenue; quarantined first-sight receipts currently have no later re-attribution path.
+ 
+ Observed fee state includes `feeSource`, `dammPool`, `graduated`, `taxBps`, `creatorSideBps` and published payouts. The platform token observed in the catalogue is `5dvXTZ5qwgafnHtwu3Ls3QrWx1U4LQsFeCuJgkk4QEC6`; this is a source observation, not a guarantee that it qualifies for our basket.
+ 
+@@ -32,7 +35,9 @@ Jupiter build schema includes quote mints/amounts, `otherAmountThreshold`, `slip
+ 
+ The 32% Keep-it figure is a dated platform observation. Some descriptions still refer to “80%”; this inconsistency is preserved as an uncertainty. No forecast fee percentage creates spendable funds. Our 80/10/10 is a separate versioned project policy applied only after verified funding and direct costs.
+ 
+-Ember's developer documentation says reads are cached for 5–60 seconds and recommends no more than one request per second per endpoint. The financial EmberClient discovery cache is 60 seconds; the separate public MarketDataService cache is normally 45 seconds (bounded to 30–60 seconds); other reads use conservative caches and bounded retries with backoff for 429/5xx. No private RPC proxy is reused. Jupiter documentation says to use `x-api-key`, while the public quote-only probe happened to work without one. The pilot adapter still requires a key. Router `/build` is documented without a Jupiter swap platform fee; network, priority, rent and route-specific trading costs must still be inspected. Metis v2 order/execute has separate platform fees and RFQ expiry rules; the baseline executor uses self-managed `/build` and the original blockhash lifetime.
++Ember's developer documentation says reads are cached for 5–60 seconds and recommends no more than one request per second per endpoint. `EmberClient.read()` defaults to 60 seconds, but the financial funding-route helper explicitly uses 45 seconds when unforced and 0 when forced. The live worker passes `force=true`, bypassing that cache for its route checks; F-9/N-M4 remain open. Pool payout windows use 15 seconds. The separate public `MarketDataService` refreshes normally every 45 seconds (configuration bounded to 30–60 seconds), with longer failure backoff. These timings must not be described as a uniform 60-second financial discovery cache.
++
++No private RPC proxy is reused. Jupiter documentation says to use `x-api-key`, while the public quote-only probe happened to work without one. The pilot adapter still requires a key. Router `/build` is documented without a Jupiter swap platform fee; network, priority, rent and route-specific trading costs must still be inspected. Metis v2 order/execute has separate platform fees and RFQ expiry rules; the baseline executor uses self-managed `/build` and the original blockhash lifetime.
+ 
+ ## Unresolved evidence
+ 
+diff --git a/docs/RUNBOOK.md b/docs/RUNBOOK.md
+index 0289d7a..bd9cbee 100644
+--- a/docs/RUNBOOK.md
++++ b/docs/RUNBOOK.md
+@@ -31,8 +31,8 @@ Do not manufacture a source receipt, use a treasury balance as revenue, or edit
+ 1. Leave the existing intent, attempt, signature, signed payload and reservation intact.
+ 2. Restart the worker against the same database and mode. In-flight reconciliation runs before new preparation.
+ 3. A finalized successful transaction must match its expected mint, owner, amount and signer before accounting is applied. A process crash after chain success is repaired by completing the existing database operation.
+-4. While the blockhash is valid, retrying sends identical stored bytes. Do not rebuild a second live transaction for that intent.
+-5. A finalized failed atomic transaction consumes its verified network fee, pays no entitlements and retains the principal reservation. A new attempt under the same logical intent is permitted only after that definite failure.
++4. A resend, when authorized, sends identical stored bytes while the blockhash remains valid. Current code also requires the full fresh execution authorization before broadcast and again at the adapter boundary; an approval, funding-route or provider failure can prevent resend even with a valid blockhash. These denials are not yet reported with a distinct reason (open N-M5). Do not rebuild a second live transaction for that intent or treat this runbook as authorization to weaken the resend gates.
++5. A finalized failed atomic transaction consumes its verified network fee, pays no entitlements and retains the principal reservation. A new attempt under the same logical intent is permitted only after that definite failure and the remaining cost allowance and current authorization checks pass. A depleted epoch cost allowance currently has no operator replenishment route (open F-3/F-4).
+ 
+ The tests terminate real child processes after signing, after sending, and after observing chain success. The synthetic chain is itself database-persistent, so restarting a client does not reset evidence.
+ 
+@@ -52,7 +52,9 @@ Discovery preserves last successful observations with timestamps and stale statu
+ 
+ Request `reconcile`, inspect the immutable reconciliation record and match each asset individually. First reconcile all in-flight signatures. Query actual native/token balances with their returned RPC context slots; never combine raw units from different mints. Compare those with the sum of internal ledger partitions. Investigate deficits, unclassified surpluses and missing token accounts. Resolve incidents only after linked correcting records and evidence exist; do not flip health flags just to resume.
+ 
+-Payout rent and network charges must fit the reserved allowance. If they do not, add explicitly recognized operational capital or defer. Do not use holder token liabilities to pay SOL costs. The live worker returns unused epoch direct-cost allowance after its cost-bearing intents, including operations and burn, finalize; `Engine.returnUnusedCosts` refunds the original receipt sources. Holder payouts use the separately protected execution reserve.
++Do not use the public `reconciled` label as proof that no later transaction committed: its timestamp comparison uses transaction-start timestamps, not a lock-ordered commit watermark (N-M3). Token deposits also need a custody baseline before prior account history can be trusted (N-M2). A slow RPC inspection lasting beyond the tick's 120-second lease can make settlement fencing fail and produce a generic incident and pause; the narrowed N-M6 timing scenario is source-reviewed, not executed in the R3 evidence update.
++
++Holder payout rent and network charges must fit the separately protected execution reserve. For four new recipient ATAs, the tested constants require `4 × 2,039,280 + 100,000 = 8,257,120` lamports above the reserve floor; the epoch forecast does not include this cash. If the reserve is insufficient, explicitly recognized operational capital or deferral is required. Extra capital does not automatically refill `cost:<epoch>`, and the current epoch forecast and retry margin remain blocked by F-3. Do not use holder token liabilities to pay SOL costs. `Engine.returnUnusedCosts` refunds original receipt sources only after all cost-bearing intents tied to that epoch, including burn and any operations intent, finalize.
+ 
+ ## Key rotation
+ 
+@@ -66,12 +68,14 @@ Use PostgreSQL `pg_dump --format=custom` for a consistent logical backup, plus m
+ 
+ ## Deployment and public launch
+ 
+-Run the API and worker on a persistent Node host with PostgreSQL, independent of a static frontend host. The local Compose example is not a tested public deployment. Configure TLS, private operator routing, least-privilege database credentials, backup retention, signer policy and alerts before live use. The read-only prelaunch frontend is published on Vercel. No financial-service deployment, domain registration, project token creation, mainnet funding or funded launch was performed. Open R2 financial findings block a funded pilot.
++Run the API and worker on a persistent Node host with PostgreSQL, independent of a static frontend host. The local Compose example is not a tested public deployment. Configure TLS, private operator routing, least-privilege database credentials, backup retention, signer policy and alerts before live use. The read-only prelaunch frontend is published on Vercel. No financial-service deployment, domain registration, project token creation, mainnet funding or funded launch was performed. Open R2 financial findings and the R3 additions block a funded pilot; the current work authorizes public fixes and audit evidence only.
+ 
+ ## Current audit handoff
+ 
+ Policy publication is currently limited by the schema to versions 1 and 2; instructions describing later increasing versions are a design requirement, not an implemented path. See [R2 findings](AUDIT-R2.md).
+ 
++The [R3 financial evidence update](evidence/r3/FINANCIAL-EVIDENCE-UPDATE.md) records the actual pool-window failure (F-5), the no-retry-margin limit of the proposed forecast (F-3), and source-only N-M1–N-M6 findings. In particular, current final authorization is not bound to the approval generation used to build the transaction (N-M1); the live funding-route read forces TTL 0 despite the client's default cache (N-M4). No financial behavior was changed to address these findings.
++
+ See [external audit](EXTERNAL-AUDIT.md) before operational use. New migration 008 has only been exercised in isolated tests; deploy the API and worker together after a backup and normal migration while paused. Vercel publication does not migrate a financial database.
+ 
+ Incident resolution is an authenticated POST to /operator/incidents/:id/resolve with reason and evidenceReference; it leaves execution paused. A persisting fault can create another incident. Current policy publication is constrained to versions 1 and 2 and needs revision semantics before later policy updates. Windows forced termination can leave a lease until expiry; do not assume graceful release on every shutdown.
+diff --git a/docs/evidence/r3/FINANCIAL-EVIDENCE-UPDATE.md b/docs/evidence/r3/FINANCIAL-EVIDENCE-UPDATE.md
+new file mode 100644
+index 0000000..eca0a15
+--- /dev/null
++++ b/docs/evidence/r3/FINANCIAL-EVIDENCE-UPDATE.md
+@@ -0,0 +1,41 @@
++# R3 financial evidence update — read-only
++
++Source reviewed: `ad972e70e0b946eb0c73712ff88a7d6e090f1d1d`. No repository changes, signer calls, broadcasts, credentials access, funds, or database writes. Financial execution remains out of scope. The attached R3 report is supplied evidence; the following two HTTP captures and schema checks were independently executed here on 23 September 2026 at 23:30 UTC.
++
++## F-5: correct the earlier global-window inference
++
++| Public pool | Window | Matching published-row shape | Actual installed `EmberClient.payouts()` result |
++|---|---:|---:|---|
++| `4isa4qXav8juubpkUduS93hbr72Pm76dLcYTWRCqnAJQ` | 100 rows, 39,487 bytes | 37 signed `payout` / `keep` / WSOL rows with positive amounts accepted by `decimalUnits` | Accepted, 100 rows |
++| `6sg6ubMzZKKD5WcpbYDoXTJzzHxSLJ8Huy1agt8cMV9S` | 2 rows, 691 bytes | 0 | `ZodError` at `payouts[0].signature`: expected string, received undefined |
++
++Sources: [first pool window](https://embercurve.fun/api/solana/payouts?pool=4isa4qXav8juubpkUduS93hbr72Pm76dLcYTWRCqnAJQ), [second pool window](https://embercurve.fun/api/solana/payouts?pool=6sg6ubMzZKKD5WcpbYDoXTJzzHxSLJ8Huy1agt8cMV9S). Both returned HTTP 200. The exact supplied live row counts and strict-schema failure are independently reproduced, although the first pool's most recent amounts have changed since the auditor's earlier capture.
++
++The second pool contains a signature-less `sweep` row with mode `keep`, WSOL, and amount `0.0072`; its note describes small-round dust booked to platform treasury. The code requests the pool-filtered window before examining native transfer signatures. A single such row therefore rejects the window before ingestion can proceed. Later matching evidence still cannot reclassify an already persisted review receipt: the ingestion cursor advances and `Engine.ingest` returns on its duplicate ID. This latter lifecycle point was confirmed by source reading, not a new database execution.
++
++The prior historical global window showed no compatible rows; it never established that every real Keep-it pool lacked them. Any broader assertion that the attribution predicate cannot match is superseded. Matching published-row fields is **not** verified project revenue: no on-chain sender, recipient, instruction uniqueness, exact transfer amount, finality, funding route, or project identity was independently checked in this task.
++
++`f5-pool-evidence-results.json` records URLs, exact request/response times, response byte counts and SHA-256 hashes, row counts, three compatible examples, the signature-less row, and the actual schema result. Full response bodies were kept only in memory, not saved. The source body's hashes identify the fetched bytes; the saved samples alone cannot reconstruct those complete bodies.
++
++## F-3: retry margin correction, no policy change
++
++Executed local BigInt arithmetic and the actual `bindNativeCost` admission function, using a 100,000-lamport fee cap and 2,039,280-lamport ATA rent. This does not execute a financial worker, database, chain settlement, or signer.
++
++The current forecast is 23,632,080 lamports. The earlier proposed extra-WSOL-float forecast is 25,671,360. It covers eleven successful swap/buyback transactions and a burn, but only with **zero finalized failure fees at the cap**. After ten successful purchases/buyback transactions at the cap, one failed attempt, and the burn, available cost cash is 4,078,560; the retry needs 4,178,560. The actual admission check rejects it with a 100,000-lamport shortfall.
++
++Adding a single explicit 100,000-lamport retry allowance gives 25,771,360 and passes the one-failure case; two failures exhaust that margin. Generally the arithmetic proposal is `(size + 2) * rent + (size + 2 + k) * maxFee`, with `k` a deliberately chosen bounded retry budget. No value of `k` was selected or implemented. This remains a financial design decision, not an automatic fix or funded-pilot readiness claim.
++
++At 5,000-lamport actual fees and the same 100,000-lamport admission cap, the no-extra-retry proposal passes this ordering with 209 failure fees and fails with 210; relying on low current fees would be unsound. Under the policy's 10% cost ceiling, the minimum implied round for the extra-float proposal is 256,713,600 lamports, or 257,713,600 with one capped retry fee. Holder delivery costs remain separate: four new recipient ATAs plus the capped fee require 8,257,120 lamports above the reserve floor, not from this epoch cost forecast.
++
++## N-M1 through N-M6: source review only
++
++| Finding | Code reviewed | Assessment and execution limit |
++|---|---|---|
++| N-M1 | `main.ts` swap builder, `control.ts:15-29`, `solana.ts:99-104` | Consistent with source. Build approval is loaded separately; final authorization compares two reads inside its own callback, without binding the built transaction to that generation. No approval-change race was executed. |
++| N-M2 | `ingestion.ts:33-45` | Consistent with source. Current-owner account enumeration is followed by whole history on first sight; inbound transfers are credited without an ownership baseline or matching outbound history. No authority-transfer transaction or ledger exploit was executed. |
++| N-M3 | `queries.ts:41-43`, `001_initial.sql:17`, `store.ts:7,15,21` | Consistent with source. Health uses maximum `created_at`; ledger timestamps default to `now()` while transactions begin before acquiring control locks. No concurrent PostgreSQL timing test was executed. |
++| N-M4 | `main.ts:31,49`, `ingestion.ts:31`, `INTEGRATIONS.md:35` | Confirmed source/document mismatch: the live funding-route call passes `force=true`, using TTL 0; unforced funding-route TTL is 45 seconds. A statement that live financial discovery uniformly uses 60 seconds is inaccurate. |
++| N-M5 | `runner.ts:85-96`, `solana.ts:140-144`, `control.ts:15-29` | Confirmed source mechanism: stored-byte resend calls full execution authorization before broadcast, and again at the adapter boundary; denial returns without an explicit reason. No transient-provider or blockhash-expiry reproduction was executed. Changing resend authorization requires a reviewed financial policy; this report does not endorse removing revocation/economic checks automatically. |
++| N-M6 | `runner.ts:66-69,101-106`, `store.ts:13-14,27`, `engine.ts:100` | Plausible, narrowed to slow inspect/apply evidence and lease expiry. Tick grants 120 seconds; apply re-fences; caught settlement errors cause a generic incident and pause. No >120-second stall or lease-expiry scenario was executed. |
++
++The public-fix scope remains unchanged. These findings update the audit record and funding blockers; they do not authorize financial remediation or operation.
+diff --git a/docs/evidence/r3/f5-pool-evidence-results.json b/docs/evidence/r3/f5-pool-evidence-results.json
+new file mode 100644
+index 0000000..4887a9a
+--- /dev/null
++++ b/docs/evidence/r3/f5-pool-evidence-results.json
+@@ -0,0 +1,232 @@
++{
++  "executedAt": "2026-09-23T23:30:23.173Z",
++  "revision": "ad972e70e0b946eb0c73712ff88a7d6e090f1d1d",
++  "kind": "independent_read_only_evidence",
++  "financialMutations": 0,
++  "signaturesCreated": 0,
++  "broadcasts": 0,
++  "networkReads": "Two public pool-filtered Ember windows; no catalogue or credentials",
++  "observations": [
++    {
++      "url": "https://embercurve.fun/api/solana/payouts?pool=4isa4qXav8juubpkUduS93hbr72Pm76dLcYTWRCqnAJQ",
++      "requestedAt": "2026-09-23T23:30:20.434Z",
++      "receivedAt": "2026-09-23T23:30:20.801Z",
++      "httpStatus": 200,
++      "bytes": 39487,
++      "bodySha256": "45579861c39e62da963cca63b4dda6607138d2ea7f18ff89dcb378435c97f149",
++      "rows": 100,
++      "poolMismatchRows": 0,
++      "predicateShapeMatches": 37,
++      "signaturelessRows": 0,
++      "windowAt": {
++        "min": 1790174124,
++        "max": 1790206223
++      },
++      "actualEmberClientSchema": {
++        "accepted": true,
++        "rows": 100
++      },
++      "samples": {
++        "predicateCompatible": [
++          {
++            "mode": "keep",
++            "pool": "4isa4qXav8juubpkUduS93hbr72Pm76dLcYTWRCqnAJQ",
++            "symbol": "EMBER5",
++            "quoteMint": "So11111111111111111111111111111111111111112",
++            "quoteTicker": "SOL",
++            "quoteDecimals": 9,
++            "quoteUsd": 114.923317,
++            "kind": "payout",
++            "creator": "B7Xo4eXyatQQhhZgS9k3vJKtoHZiKMYkdq7FNchsUMg3",
++            "amount": 0.07506072,
++            "claimed": 0,
++            "signature": "5zrEFhwVncn7Dz146wDf7Go6qDBBpHy7AveDKKaqsSV1Wm6DeVvAQs2B7iPXiE8r2qczaJ8aN2P1cUk5k6Rn5Thc",
++            "at": 1790206223
++          },
++          {
++            "mode": "keep",
++            "pool": "4isa4qXav8juubpkUduS93hbr72Pm76dLcYTWRCqnAJQ",
++            "symbol": "EMBER5",
++            "quoteMint": "So11111111111111111111111111111111111111112",
++            "quoteTicker": "SOL",
++            "quoteDecimals": 9,
++            "quoteUsd": 115.009226,
++            "kind": "payout",
++            "creator": "B7Xo4eXyatQQhhZgS9k3vJKtoHZiKMYkdq7FNchsUMg3",
++            "amount": 0.032856361,
++            "claimed": 0,
++            "signature": "kGpadgRE6oPtxhC5chSgPK2XmaLpYYALZvHisewd2UySZ3A9CE8sAegmCcMwBYbgGh4kopSCj6Dg14d54x21Zdn",
++            "at": 1790205332
++          },
++          {
++            "mode": "keep",
++            "pool": "4isa4qXav8juubpkUduS93hbr72Pm76dLcYTWRCqnAJQ",
++            "symbol": "EMBER5",
++            "quoteMint": "So11111111111111111111111111111111111111112",
++            "quoteTicker": "SOL",
++            "quoteDecimals": 9,
++            "quoteUsd": 115.069765,
++            "kind": "payout",
++            "creator": "B7Xo4eXyatQQhhZgS9k3vJKtoHZiKMYkdq7FNchsUMg3",
++            "amount": 0.162494816,
++            "claimed": 0,
++            "signature": "2243GXyzjbWej4Kj1hWh25MkGs2v67MXyiKcWVGHf4TVgQ5oFP8ozdQyxPSx4euJdHwzuv9YYiApaWqVvx1Ctqs5",
++            "at": 1790204423
++          }
++        ],
++        "signatureless": []
++      },
++      "note": "Matching published-row shape is not receipt attribution: no chain transfer, sender, destination, unique instruction, finality or pool route was independently verified."
++    },
++    {
++      "url": "https://embercurve.fun/api/solana/payouts?pool=6sg6ubMzZKKD5WcpbYDoXTJzzHxSLJ8Huy1agt8cMV9S",
++      "requestedAt": "2026-09-23T23:30:21.909Z",
++      "receivedAt": "2026-09-23T23:30:22.072Z",
++      "httpStatus": 200,
++      "bytes": 691,
++      "bodySha256": "dd328330c69e7cc9ec14dee63562fa205a4b8686bb432780612aedc22a8e3a3f",
++      "rows": 2,
++      "poolMismatchRows": 0,
++      "predicateShapeMatches": 0,
++      "signaturelessRows": 1,
++      "windowAt": {
++        "min": 1790190050,
++        "max": 1790198150
++      },
++      "actualEmberClientSchema": {
++        "accepted": false,
++        "name": "ZodError",
++        "issues": [
++          {
++            "path": [
++              "payouts",
++              0,
++              "signature"
++            ],
++            "code": "invalid_type",
++            "expected": "string",
++            "message": "Invalid input: expected string, received undefined"
++          }
++        ]
++      },
++      "samples": {
++        "predicateCompatible": [],
++        "signatureless": [
++          {
++            "mode": "keep",
++            "pool": "6sg6ubMzZKKD5WcpbYDoXTJzzHxSLJ8Huy1agt8cMV9S",
++            "symbol": "MDOXX",
++            "quoteMint": "So11111111111111111111111111111111111111112",
++            "quoteTicker": "SOL",
++            "quoteDecimals": 9,
++            "quoteUsd": 114.332307,
++            "kind": "sweep",
++            "amount": 0.0072,
++            "claimed": 0,
++            "at": 1790198150,
++            "note": "10 rounds under $1, dust booked to the platform treasury"
++          }
++        ]
++      },
++      "note": "Matching published-row shape is not receipt attribution: no chain transfer, sender, destination, unique instruction, finality or pool route was independently verified."
++    }
++  ],
++  "forecast": {
++    "current": "23632080",
++    "plusOneWsolFloat": "25671360",
++    "marginCases": [
++      {
++        "retryBudget": 0,
++        "failedAttempts": 0,
++        "actualFee": "100000",
++        "forecast": "25671360",
++        "minimumFundingAtTenPercentCostCap": "256713600",
++        "afterTenSuccesses": "4278560",
++        "afterFailures": "4278560",
++        "afterBurn": "4178560",
++        "retryCashRequired": "4178560",
++        "retryAllowed": true,
++        "shortfall": "0",
++        "afterRetry": "2039280",
++        "reason": null
++      },
++      {
++        "retryBudget": 0,
++        "failedAttempts": 1,
++        "actualFee": "100000",
++        "forecast": "25671360",
++        "minimumFundingAtTenPercentCostCap": "256713600",
++        "afterTenSuccesses": "4278560",
++        "afterFailures": "4178560",
++        "afterBurn": "4078560",
++        "retryCashRequired": "4178560",
++        "retryAllowed": false,
++        "shortfall": "100000",
++        "afterRetry": null,
++        "reason": "rent/fee allowance insufficient; defer before signing"
++      },
++      {
++        "retryBudget": 1,
++        "failedAttempts": 1,
++        "actualFee": "100000",
++        "forecast": "25771360",
++        "minimumFundingAtTenPercentCostCap": "257713600",
++        "afterTenSuccesses": "4378560",
++        "afterFailures": "4278560",
++        "afterBurn": "4178560",
++        "retryCashRequired": "4178560",
++        "retryAllowed": true,
++        "shortfall": "0",
++        "afterRetry": "2039280",
++        "reason": null
++      },
++      {
++        "retryBudget": 1,
++        "failedAttempts": 2,
++        "actualFee": "100000",
++        "forecast": "25771360",
++        "minimumFundingAtTenPercentCostCap": "257713600",
++        "afterTenSuccesses": "4378560",
++        "afterFailures": "4178560",
++        "afterBurn": "4078560",
++        "retryCashRequired": "4178560",
++        "retryAllowed": false,
++        "shortfall": "100000",
++        "afterRetry": null,
++        "reason": "rent/fee allowance insufficient; defer before signing"
++      },
++      {
++        "retryBudget": 0,
++        "failedAttempts": 209,
++        "actualFee": "5000",
++        "forecast": "25671360",
++        "minimumFundingAtTenPercentCostCap": "256713600",
++        "afterTenSuccesses": "5228560",
++        "afterFailures": "4183560",
++        "afterBurn": "4178560",
++        "retryCashRequired": "4178560",
++        "retryAllowed": true,
++        "shortfall": "0",
++        "afterRetry": "2134280",
++        "reason": null
++      },
++      {
++        "retryBudget": 0,
++        "failedAttempts": 210,
++        "actualFee": "5000",
++        "forecast": "25671360",
++        "minimumFundingAtTenPercentCostCap": "256713600",
++        "afterTenSuccesses": "5228560",
++        "afterFailures": "4178560",
++        "afterBurn": "4173560",
++        "retryCashRequired": "4178560",
++        "retryAllowed": false,
++        "shortfall": "5000",
++        "afterRetry": null,
++        "reason": "rent/fee allowance insufficient; defer before signing"
++      }
++    ],
++    "holderFourNewAtaCashAboveReserveFloor": "8257120",
++    "limits": "Local arithmetic and actual bindNativeCost admission only, no eleven-transaction ledger/chain execution; retry budget remains an undecided policy input."
++  }
++}
+diff --git a/docs/evidence/r3/f5-pool-evidence.source.mts.txt b/docs/evidence/r3/f5-pool-evidence.source.mts.txt
+new file mode 100644
+index 0000000..464b686
+--- /dev/null
++++ b/docs/evidence/r3/f5-pool-evidence.source.mts.txt
+@@ -0,0 +1,49 @@
++import {createHash} from 'node:crypto';
++import {writeFileSync} from 'node:fs';
++import assert from 'node:assert/strict';
++import {EmberClient} from '../../work/r2-integration/packages/integrations/ember.ts';
++import {decimalUnits} from '../../work/r2-integration/packages/integrations/http.ts';
++import {epochCostForecast} from '../../work/r2-integration/apps/worker/forecast.ts';
++import {bindNativeCost} from '../../work/r2-integration/packages/core/execution-cost.ts';
++const pools=['4isa4qXav8juubpkUduS93hbr72Pm76dLcYTWRCqnAJQ','6sg6ubMzZKKD5WcpbYDoXTJzzHxSLJ8Huy1agt8cMV9S'];
++const WSOL='So11111111111111111111111111111111111111112';
++const observations=[];
++for(const pool of pools){
++ const url='https://embercurve.fun/api/solana/payouts?pool='+pool;
++ const requestedAt=new Date().toISOString();
++ try{
++  const response=await fetch(url,{headers:{accept:'application/json'},redirect:'error',signal:AbortSignal.timeout(20000)});
++  assert(response.ok&&response.body,'source unavailable');
++  const reader=response.body.getReader(),chunks:Uint8Array[]=[];let bytes=0;
++  while(true){const next=await reader.read();if(next.done)break;bytes+=next.value.byteLength;if(bytes>2_000_000){await reader.cancel();throw Error('Pool response exceeds 2 MB evidence bound');}chunks.push(next.value);}
++  const body=Buffer.concat(chunks),value=JSON.parse(body.toString('utf8'));
++  assert(Array.isArray(value.payouts),'payouts envelope missing');
++  const rows=value.payouts;
++  const compatible=rows.filter((row:any)=>{try{return row.pool===pool&&row.kind==='payout'&&row.mode==='keep'&&row.quoteMint===WSOL&&typeof row.signature==='string'&&decimalUnits(String(row.amount),9)>0n;}catch{return false;}});
++  const malformed=rows.filter((row:any)=>typeof row.signature!=='string');
++  const client=new EmberClient();
++  client.read=async(path:string)=>{assert.equal(path,'/payouts?pool='+pool);return {at:Date.now(),value};};
++  let schema:Record<string,unknown>;
++  try{const parsed=await client.payouts(pool);schema={accepted:true,rows:parsed.value.payouts.length};}
++  catch(error){schema={accepted:false,name:(error as Error).name,issues:(error as any).issues?.map((issue:any)=>({path:issue.path,code:issue.code,expected:issue.expected,message:issue.message}))};}
++  observations.push({url,requestedAt,receivedAt:new Date().toISOString(),httpStatus:response.status,bytes,bodySha256:createHash('sha256').update(body).digest('hex'),rows:rows.length,poolMismatchRows:rows.filter((r:any)=>r.pool!==pool).length,predicateShapeMatches:compatible.length,signaturelessRows:malformed.length,windowAt:{min:Math.min(...rows.map((r:any)=>r.at)),max:Math.max(...rows.map((r:any)=>r.at))},actualEmberClientSchema:schema,samples:{predicateCompatible:compatible.slice(0,3),signatureless:malformed.slice(0,5)},note:'Matching published-row shape is not receipt attribution: no chain transfer, sender, destination, unique instruction, finality or pool route was independently verified.'});
++ }catch(error){observations.push({url,requestedAt,failedAt:new Date().toISOString(),error:(error as Error).message});}
++ await new Promise(resolve=>setTimeout(resolve,1100));
++}
++const rent=2039280n,maxFee=100000n,actual=epochCostForecast(10,maxFee,rent),withFloat=actual+rent;
++function retryCase(retryBudget:number,failedAttempts:number,actualFee:bigint){
++ const forecast=withFloat+BigInt(retryBudget)*maxFee;
++ const afterTen=forecast-10n*(rent+actualFee),afterFailures=afterTen-BigInt(failedAttempts)*actualFee,afterBurn=afterFailures-actualFee;
++ const intent:any={kind:'swap',asset:'SOL',expected:{maxFee:String(maxFee),maxTotalCost:String(afterBurn)}};
++ let retryAllowed=true,reason:string|null=null;
++ try{bindNativeCost(intent,rent,2n*rent);}catch(error){retryAllowed=false;reason=(error as Error).message;}
++ return {retryBudget,failedAttempts,actualFee:String(actualFee),forecast:String(forecast),minimumFundingAtTenPercentCostCap:String(forecast*10n),afterTenSuccesses:String(afterTen),afterFailures:String(afterFailures),afterBurn:String(afterBurn),retryCashRequired:String(2n*rent+maxFee),retryAllowed,shortfall:String(2n*rent+maxFee>afterBurn?2n*rent+maxFee-afterBurn:0n),afterRetry:retryAllowed?String(afterBurn-rent-actualFee):null,reason};
++}
++const marginCases=[retryCase(0,0,maxFee),retryCase(0,1,maxFee),retryCase(1,1,maxFee),retryCase(1,2,maxFee),retryCase(0,209,5000n),retryCase(0,210,5000n)];
++assert.equal(marginCases[0].retryAllowed,true);assert.equal(marginCases[0].afterBurn,marginCases[0].retryCashRequired);
++assert.equal(marginCases[1].retryAllowed,false);assert.equal(marginCases[1].shortfall,'100000');
++assert.equal(marginCases[2].retryAllowed,true);assert.equal(marginCases[3].retryAllowed,false);
++assert.equal(marginCases[4].retryAllowed,true);assert.equal(marginCases[5].retryAllowed,false);
++const output={executedAt:new Date().toISOString(),revision:'ad972e70e0b946eb0c73712ff88a7d6e090f1d1d',kind:'independent_read_only_evidence',financialMutations:0,signaturesCreated:0,broadcasts:0,networkReads:'Two public pool-filtered Ember windows; no catalogue or credentials',observations,forecast:{current:String(actual),plusOneWsolFloat:String(withFloat),marginCases,holderFourNewAtaCashAboveReserveFloor:String(4n*rent+maxFee),limits:'Local arithmetic and actual bindNativeCost admission only, no eleven-transaction ledger/chain execution; retry budget remains an undecided policy input.'}};
++writeFileSync(new URL('f5-pool-evidence-results.json',import.meta.url),JSON.stringify(output,null,2)+'\n');
++console.log(JSON.stringify(output,null,2));
+diff --git a/docs/evidence/r3/financial-evidence.md b/docs/evidence/r3/financial-evidence.md
+new file mode 100644
+index 0000000..0a7371f
+--- /dev/null
++++ b/docs/evidence/r3/financial-evidence.md
+@@ -0,0 +1,12 @@
++# R3 financial evidence provenance
++
++These compact artifacts preserve the read-only work executed on **23 September 2026 at 23:30 UTC** against repository revision `ad972e70e0b946eb0c73712ff88a7d6e090f1d1d`. They were copied into this documentation update on 24 September, not re-fetched or re-executed then. No financial behavior or policy changed.
++
++- [Financial review](FINANCIAL-EVIDENCE-UPDATE.md): separately labels live HTTP/schema execution, local cost-admission arithmetic, and source-only N-M1–N-M6 findings.
++- [Compact results](f5-pool-evidence-results.json): two public pool URLs, timestamps, raw response byte counts and SHA-256 values, selected rows, counts, actual installed `EmberClient.payouts()` results, and six cost-margin cases using `bindNativeCost`.
++- [Executed helper source](f5-pool-evidence.source.mts.txt): the exact source used for those results, preserved as text. Its imports refer to the original local orchestration layout; it is a historical execution artifact, not a new runnable repository script. The result's `revision` was an explicit label whose value was checked with `git rev-parse HEAD` at execution; it is not runtime-generated attestation.
++- [Artifact manifest](financial-manifest.json): source revision, execution boundaries and SHA-256 hashes of these three artifacts. Text hashes normalize CRLF to LF so they can be checked across Git's Windows line-ending conversion. Hashes of upstream response bodies in the results are over their original received bytes, without text normalization.
++
++The full response bodies were processed in memory but not saved: the 39,487-byte window and the 691-byte window have hashes and compact samples only. The samples cannot reproduce the full-body hashes or independently prove all omitted rows. The helper was executed against the actual full fetched windows; a future live fetch can differ because these are moving windows. The stored signature-less row does preserve the exact schema-rejection input field.
++
++These source windows establish neither project ownership nor finalized creator-fee attribution. No chain sender, destination, instruction uniqueness, account custody, finalized transfer or project funding route was independently verified. N-M1–N-M6 remain source findings with the limitations stated in the review. The extra-rent and retry-budget arithmetic is a comparison, not an implemented forecast, an approved retry policy, or an end-to-end financial execution test.
+diff --git a/docs/evidence/r3/financial-manifest.json b/docs/evidence/r3/financial-manifest.json
+new file mode 100644
+index 0000000..143b660
+--- /dev/null
++++ b/docs/evidence/r3/financial-manifest.json
+@@ -0,0 +1,35 @@
++{
++  "schemaVersion": 1,
++  "reviewedRevision": "ad972e70e0b946eb0c73712ff88a7d6e090f1d1d",
++  "executedAt": "2026-09-23T23:30:23.173Z",
++  "preparedForRepositoryOn": "2026-09-24",
++  "textHashConvention": "SHA-256 of UTF-8 artifact bytes after CRLF-to-LF normalization; upstream body hashes in the results use raw received bytes",
++  "artifacts": [
++    {
++      "path": "FINANCIAL-EVIDENCE-UPDATE.md",
++      "sha256": "d82cc693716b42c2c419495617ae78f104bf22a5dc5303493eb2d9b3a535a67c"
++    },
++    {
++      "path": "f5-pool-evidence-results.json",
++      "sha256": "6cd73731810093f992c77a7431b364a9e9d56bb4e6252a2f3fe8d2d26ef250e2"
++    },
++    {
++      "path": "f5-pool-evidence.source.mts.txt",
++      "sha256": "11dd2d491c988d486d8cc59950105179e9effa8817c2c5851e98e4e930045371"
++    }
++  ],
++  "executed": [
++    "Two public pool-filtered Ember HTTP payout-window reads",
++    "Actual installed EmberClient.payouts schema applied to each full fetched body in memory",
++    "Local BigInt forecast comparisons and actual bindNativeCost admission"
++  ],
++  "notExecuted": [
++    "On-chain creator-fee attribution or account-custody verification",
++    "Financial worker or database settlement",
++    "Signing or broadcasting",
++    "N-M1 through N-M6 timing, custody or failure scenarios",
++    "Financial remediation, funding or deployment"
++  ],
++  "fullUpstreamBodiesSaved": false,
++  "financialPolicyChanged": false
++}
+diff --git a/docs/evidence/r3/supplied-audit.md b/docs/evidence/r3/supplied-audit.md
+new file mode 100644
+index 0000000..6c1f4ad
+--- /dev/null
++++ b/docs/evidence/r3/supplied-audit.md
+@@ -0,0 +1,259 @@
++EMBER10 AUDIT ROUND 3 - 2026-09-23 - findings for the orchestrating/building session
++Repo github.com/missfitchief/ember10 @ ad972e7 (HEAD of main, 64 commits, all "Codex <codex@local>"). Live https://ember5-pilot.vercel.app
++serves ed67a05 (/api/status revision). The three commits after ed67a05 touch documentation and evidence only: `git diff ed67a05 ad972e7 --
++apps api packages tests package.json package-lock.json vercel.json .vercelignore compose.yaml deploy tsconfig.json` is EMPTY (measured).
++The ten commits since round 2 (4f9fba2) change ONLY the public path (apps/api catalogue/token-image/hosted/overview, apps/web, market-data,
++http, shared limits, tests, scripts, docs). No file in apps/worker, packages/core, packages/db or the Jupiter/Solana/ingestion/provenance
++adapters changed. The `backend/corrections` branch is fully merged into main (merge-base == its tip).
++
++VERDICT IN ONE PARAGRAPH
++The public site works and is exactly this source: all eight deployed files (index.html, JS, CSS, two fonts, favicon, two share images) are
++sha256-identical to a clean local build of HEAD; 258/258 tests pass in 20 files; every public route, validation case and method was probed
++live; the site was driven in a browser at desktop and 320 px with zero console errors. Four of the five round-2 public fixes are confirmed by
++execution (P-1 search retention, P-3 catalogue-bound logo relay, P-4 search parity, P-5 mobile navigation and independent ledger loads);
++P-2 is confirmed by code and tests. The fixes introduced two regressions worth fixing: a paging response that lands after a poll or after
++"Refresh list" can overwrite the newer list (N-P1, found independently by three channels), and turning off CDN caching for logos makes a
++visitor's first logos arrive 0.2-4.0 s after the page on cold instances (N-P2, measured twice). The money path did not change and remains
++NOT RUNNABLE and NOT SAFE TO FUND. Two flip tests were run on live data: F-2 stands (today's Jupiter build is still an undecodable
++instruction with a multi-hop route); F-5 changed shape - a real Keep-it pool DOES publish rows that match the attribution predicate (the
++round-2 "attribution can never match" reading is refuted), but a pool's own payout window can carry a signature-less `sweep` row that makes the
++strict schema throw and stalls ingestion every loop, so F-5 keeps its severity on a different mechanism. Four new money-path items (N-M1
++approval-generation binding, N-M2 fabricated token custody, N-M5 resend gated on a full re-authorization, N-M3 reconciliation-health
++timestamp) are S2/S3; none is a theft path, and no channel found a way to sign or broadcast while paused, in prelaunch or over the caps.
++Recommendation: keep publishing; fix N-P1 and set a bounded CDN TTL for logos; do not schedule a funded pilot; if the money path is pursued,
++the order is F-5 tolerant schema (now proven necessary on live data), F-2 keyed build, F-3 forecast with a retry margin, N-M1, then the rest.
++
++0. PROVENANCE - WHAT WAS EXECUTED
++- Clean clone at ad972e7, `npm ci --ignore-scripts`, `tsc --noEmit` OK, `vite build` OK, `vitest run`: 258/258 in 20 files (43 s, embedded
++  PostgreSQL 18). Local dist/web hashes == live: index.html 387ee7cc..., index-BHmCP8pK.js 5ee23737..., index-EjoWDp4l.css a901f09c...,
++  both woff2, favicon.svg, ember10-share.png/svg (all SAME).
++- Live API: overview (limit/offset/q/view validation incl. 101-char q -> 400 with message), basket (universeComplete:false, hasMore:true,
++  100-row universe), status, project, transparency, epochs, wallets/<valid>/rewards, wallets/notanaddress -> 400, epochs/x/export -> 404,
++  HEAD -> 200, POST -> 405, /api/operator/pause and /api/%6Fperator/funding -> 404. Every JSON response `cache-control: no-store`.
++- Live logo relay: listed CID via embercurve, ipfs.io alias and pinata alias -> 200 webp (same ETag); If-None-Match -> 304; HEAD -> 200;
++  old URL without v=2 -> 200; UNLISTED valid CIDs (embercurve /img/, ipfs.io) -> 404 no-store; arweave id -> 404; evil host / two source
++  params / retry=9 / no source -> 400; POST -> 405. Cache-control observed: `public, max-age=0, must-revalidate`; `x-vercel-cache: MISS` on
++  every logo request (Vercel strips s-maxage=0 and does not cache).
++- Logo latency, first visit in the built-in browser (/#basket, 15 logo requests): 1164, 2851, 3110, 232, 2635, 3445, 1088, 3082, 3529,
++  830, 901, 1545, 2803, 3962, 2645 ms. curl, ten logos in parallel: eight of ten between 3.06 and 3.79 s, two at 0.38/1.17 s; sequential
++  warm requests 0.24-0.26 s.
++- Browser (built-in), live site: search "a" (2,803 matches), Show more x4 -> 140 rows at 21:45:40Z (page 2 fetched at offset 100 and
++  merged); two parent polls later (@315 s, @360 s) the list still shows 140 rows, no offset-0 search refetch, notice "A newer observation may
++  be available. Your current list is retained until you refresh it." with "Refresh list"; clicking it -> 20 rows, fresh q=a fetch, notice
++  cleared. 320 px: no horizontal overflow (scrollWidth 320), mobile nav present in DOM with hidden=true and display:none, real pointer click
++  opens it (aria-expanded=true), Escape closes it and returns focus to the button; rewards page shows Unreported x3 and "Verified round
++  history is not connected."; zero console messages throughout.
++- Live Ember catalogue: 8,049,071 B, 3,097 rows, 3,096 unique mints, 2,599 B/row, 98 rows without image; launches/day last 7 d mean 48
++  (09-11 spike 1,154). Live payouts: global latest-100 and ?limit=500 windows, pool-filtered windows for two Keep-it pools (see F-5).
++- Live Jupiter v2 /build x2 (unauthenticated, the adapter's exact params) decoded with the installed @jup-ag/instruction-parser 6.0.28 (F-2).
++- Channels: two isolated Codex cold packets (full tree at ad972e7 + the code diff since 4f9fba2), both VERIFIED gpt-6-astra/xhigh, 0 injected
++  persona blocks: public session [review-session-redacted] (12 min), ledger [review-session-redacted] (20 min);
++  two Claude finder agents (public path, money path; the money agent EXECUTED the builder's F-3 harness - numbers reproduced exactly - a
++  40,000-case budget() conservation check and a 70,120-row returnUnusedCosts refund-bound check, all clean). Every claim below was re-read
++  by the orchestrating auditor at the cited lines.
++  Caveat unchanged: all commits are by Codex, so the Codex channel is same-vendor as the builder. Codex has no internet, so its money-path
++  reading used the repo's stale payouts fixture; the live pool-filtered data in F-5 below supersedes that.
++  Tags: EXECUTED (reproduced), MEASURED (numbers from the live system or the code's constants), CODE (verified by reading), PLAUSIBLE.
++
++1. VERDICT
++- Public site: WORKS and matches source. No S1. Two S2 regressions introduced this round (N-P1, N-P2); the rest S3. Safe to keep publishing.
++- Financial half: unchanged code, still NOT RUNNABLE (F-1 design, F-2 live provider re-executed today, F-3 forecast) and NOT SAFE TO FUND.
++  No theft or mis-credit path found by any channel this round either; N-M1 and N-M2 are fail-open-against-documentation and griefing wedges.
++
++2. ROUND-2 FINDINGS - STATUS
++P-1 FIXED (EXECUTED)        market.tsx:59-90 request effect keyed on [requestKey, view]; the [data] effect retains an expanded or searched
++                            snapshot and sets a notice. 140 searched rows survived two polls; explicit refresh resets. Side effects: a searched
++                            or filtered list never auto-refreshes any more (by design, the original time is shown) and the new effect opened
++                            N-P1. Pinned by tests/ui-r2.browser.mjs (Playwright, reviewer tooling; not run here) - none for N-P1.
++P-2 FIXED for the row bound (CODE + tests market-data.test.ts:18,25)  catalogue-limits.json 64 MB / 50,000 rows / 80 % warning; evidence.mjs
++                            shares the byte cap. Honest headroom: at 2,599 B/row the BYTE cap binds first at ~24,600 rows and the 80 % byte
++                            warning fires at ~19,700 rows; "50,000 rows" is a schema ceiling (~130 MB at today's row size), not capacity.
++                            At 48 rows/day (7-day mean) the warning is ~11 months away; at the 09-11 spike rate ~14 days. The warning is a
++                            console.warn plus a coverage note on Transparency, not an alert. docs/DATA-SCHEMA-MAPPING.md:47 says timeout,
++                            retries and the row bound are shared with the collector; only the byte cap is (evidence.mjs:14-16: one 20 s fetch,
++                            no retry, no row bound) - S3 doc.
++P-3 FIXED (EXECUTED)        catalogue.ts:10-46 membership from the last-good catalogue before cache/slot/304; unlisted CIDs 404 live; aliases
++                            map to the canonical URL; re-check after I/O. Cost of the design: N-P2 and N-P3. Pinned by token-image.test.ts
++                            (22 tests).
++P-4 FIXED (EXECUTED + test) overview.ts:20 == view-model.ts:87-90 (mint name symbol); ui-r2.test.ts:10 compares against the server function.
++P-5 PARTIAL (EXECUTED)      api() 28 s deadline (view-model.ts:108-125) > server 25 s; src.tsx 15 s timer removed; records.tsx loads
++                            transparency/epochs/status independently; basket universeComplete false unless ready+fetched+!hasMore (live:
++                            false); role="group" on hero/stages; mobile nav always in the DOM with hidden (style.css:4 has
++                            [hidden]{display:none!important}, so it cannot be defeated). Residuals as the builder states: 4 MB proxy cap and
++                            generic 503 text (S2-06), server function not attestable (D-02).
++S2-01 residual              Cross-instance paging still keyed on fetchedAt+evidenceHash (view-model.ts:94-105); N-P4 states the consequence.
++S2-06 PARTIAL, S2-11 PARTIAL, D-02 PARTIAL - the builder's descriptions in docs/AUDIT-R2.md are accurate (Codex and my reading agree).
++F-1  OPEN, unchanged code.  F-2 OPEN, RE-EXECUTED 2026-09-23 21:4xZ: SOL->USDC 0.1 and WSOL->5dvXTZ...4QEC6 0.0784 both returned instruction
++     discriminator d19853937cfed8e9 (decodes to null in parser 6.0.28), routePlan length 2 and 4 (GoonFi V2 / SolFi V2; GoonFi V2 / Quantum /
++     Whirlpool x2) despite onlyDirectRoutes=true, 41 and 70 accounts, 2 and 4 lookup tables. validateSwapInstruction rejects both. The
++     flip test remains a keyed build that decodes as a one-hop `route`.
++F-3  OPEN, arithmetic re-confirmed by three channels; the builder's harness (scripts/audit/f3-eleven-builds.mts) reproduces it correctly
++     (Codex: the harness's `remaining -= rent + actualFee` matches Engine.apply's net debit; the WSOL rent returns). SHARPENED: the proposed
++     forecast (size+2)*rent + (size+2)*maxFee = 25,671,360 covers eleven successes plus the burn in any order, but has NO margin at the fee
++     cap: after ten successes at 100,000 the balance is 4,278,560; an eleventh attempt that fails on chain charges 100,000 (runner.ts:71-77)
++     -> 4,178,560; the untouched burn sorts first (last_attempt_at NULLS FIRST, so any deferred purchase - exactly the F-3/F-6 state -
++     runs after it) and spends 100,000 -> 4,078,560; the retry needs 4,178,560: short by 100,000 with no route to replenish cost:<epoch>.
++     Even with zero failures the proposal has zero slack in that ordering (C' - 10*(rent+fee) - fee = 2*rent + fee exactly). At the real
++     5,000 fee the same forecast has margin for ~200 failures. Size the forecast to (size+2)*rent + (size+2+k)*maxFee with k = the retry
++     budget, and add the eleven-transaction + one-failure test the builder's own review asks for (FINANCIAL-INDEPENDENT-REVIEW.md:26). Under
++     the 10 % cost cap the minimum round rises from 236,320,800 to 256,713,600 lamports. Holder payouts draw on `reserve`, not cost:<epoch>;
++     four new recipient ATAs need 4*rent + fee = 8,257,120 above the reserve floor - the epoch forecast never covers that (by design; state
++     it in RUNBOOK). Evidence note: docs/evidence/r2/f3-eleven-builds-results.json was written by an earlier harness version (keys
++     `revision,...`; the shipped harness writes `auditedBaseRevision, executedRevision, workingTreeDirty, harnessSha256`); the newer run is
++     docs/evidence/audit-ready/harness-recheck.json (executedRevision b224b1c). The numbers are identical; the provenance labels are not.
++F-4, F-6, F-7 .. F-14 OPEN, unchanged code, as the register says.
++F-5  CHANGED SHAPE (EXECUTED on live data, 2026-09-23 21:35-21:50Z):
++     (a) REFUTED: "the predicate kind=payout & mode=keep & quoteMint=WSOL matches nothing". The worker reads /payouts?pool=<own pool>
++         (ingestion.ts:17). The live pool-filtered window of a real Keep-it pool (4isa4qXav8juubpkUduS93hbr72Pm76dLcYTWRCqnAJQ) has 100 rows,
++         ALL with a string signature, 37 of them kind=payout mode=keep quoteMint=WSOL with 9-decimal amounts that decimalUnits(String(amount),9)
++         accepts (e.g. 0.288964623, 0.204409781), one every ~15 min, window span 9.0 h. The global latest-100 window (the shape of the repo's
++         fixture) still has 3 signature-less rows and only 1 match - it was the wrong sample.
++     (b) CONFIRMED on live data: a pool's OWN window can contain a signature-less row. Pool 6sg6ubMzZKKD5WcpbYDoXTJzzHxSLJ8Huy1agt8cMV9S returns
++         2 rows, one `kind:sweep, mode:keep, amount:0.0072, note:"10 rounds under $1, dust booked to the platform treasury"` with NO
++         signature. ember.ts:15's schema requires `signature: z.string()` on every row, so EmberClient.payouts() throws ZodError for that pool
++         and ingestTreasury (ingestion.ts:17) throws before scanning any signature; main.ts's loop catch then skips planning, payouts,
++         operations and reconcile on every pass for as long as the row stays in the 100-row window (for a low-activity pool: indefinitely).
++         "10 rounds under $1" is a realistic state for a small pilot. Severity stays S1 (unrunnable as configured) on this mechanism.
++     (c) Unchanged: first-sight attribution against a bounded window (9 h for this pool at ~11 rows/h) with permanent quarantine (L-07b).
++     Fix: tolerant schema (drop rows without a signature instead of throwing), re-check quarantined receipts on later passes, and capture a
++     multi-day window of the configured pool before funding.
++
++3. NEW FINDINGS - PUBLIC PATH
++N-P1 S2 CODE (INTRODUCED; Claude agent A-4, Codex R3-01 and my reading agree)  market.tsx:81-90, 92-110, 120-121
++     The [data] effect replaces a <=100-row default page with the polled `data` and clears `busy` (line 86) WITHOUT bumping requestVersion, and
++     retryRequest's default branch (line 121: setPage(undefined); setLimit(20); retry()) does not bump it either. A "Show more" page request
++     in flight at that moment (page boundaries: the 4th click, then every 3rd) passes its version check on return: if its fetchedAt still
++     matches the captured pre-poll snapshot it overwrites the newer observation with the older merged list (200 rows of the old observation,
++     no notice); if it does not match, line 105 writes `snapshot: current` (the pre-poll observation) and the "catalogue changed" notice,
++     undoing the poll or the explicit refresh; the re-enabled button also allows a second concurrent page request. The round-2 code
++     invalidated pending page requests on every `data` change (the effect depended on data); this round removed that without a replacement
++     generation check. Trigger window: page-request latency (0.2-1.7 s measured) around each 45 s poll, or "Refresh list" within ~1 s of a
++     boundary click. Self-heals at the next poll. No test (ui-r2.browser.mjs completes expansion before polling). Fix: `++requestVersion.current`
++     whenever the [data] effect replaces the snapshot and in retryRequest's default branch; or compare next.discovery.fetchedAt with the latest
++     data before merging.
++N-P2 S2 MEASURED  token-image.ts:120 (`public, max-age=0, s-maxage=0, must-revalidate`) + catalogue.ts:42 cold bootstrap
++     Every logo view is now a function invocation (x-vercel-cache MISS on all requests), and a cold instance must download and normalize the
++     8 MB catalogue plus configs before it can authorize one logo. Measured first-visit logo latency 0.2-4.0 s (median ~2.6 s, 15 requests);
++     ten parallel logos across cold instances = up to ten catalogue downloads (~80 MB from Ember, which asks <= 1 request/s per endpoint,
++     INTEGRATIONS.md:35). Round 2 served logos from the CDN. The membership check makes the year-long immutable cache unnecessary as a
++     defence, but s-maxage=0 throws away the CDN entirely. Fix: a bounded `s-maxage` (minutes) with stale-while-revalidate - a removed logo
++     then lingers at most that long, which the 45 s membership refresh already tolerates - and keep max-age=0 for browsers if desired.
++N-P3 S3 CODE (INTRODUCED; Codex R3-02)  catalogue.ts:42, market-data.ts:123 (backoff 90 s after one failure), market.tsx:6-26
++     A logo request that lands on a cold instance whose catalogue read fails gets 503 after up to ~17 s; the avatar retries at 0.8 s and
++     3.0 s, both inside the instance's 90 s backoff (snapshot() null -> 503 immediately), then shows initials for the rest of the session
++     (LogoImage is keyed by mint+src, so polls do not remount it; only `online` or a reload resets it). Not reachable before this round.
++     Fix: reset the avatar on a successful parent poll, or lengthen the last retry beyond the backoff.
++N-P4 S3 CODE (Claude agent A-1; sharper than the S2-01 residual)  view-model.ts:94-105 + market-data.ts:123-133
++     Page merges require identical fetchedAt+evidenceHash; a single instance rotates both on the first read >= 45 s after the previous one,
++     and every warm instance has its own. So paging past 100 rows works only within one 45 s window on one instance; after that every "Show
++     more" returns "The catalogue changed while paging" and the only exit is "Refresh list" -> 20 rows. Ranks beyond ~300 are effectively
++     reachable only by search. The builder documents the cross-instance half; the same-instance rotation and the reset-only exit are new.
++N-P5 S3 CODE (INTRODUCED; Claude agent A-5)  market.tsx:47 (`requestError = matchingPage?.error || error`) + view-model.ts:79-82
++     After a failed parent poll, a searched or filtered page that succeeded seconds earlier is labelled "Stale observation" with a "Refresh
++     failed" notice for up to 45 s. Defensible (the source is failing) but the label is about the wrong request.
++N-P6 S3 EXECUTED by the Claude agent (locally)  token-image.ts:106  20 distinct logos in flight on one instance -> 16 x 200 + 4 x 503; the
++     browser's two retries usually recover; with s-maxage=0 the cap is now hit by visitors, not only by attackers.
++N-P7 S3 CODE  market.tsx:143  Eligibility tab + any query shows "No matching token." instead of "No eligible selection yet." (query is
++     tested before view).
++N-P8 S3 evidence (Codex R3-04)  docs/evidence/r2/independent-public-review.md:15-18 records SHA-256 of market.tsx, records.tsx and
++     ui-r2.browser.mjs that do not match the served files even after CRLF normalization (the review predates the integrator's last edits);
++     the "independent review" cannot be tied to the shipped bytes.
++Checked and clean this round (three channels): within() (no timer/listener leak, double-settle harmless, abort -> 503), pending/cache keying,
++membership re-check after I/O, HEAD/304 gating, fail-closed 503 on cold outage, fetchJson {value,bytes} and configs?.value, zod row schema on
++the live catalogue (0 invalid rows), duplicate grouping and tie-breaks, hosted validation and 404/405/400 paths, api() abort plumbing and
++timer cleanup, useLedger independent loads and abort guards, render-time shapes (rank null, image null, empty markets, unavailable), JSON
++import attributes present in all three production importers (the live function loads, so the ESM fix holds), no uncaught 500 path found.
++
++4. NEW FINDINGS - MONEY PATH (code unchanged since round 2; these are additions to the register, not regressions)
++N-M1 S2 CODE (Codex ledger R3-01; verified at control.ts:15-29, main.ts:29-36, solana.ts:99-104, runner.ts:27-45,85-96)
++     The transaction is BUILT under the approval loaded inside swapBuilder (main.ts:29: `const a=await loadApproval(c)` -> approvedPrograms,
++     policy.slippageBps, impactBps), then preflighted, then `authorizeSigning()` runs executionAuthorizer, which reads the approval file
++     afresh and only checks that it did not change DURING that call (control.ts:18,25-26). If the operator replaces the approval file after
++     the build starts and before the signer-boundary authorize begins (a window of one Jupiter build + preflight, seconds), the new file is
++     accepted (hash(B)===hash(B)), conditions re-check admission/identity/budget under B, but nothing rebinds the built transaction's slippage,
++     minimum output or program set to B, and the A-built bytes are signed (and later rebroadcast under the same gap). Loss bounded by the
++     limits A allowed; the documented guarantee ("even if the file changed mid-cycle", control.ts:24) is not met. backend-orchestration.test.ts:
++     97-100 covers a change inside one callback only. Fix: record hash(a) and the economic limits used at build in i.expected and require
++     equality (or a re-validation of the built message against the effective approval) at signing and at broadcast.
++N-M2 S2 CODE (Codex ledger R3-02; verified at ingestion.ts:33-45)  ingestTokenDeposits enumerates token accounts by CURRENT owner and, for
++     an account without a cursor, scans its ENTIRE signature history, booking every inbound transfer as a deposit and ignoring outbound
++     transfers, with no custody baseline. Anyone can move 100 units through their own token account, empty it, then SetAuthority(AccountOwner)
++     to the treasury (~0.002 SOL): the ledger gains a 100-unit deposit the treasury never held; reconcile then reports a deficit -> incident +
++     pause. Sharper than F-8 (no dust needed) and it defeats F-8's proposed "sum all treasury-owned accounts" fix (the account balance is 0).
++     Not creator revenue, not distributed, no loss - a cheap pause wedge and a false balance. Fix: baseline each account at first sight (current
++     balance) and account net movements after that; never credit pre-ownership history.
++N-M3 S3 CODE (Codex ledger R3-03; verified at queries.ts:41-43, migration 001:17, store.ts:7,15)  accountingHealth 'reconciled' requires
++     max(ledger_events.created_at) <= reconciliation.at, but created_at DEFAULT now() is the transaction START time in PostgreSQL. A transaction
++     that begins (BEGIN) and then waits on the control lock while reconcile runs commits its postings with a timestamp EARLIER than the
++     reconciliation observation, so Transparency reports 'reconciled' for up to 180 s despite a later committed movement. Reachable with one
++     worker plus the operator API (capital recognition). No loss. Fix: compare against a lock-ordered watermark (sequence / clock_timestamp()
++     taken under the lock), not created_at.
++N-M4 S3 docs  INTEGRATIONS.md:35 now says "The financial EmberClient discovery cache is 60 seconds"; live mode calls fundingRoute(ember,pool,
++     true) (main.ts:31,49) which reads /markets with ttl 0 (ingestion.ts:31), and even the unforced path uses 45 s. F-9 restated; the doc
++     edit made the sentence false rather than fixing the cache.
++N-M5 S2 CODE (Claude money agent M-2; verified at runner.ts:85-96, solana.ts:157-159, control.ts:15-29)  Resending ALREADY-SIGNED bytes is
++     gated on the full new-signing authorization - two approval loads, a forced 8 MB /markets read, the selection provider read for swaps
++     (which per F-12 misses the 45 s cache and walks the provider), admission - run twice (authorizeBroadcast at :87, then again inside
++     chain.broadcast at solana.ts:159), and any failure is swallowed: `try{await authorizeBroadcast();}catch{return;}` (:94). A transient
++     Ember/RPC/provider failure or a provider walk longer than the ~60-90 s blockhash window forfeits the resend; the signature then inspects
++     as `expired` -> needs_review (:79-83) and F-4's dead end follows. RUNBOOK.md:34 "While the blockhash is valid, retrying sends identical
++     stored bytes" is unconditional; the code is not. No loss; a realistic wedge. Fix: gate a resend of stored bytes on pause/blockhash/cluster
++     only (the economic checks were done at signing), and log the reason instead of returning silently.
++N-M6 S3 PLAUSIBLE (Claude money agent M-1, narrowed by my reading of runner.ts:99-113)  tick() holds one 120 s lease for every in-flight
++     intent and never renews it; Engine.apply re-fences (engine.ts:100). The agent's scenario (a slow resend authorization delaying a later
++     settlement in the same tick) is blocked in practice by the busy check (at most one non-review intent in flight) and by settlement
++     running in a later tick than the resend; what remains is RPC stalls inside inspect/apply themselves exceeding 120 s, after which a
++     SUCCESSFUL settlement is recorded as incident 'settlement evidence or ledger mismatch' + pause (runner.ts:69, store.ts:27) until an
++     operator resolves it; the next tick applies correctly, so the ledger self-heals but the pause does not. Fix: renew the lease before
++     apply or fence on a longer lease; label the incident by cause.
++Also noted (KNOWN or inert): /operator/capital accepts source==feeSender (F-14), so while F-5 stalls ingestion an operator can book a
++creator fee as capital -> reserve (agent M-6); OPERATIONS==TREASURY is not rejected and ingestTreasury does not exclude the worker's own
++signatures - inert while scheduleOperations is uncalled (agent M-7).
++
++5. DOCS VS CODE (this round's edits)
++- AUDIT-START-HERE.md / VERIFICATION.md / deployment.json claims (258 tests / 20 files, 8 assets, 10 logos, prelaunch/paused/no worker):
++  REPRODUCED here. docs/AUDIT-FINDINGS.json (56 entries: 37 inherited + 19 R2) matches the builder's own status labels; F-1..F-14 all 'open'.
++- docs/AUDIT-R2.md P-1..P-5 and residual descriptions: accurate, except that "retain their observation and expanded rows" is unconditional
++  while N-P1 is a counterexample, and P-2's "50,000-row bounds" is a schema ceiling (see P-2 above).
++- FINANCIAL-INDEPENDENT-REVIEW.md:24 "(size+2)*maxFee + (size+2)*rent suffices": holds for eleven successes + burn with zero failed attempts;
++  see F-3 for the one-failure counterexample at the cap. Its own line 26 already asks for the integrated regression that would catch it.
++- DATA-SCHEMA-MAPPING.md:47 overstates what the collector shares (P-2). INTEGRATIONS.md:35 cache sentence false for live (N-M4).
++- BACKEND-CORRECTIONS.md:59 "Reconciliation health only says reconciled for a fresh balanced observation with no later journal movement":
++  contradicted by N-M3.
++- RUNBOOK.md:34 "While the blockhash is valid, retrying sends identical stored bytes": conditional in code on a full re-authorization (N-M5).
++- independent-public-review.md hashes do not identify the shipped files (N-P8).
++
++6. TESTS
++258/258 green (43 s). This round's tests pin what they claim: P-2 bounds and warning, P-3 membership/304/HEAD/deadline/abort isolation, P-4
++parity, P-5 timeouts and the native ESM import. Nothing can fail on N-P1 (no test pages while a poll lands), N-P3 (the 91 s test re-requests
++by hand), N-M1 (the only approval-change test mutates inside one callback), N-M2 (ingestTokenDeposits has no history test), N-M3, or F-5(b)
++(the fixture is the global window, not a pool window with a sweep row). audit-s1.test.ts:79 still asserts the forecast formula's own output;
++the eleven-transaction + one-failure regression the builder's review requests does not exist. The Playwright browser suite is reviewer
++tooling and was not run here; the live browser session above covers its main assertions (140-row retention, explicit refresh, 320 px nav).
++Nothing can fail on N-M5 either (execution-regressions asserts the resend gating as desired behaviour; no transient-failure case).
++
++7. ORDER
++Public showcase: 1) N-P1 (two `++requestVersion.current` lines + a test that polls during a pending page request). 2) N-P2 (bounded s-maxage;
++measure logo latency again). 3) N-P3 avatar reset on a good poll. 4) Docs: DATA-SCHEMA-MAPPING.md:47, INTEGRATIONS.md:35, refresh the
++review hashes or drop them. Stop there unless the money path is pursued.
++Money path, only if pursued: 1) F-5 tolerant payouts schema + quarantine re-check (now proven necessary on live data). 2) F-2 keyed build
++acceptance test (still the gate on whether the adapter is rewritten). 3) F-3 forecast with a retry margin + the eleven-transaction/one-failure
++test. 4) N-M1 approval binding at build. 5) F-4 retire route together with N-M5 (resend on stored bytes gated on pause/blockhash only).
++6) F-6 WSOL handling + epoch gate. 7) N-M2 custody baseline (with F-8). 8) F-9 cache (make INTEGRATIONS.md true). 9) F-7, F-10-F-14,
++N-M3, N-M6. F-1 remains a service to build, not a bug; it gates everything above.
++
++8. EVIDENCE ON THIS MACHINE (all outside the repository)
++- Scratch clone with node_modules, dist/web, test/build logs and probes:
++  [reviewer-local-path]
++  (ember10\, tests-r3.json, typecheck.out, build.out, test.out, ov.json, basket.json, markets-live.json, payouts-live.json, payouts-pool.json,
++  pp-6sg6ub...json, jup-f2-recheck.mts, codex-payload\ with DIFF-code-4f9fba2..ad972e7.patch)
++- Codex packets (TASK.md, MANIFEST.md, OUT.md = report, RESULT.md = verification, ROLLOUT.jsonl):
++  [reviewer-local-path]   [reviewer-local-path]
++- Round-1 and round-2 reports: EMBER10-AUDIT-2026-09-23.md, EMBER10-AUDIT-R2-2026-09-23.md in this folder (the round-2 report is also in the
++  repository at docs/evidence/r2/supplied-audit.md).
++
++NOTES
++- Nothing touched the deployment or the repository; all execution was on a scratch clone; the scratch database is stopped.
++- Same-vendor caveat: the builder is Codex. Codex found N-M2 and N-M3 alone; N-M1 and the F-3 zero-slack ordering were found by Codex and
++  the Claude money agent independently; N-M5 and N-M6 by the Claude money agent; N-P1 by all three channels; N-P2 and F-2/F-5 are
++  executed, not read.
+diff --git a/packages/shared/token-image.ts b/packages/shared/token-image.ts
+index 55e5cf7..8ca0097 100644
+--- a/packages/shared/token-image.ts
++++ b/packages/shared/token-image.ts
+@@ -28,5 +28,5 @@ export function tokenImageUrl(value: string | null): string | null {
+   const source = tokenImageSource(value);
+   // Change the URL when authorization/cache policy changes, so existing browsers
+   // do not reuse the old year-long immutable proxy response.
+-  return source ? `/api/token-image?source=${encodeURIComponent(source.url)}&v=2` : null;
++  return source ? `/api/token-image?source=${encodeURIComponent(source.url)}&v=3` : null;
+ }
+diff --git a/scripts/audit-public.mjs b/scripts/audit-public.mjs
+index 68cd0e0..961d7fb 100644
+--- a/scripts/audit-public.mjs
++++ b/scripts/audit-public.mjs
+@@ -14,7 +14,7 @@ try{
+  const data=await(await get('/api/overview?limit=10')).json();assert.equal(data.project.dataMode,'real');assert.equal(data.project.mint,null);assert.equal(data.selection.commitmentsAllowed,false);assert.equal(data.markets.length,10);report.observedAt=data.discovery.fetchedAt;
+  const root=new URL('../dist/web/',import.meta.url),names=await readdir(new URL('assets/',root));
+  for(const path of ['index.html',...names.map(n=>'assets/'+n),'favicon.svg','ember10-share.png','ember10-share.svg']){const expected=await readFile(new URL(path,root)),actual=Buffer.from(await(await get('/'+path)).arrayBuffer());assert.equal(hash(actual),hash(expected),path);report.assets.push({path,bytes:actual.length,sha256:hash(actual)});}
+- for(const market of data.markets){const response=await get('/api/token-image?source='+encodeURIComponent(market.imageUrl)+'&v=2'),bytes=Buffer.from(await response.arrayBuffer()),meta=await sharp(bytes).metadata();assert.equal(response.headers.get('content-type'),'image/webp');assert.equal(meta.format,'webp');assert(meta.width>0&&meta.width<=160&&meta.height>0&&meta.height<=160);report.logos.push({mint:market.mint,bytes:bytes.length,width:meta.width,height:meta.height,sha256:hash(bytes)});}
++ for(const market of data.markets){const response=await get('/api/token-image?source='+encodeURIComponent(market.imageUrl)+'&v=3'),bytes=Buffer.from(await response.arrayBuffer()),meta=await sharp(bytes).metadata();assert.equal(response.headers.get('content-type'),'image/webp');assert.equal(meta.format,'webp');assert(meta.width>0&&meta.width<=160&&meta.height>0&&meta.height<=160);report.logos.push({mint:market.mint,bytes:bytes.length,width:meta.width,height:meta.height,sha256:hash(bytes)});}
+  report.passed=true;
+ }catch(error){report.passed=false;report.failure=String(error.stack);process.exitCode=1;}
+ await writeFile(output,JSON.stringify(report,null,2)+'\n');console.log(JSON.stringify({passed:report.passed,revision:report.revision,assets:report.assets.length,logos:report.logos.length,failure:report.failure}));
+diff --git a/scripts/audit/logo-latency.mjs b/scripts/audit/logo-latency.mjs
+new file mode 100644
+index 0000000..6fabea9
+--- /dev/null
++++ b/scripts/audit/logo-latency.mjs
+@@ -0,0 +1,12 @@
++﻿import {writeFile} from 'node:fs/promises';
++import assert from 'node:assert/strict';
++import {createHash} from 'node:crypto';
++const [origin,version,output]=process.argv.slice(2);
++const data=await(await fetch(origin+'/api/overview?limit=10')).json();
++const report={at:new Date().toISOString(),origin,version,passes:[]};
++for(let pass=0;pass<2;pass++){
++ const rows=await Promise.all(data.markets.map(async m=>{const start=performance.now();try{const r=await fetch(origin+'/api/token-image?source='+encodeURIComponent(m.imageUrl)+'&v='+version,{signal:AbortSignal.timeout(30000)});const body=Buffer.from(await r.arrayBuffer()),bytes=body.length,sha256=createHash('sha256').update(body).digest('hex');return {mint:m.mint,status:r.status,ms:Math.round(performance.now()-start),cache:r.headers.get('x-vercel-cache'),age:r.headers.get('age'),cacheControl:r.headers.get('cache-control'),bytes,sha256};}catch(e){return {mint:m.mint,error:String(e),ms:Math.round(performance.now()-start)}}}));
++ report.passes.push({pass,medianMs:rows.map(r=>r.ms).sort((a,b)=>a-b)[5],rows});
++}
++await writeFile(output,JSON.stringify(report,null,2)+'\n');console.log(JSON.stringify(report.passes.map(p=>({pass:p.pass,medianMs:p.medianMs,statuses:p.rows.map(r=>r.status),caches:p.rows.map(r=>r.cache)}))));
++assert(report.passes.every(p=>p.rows.every(r=>r.status===200)));
+diff --git a/scripts/audit/public-browser.mjs b/scripts/audit/public-browser.mjs
+index dad036b..6ace306 100644
+--- a/scripts/audit/public-browser.mjs
++++ b/scripts/audit/public-browser.mjs
+@@ -6,7 +6,7 @@ const { chromium } = await import(process.env.PLAYWRIGHT_MODULE ?? 'playwright')
+ const [base, output, stage = 'public'] = process.argv.slice(2);
+ if (!base || !output) throw Error('Supply origin and output directory');
+ await mkdir(output, { recursive: true });
+-const browser = await chromium.launch({ headless: true });
++const browser = await chromium.launch({ headless: true, channel: process.env.BROWSER_CHANNEL || undefined });
+ const result = { at: new Date().toISOString(), base, stage, checks: [], errors: [], passed: false };
+ try {
+   for (const width of [1440, 375, ...(stage === 'before' ? [] : [320])]) {
+diff --git a/tests/token-image.test.ts b/tests/token-image.test.ts
+index 2cbf2d2..9d9ee5a 100644
+--- a/tests/token-image.test.ts
++++ b/tests/token-image.test.ts
+@@ -23,7 +23,7 @@ const catalogue = (markets: unknown[], warming = false) => ({ markets, warming,
+ afterEach(() => { vi.unstubAllGlobals(); vi.useRealTimers(); vi.restoreAllMocks(); });
+ 
+ it('uses a same-origin URL for approved content-addressed images', () => {
+-  expect(tokenImageUrl(source)).toBe(`/api/token-image?source=${encodeURIComponent(source)}&v=2`);
++  expect(tokenImageUrl(source)).toBe(`/api/token-image?source=${encodeURIComponent(source)}&v=3`);
+   expect(tokenImageSource(source.replace('embercurve.fun', 'www.embercurve.fun'))?.url).toBe(source);
+   expect(tokenImageSource(`https://ipfs.io/ipfs/${cid}`)?.cid).toBe(cid);
+   expect(tokenImageSource(`https://gateway.pinata.cloud/ipfs/${cid}`)?.cid).toBe(cid);
+@@ -50,7 +50,7 @@ it('decodes and resizes real raster bytes, strips upstream headers and caches su
+   const result = await handler(request()), bytes = Buffer.from(await result.arrayBuffer());
+   expect(result.status).toBe(200); expect(result.headers.get('content-type')).toBe('image/webp');
+   expect(result.headers.get('set-cookie')).toBeNull(); expect(result.headers.get('x-content-type-options')).toBe('nosniff');
+-  expect(result.headers.get('cache-control')).toBe('public, max-age=0, s-maxage=0, must-revalidate');
++  expect(result.headers.get('cache-control')).toBe('public, max-age=0, s-maxage=300, stale-while-revalidate=60');
+   expect(await sharp(bytes).metadata()).toMatchObject({ width: 160, height: 80, format: 'webp' });
+   expect(bytes.length).toBeLessThan(png.length);
+   const options = fetcher.mock.calls[0] as unknown as [string, RequestInit];
+diff --git a/tests/ui-r2.browser.mjs b/tests/ui-r2.browser.mjs
+index ad39c7b..7f33dac 100644
+--- a/tests/ui-r2.browser.mjs
++++ b/tests/ui-r2.browser.mjs
+@@ -20,7 +20,7 @@ const source = { refreshSeconds: 45, read: async () => ({ status: sourceStatus,
+     markets, evidenceHash: `fixture-${poll}`, coverage: { status: 'unverified', rawRows: 250, uniqueMints: 250, rankedMints: 250, duplicateRows: 0, invalidRows: 0, warming: false, complete: true, note: 'Browser test fixture' },
+   },
+ } }) };
+-const browser = await chromium.launch({ headless: true });
++const browser = await chromium.launch({ headless: true, ...(process.env.BROWSER_CHANNEL ? { channel: process.env.BROWSER_CHANNEL } : {}) });
+ const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
+ const errors = [];
+ page.on('pageerror', error => errors.push(error.message));
+@@ -82,7 +82,7 @@ try {
+     sourceStatus = health;
+     await page.clock.fastForward(45_000);
+     await waitFor(() => poll > beforeHealthPoll, 'source health poll');
+-    await waitFor(() => page.getByText(/^Stale observation\. Last successful fetch:/).isVisible(), 'retained source failure warning');
++    await waitFor(() => page.getByText(/^The latest background source check is (stale|unavailable)/).isVisible(), 'retained source failure warning');
+     assert.equal(await rowCount(), 140, 'outage retains expanded rows');
+     assert.equal(await page.locator('.source-time').innerText(), originalTime, 'outage retains original provenance');
+   }
+diff --git a/tests/ui-r3.browser.mjs b/tests/ui-r3.browser.mjs
+new file mode 100644
+index 0000000..f16b41e
+--- /dev/null
++++ b/tests/ui-r3.browser.mjs
+@@ -0,0 +1,210 @@
++/** Controlled browser regressions against the actual app, using isolated API fixtures.
++ * PLAYWRIGHT_MODULE=<installed entry> node --import tsx tests/ui-r3.browser.mjs
++ * BASE_URL defaults to dev:web on port 5192. EVIDENCE_DIR optionally records results.
++ */
++import assert from 'node:assert/strict';
++import { mkdir, writeFile } from 'node:fs/promises';
++import sharp from 'sharp';
++import { overview } from '../apps/api/overview.ts';
++const { chromium } = await import(process.env.PLAYWRIGHT_MODULE ?? 'playwright');
++const base = process.env.BASE_URL ?? 'http://127.0.0.1:5192';
++const png = await sharp({ create: { width: 8, height: 8, channels: 4, background: '#ee713f' } }).png().toBuffer();
++const imageSources = ['a', 'b'].map(char => `https://embercurve.fun/img/b${char.repeat(52)}`);
++const browser = await chromium.launch({ headless: true, ...(process.env.BROWSER_CHANNEL ? { channel: process.env.BROWSER_CHANNEL } : {}) });
++const results = [];
++const wait = async (condition, description) => {
++  for (let i = 0; i < 150; i++) { if (await condition()) return; await new Promise(resolve => setTimeout(resolve, 20)); }
++  throw Error(`Timed out: ${description}`);
++};
++async function setup(hash = 'basket', logos = false) {
++  const state = { generation: 0, failParent: false, failSearch: false, failLogo: true, failedImageCalls: 0, errors: [] };
++  const page = await browser.newPage({ viewport: { width: 1440, height: logos ? 2800 : 1000 }, reducedMotion: 'reduce' });
++  page.setDefaultTimeout(5_000);
++  page.on('pageerror', error => state.errors.push(error.message));
++  await page.addInitScript(() => {
++    const nativeFetch = window.fetch.bind(window);
++    window.__heldPages = [];
++    window.__holdPages = false;
++    window.fetch = (input, options) => {
++      const url = new URL(typeof input === 'string' ? input : input.url, location.href);
++      if (!window.__holdPages || url.pathname !== '/api/overview' || Number(url.searchParams.get('offset')) <= 0) return nativeFetch(input, options);
++      // Deliberately ignore cancellation. The application generation guard must
++      // reject a late response even when the transport still completes its work.
++      const entry = { ready: false, released: false, aborted: false };
++      options?.signal?.addEventListener('abort', () => { entry.aborted = true; });
++      window.__heldPages.push(entry);
++      return new Promise((resolve, reject) => {
++        nativeFetch(input, { ...options, signal: undefined }).then(response => response.json()).then(body => {
++          entry.body = body; entry.ready = true;
++          entry.release = () => { entry.released = true; resolve(new Response(JSON.stringify(entry.body), { headers: { 'content-type': 'application/json' } })); };
++        }).catch(reject);
++      });
++    };
++  });
++  await page.route('**/api/**', async route => {
++    const url = new URL(route.request().url());
++    if (url.pathname === '/api/token-image') {
++      const failed = url.searchParams.get('source') === imageSources[0] && state.failLogo;
++      if (failed) state.failedImageCalls++;
++      return route.fulfill(failed ? { status: 503, json: { error: 'temporary_catalogue_outage' }, headers: { 'cache-control': 'no-store' } } : { contentType: 'image/png', body: png, headers: { 'cache-control': 'no-store' } });
++    }
++    if (url.pathname !== '/api/overview') return route.fulfill({ status: 404, json: { message: 'Unexpected fixture request' } });
++    const parent = !url.search;
++    if (parent) state.generation++;
++    if (parent && state.failParent || !parent && state.failSearch) return route.fulfill({ status: 503, json: { message: 'Deliberate isolated request failure' } });
++    const generation = state.generation;
++    const markets = Array.from({ length: 350 }, (_, i) => ({
++      mint: `fixture-mint-${String(i).padStart(4, '0')}`, name: `Alpha asset ${i}`, symbol: `TEST${i}`,
++      imageUrl: logos && i < 2 ? imageSources[i] : null, canonicalPool: null, config: null, quoteMint: null,
++      marketCapUsd: String(350000 - i - generation * 1000), priceUsd: null, volume24hUsd: null, change24hPct: null,
++      currency: 'USD', supplyBasis: 'undocumented', sourceTimestamp: null, createdAt: null, rank: i + 1,
++      eligibility: 'unknown', reasons: [], selected: false, weightBps: null, sourceUrl: 'https://embercurve.fun/markets',
++    }));
++    const source = { refreshSeconds: 45, read: async () => ({ status: 'ready', observed: {
++      fetchedAt: new Date(Date.UTC(2026, 8, 23, 12, generation)).toISOString(), normalized: { markets, evidenceHash: `fixture-${generation}`, coverage: { status: 'unverified', rawRows: 350, uniqueMints: 350, rankedMints: 350, duplicateRows: 0, invalidRows: 0, warming: false, complete: false, note: 'Isolated browser fixture' } },
++    } }) };
++    return route.fulfill({ json: await overview(source, { query: url.searchParams.get('q') ?? '', view: url.searchParams.get('view') ?? 'all', offset: Number(url.searchParams.get('offset') ?? 0), limit: 100 }) });
++  });
++  await page.clock.install();
++  await page.goto(`${base}/#${hash}`);
++  await wait(() => state.generation > 0, 'initial overview');
++  const rows = () => page.locator('.market-table tbody tr').count();
++  const more = async expected => { await page.getByRole('button', { name: 'Show more markets' }).click(); if (expected != null) await wait(async () => await rows() === expected, `${expected} rows`); };
++  const poll = async () => { const before = state.generation; await page.clock.fastForward(45_000); await wait(() => state.generation > before, 'parent poll'); };
++  const release = async index => { await page.evaluate(index => window.__heldPages[index].release(), index); await page.waitForTimeout(50); };
++  return { page, state, rows, more, poll, release };
++}
++try {
++  // Matching late page after a replacing parent poll.
++  {
++    const { page, state, rows, more, release } = await setup();
++    await wait(async () => await rows() === 20, 'first page');
++    for (const count of [50, 80, 100]) await more(count);
++    await page.clock.fastForward(44_000);
++    await page.evaluate(() => { window.__holdPages = true; });
++    await more();
++    await wait(() => page.evaluate(() => window.__heldPages[0]?.ready), 'deferred matching page');
++    const oldTime = await page.locator('.source-time').innerText();
++    const oldGeneration = state.generation;
++    await page.clock.fastForward(2_000);
++    await wait(() => state.generation > oldGeneration, 'replacement poll');
++    await wait(async () => (await page.locator('.source-time').innerText()) !== oldTime, 'new observation selected');
++    const newTime = await page.locator('.source-time').innerText();
++    await release(0);
++    assert.equal(await rows(), 100);
++    assert.equal(await page.locator('.source-time').innerText(), newTime);
++    assert.equal(await page.getByText(/The catalogue changed while paging/).count(), 0);
++    assert.equal(await page.evaluate(() => window.__heldPages[0].aborted), true);
++    assert.deepEqual(state.errors, []);
++    results.push('Late matching page cannot overwrite a replacing parent poll, even when fetch ignores abort');
++    await page.close();
++  }
++  // Nonmatching late page after explicit Refresh list; refresh must also prevent a duplicate in-flight page.
++  {
++    const { page, state, rows, more, poll, release } = await setup();
++    await wait(async () => await rows() === 20, 'first page');
++    for (const count of [50, 80, 100, 140]) await more(count);
++    await poll();
++    await wait(() => page.getByRole('button', { name: 'Refresh list' }).isVisible(), 'retained list notice');
++    for (const count of [170, 200]) await more(count);
++    await page.evaluate(() => { window.__holdPages = true; });
++    await more();
++    await wait(() => page.evaluate(() => window.__heldPages[0]?.ready), 'deferred changed page');
++    assert.equal(await page.getByRole('button', { name: 'Show more markets' }).isDisabled(), true);
++    await page.getByRole('button', { name: 'Refresh list' }).click();
++    await wait(async () => await rows() === 20 && !(await page.getByRole('button', { name: 'Show more markets' }).isDisabled()), 'explicit refresh completion');
++    const freshTime = await page.locator('.source-time').innerText();
++    await release(0);
++    assert.equal(await rows(), 20);
++    assert.equal(await page.locator('.source-time').innerText(), freshTime);
++    assert.equal(await page.getByText(/The catalogue changed while paging/).count(), 0);
++    assert.equal(await page.evaluate(() => window.__heldPages.length), 1);
++    assert.equal(await page.evaluate(() => window.__heldPages[0].aborted), true);
++    assert.deepEqual(state.errors, []);
++    results.push('Default Refresh list cancels/invalidate pending paging and late mismatch cannot undo it');
++    await page.close();
++  }
++  {
++    const { page, state, rows, poll } = await setup();
++    await wait(async () => await rows() === 20, 'first page');
++    await page.getByPlaceholder('Find a token or mint').fill('a');
++    await page.clock.fastForward(350);
++    await wait(() => page.locator('.market-counts').getByText(/search matches/).isVisible(), 'successful search');
++    state.failParent = true;
++    await poll();
++    await wait(() => page.getByText(/The latest background source check failed/).isVisible(), 'separate background warning');
++    await page.getByPlaceholder('Find a token or mint').fill('asset');
++    await page.clock.fastForward(350);
++    await wait(async () => !(await page.locator('#market-content').getAttribute('aria-busy') === 'true'), 'fresh query after parent failure');
++    assert.equal(await rows(), 20);
++    assert.match(await page.locator('.market-source').innerText(), /Catalogue observation/);
++    assert.equal(await page.getByText(/This list request failed/).count(), 0);
++    assert.equal(await page.getByText(/^Stale observation\. Last successful/).count(), 0);
++    state.failParent = false;
++    await poll();
++    await wait(() => page.getByRole('button', { name: 'Refresh list' }).isVisible(), 'source recovers independently');
++    state.failSearch = true;
++    await page.getByRole('button', { name: 'Refresh list' }).click();
++    await wait(() => page.getByText(/This list request failed/).isVisible(), 'separate list-request failure');
++    assert.equal(await page.getByText(/The latest background source check failed/).count(), 0);
++    state.failSearch = false;
++    await page.locator('.market-panel').getByRole('button', { name: 'Retry', exact: true }).click();
++    await wait(async () => await page.getByText(/This list request failed/).count() === 0, 'list recovery');
++    await page.getByRole('tab', { name: /Eligibility/ }).click();
++    await page.clock.fastForward(350);
++    await wait(() => page.getByRole('heading', { name: 'No eligible selection yet.' }).isVisible(), 'eligibility empty state precedes query');
++    assert.equal(await page.getByRole('heading', { name: 'No matching token.' }).count(), 0);
++    assert.match(await page.locator('.market-panel .empty').innerText(), /No candidates have all required checks verified/);
++    assert.deepEqual(state.errors, []);
++    results.push('Successful query stays correctly labelled despite parent failure; eligibility-empty policy takes priority over query');
++    await page.close();
++  }
++  {
++    const { page, state, poll } = await setup('overview', true);
++    const failedHero = page.locator('.orbit-token').filter({ has: page.locator('.orbit-token-text strong', { hasText: /^TEST0$/ }) }).first();
++    const healthyHero = page.locator('.orbit-token').filter({ has: page.locator('.orbit-token-text strong', { hasText: /^TEST1$/ }) }).first();
++    await wait(() => healthyHero.locator('img').evaluate(img => img.complete && img.naturalWidth > 0), 'healthy image');
++    const healthyNode = await healthyHero.locator('img').elementHandle();
++    const exhaust = async () => {
++      await wait(() => state.failedImageCalls > 0, 'real failed image request');
++      for (let attempt = 0; attempt < 4; attempt++) { await page.clock.fastForward(3_000); await page.waitForTimeout(60); }
++      const calls = state.failedImageCalls;
++      await page.clock.fastForward(3_000); await page.waitForTimeout(60);
++      assert.equal(state.failedImageCalls, calls, 'bounded automatic retries must be exhausted before testing poll recovery');
++    };
++    await exhaust();
++    assert.equal(await failedHero.locator('img').count(), 0);
++    assert.equal(await page.locator('.ten-row').first().locator('img').count(), 0);
++    await failedHero.click();
++    await exhaust();
++    assert.equal(await page.locator('dialog .token-icon img').count(), 0);
++    state.failLogo = false;
++    await poll();
++    for (const locator of [failedHero.locator('img'), page.locator('.ten-row').first().locator('img'), page.locator('dialog .token-icon img')]) {
++      await wait(async () => await locator.count() === 1 && await locator.evaluate(img => img.complete && img.naturalWidth > 0), 'failed avatar recovers after a successful observation');
++    }
++    assert.equal(await healthyNode.evaluate(node => node.isConnected), true, 'healthy image must not be remounted');
++    assert.deepEqual(state.errors, []);
++    results.push('Exhausted real image failures recover in hero, homepage list and detail after good poll; healthy image DOM persists');
++    await page.close();
++  }
++  {
++    // Fresh browser context: previously decoded logo bytes must not mask an error.
++    const { page, state, poll } = await setup('basket', true);
++    await wait(() => state.failedImageCalls > 0, 'real failed market-table image');
++    for (let attempt = 0; attempt < 4; attempt++) { await page.clock.fastForward(3_000); await page.waitForTimeout(60); }
++    const calls = state.failedImageCalls;
++    await page.clock.fastForward(3_000); await page.waitForTimeout(60);
++    assert.equal(state.failedImageCalls, calls, 'market-table retries have exhausted');
++    assert.equal(await page.locator('.market-table tbody tr').first().locator('img').count(), 0);
++    state.failLogo = false;
++    await poll();
++    await wait(() => page.locator('.market-table tbody tr').first().locator('img').evaluate(img => img.complete && img.naturalWidth > 0), 'table avatar recovery');
++    assert.deepEqual(state.errors, []);
++    results.push('Exhausted real market-table image failure recovers after a successful observation');
++    await page.close();
++  }
++  const evidence = { passed: true, results, scope: 'Application UI with browser-only controlled API/image fixtures, deferred fetches deliberately ignoring abort; no live financial data or execution.' };
++  if (process.env.EVIDENCE_DIR) { await mkdir(process.env.EVIDENCE_DIR, { recursive: true }); await writeFile(`${process.env.EVIDENCE_DIR}/frontend-r3-browser.json`, JSON.stringify(evidence, null, 2)); }
++  console.log(JSON.stringify(evidence, null, 2));
++} finally { await browser.close(); }

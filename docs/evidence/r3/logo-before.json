@@ -1,0 +1,200 @@
+{
+  "at": "2026-09-24T10:46:57.774Z",
+  "origin": "https://ember5-pilot.vercel.app",
+  "version": "2",
+  "passes": [
+    {
+      "pass": 0,
+      "medianMs": 663,
+      "rows": [
+        {
+          "mint": "5dvXTZ5qwgafnHtwu3Ls3QrWx1U4LQsFeCuJgkk4QEC6",
+          "status": 200,
+          "ms": 188,
+          "cache": "MISS",
+          "age": "0",
+          "cacheControl": "public, max-age=0, must-revalidate",
+          "bytes": 1318
+        },
+        {
+          "mint": "9oXA1VWKNiYDYa6VKHBFFBBvZdvuhw1b2eD5Aka7YrVt",
+          "status": 200,
+          "ms": 256,
+          "cache": "MISS",
+          "age": "0",
+          "cacheControl": "public, max-age=0, must-revalidate",
+          "bytes": 7278
+        },
+        {
+          "mint": "26d5rwV5emnGJSzr5CKpgq66LmYqqddk33ybUMioYLTU",
+          "status": 200,
+          "ms": 242,
+          "cache": "MISS",
+          "age": "0",
+          "cacheControl": "public, max-age=0, must-revalidate",
+          "bytes": 3458
+        },
+        {
+          "mint": "AbkkkbRU8SZ69sZWsykkeutL1sf1Ds1fiu1yDQ8mMVo7",
+          "status": 200,
+          "ms": 1105,
+          "cache": "MISS",
+          "age": "0",
+          "cacheControl": "public, max-age=0, must-revalidate",
+          "bytes": 9046
+        },
+        {
+          "mint": "8iYPW781jBDu8zkC6PFY8WpvtbHxSVMgBX8aPnNmRY3z",
+          "status": 200,
+          "ms": 702,
+          "cache": "MISS",
+          "age": "0",
+          "cacheControl": "public, max-age=0, must-revalidate",
+          "bytes": 1606
+        },
+        {
+          "mint": "4MjrGwD4SpjVN6JPZJfmHCUmnJynoTz56tbzCX71SxE9",
+          "status": 200,
+          "ms": 656,
+          "cache": "MISS",
+          "age": "0",
+          "cacheControl": "public, max-age=0, must-revalidate",
+          "bytes": 5700
+        },
+        {
+          "mint": "26Kg27kpPHBN2MHqgrsJh3LzMZboxZyUpbeVonmpZwVm",
+          "status": 200,
+          "ms": 989,
+          "cache": "MISS",
+          "age": "0",
+          "cacheControl": "public, max-age=0, must-revalidate",
+          "bytes": 7790
+        },
+        {
+          "mint": "9LYpEqkpgCoZ99NsrPuoobDZsShteajdqtCtpKscStq7",
+          "status": 200,
+          "ms": 521,
+          "cache": "MISS",
+          "age": "0",
+          "cacheControl": "public, max-age=0, must-revalidate",
+          "bytes": 2266
+        },
+        {
+          "mint": "2Lt9MAeEdVyVCviZnEsDj9H3qn8KGjExaGud6yHT5ekj",
+          "status": 200,
+          "ms": 1074,
+          "cache": "MISS",
+          "age": "0",
+          "cacheControl": "public, max-age=0, must-revalidate",
+          "bytes": 3336
+        },
+        {
+          "mint": "GHcha5wmPV629D2aUnXsAz8x5EgEXTwPzC2YvuFJua5u",
+          "status": 200,
+          "ms": 670,
+          "cache": "MISS",
+          "age": "0",
+          "cacheControl": "public, max-age=0, must-revalidate",
+          "bytes": 3478
+        }
+      ]
+    },
+    {
+      "pass": 1,
+      "medianMs": 429,
+      "rows": [
+        {
+          "mint": "5dvXTZ5qwgafnHtwu3Ls3QrWx1U4LQsFeCuJgkk4QEC6",
+          "status": 200,
+          "ms": 483,
+          "cache": "MISS",
+          "age": "0",
+          "cacheControl": "public, max-age=0, must-revalidate",
+          "bytes": 1318
+        },
+        {
+          "mint": "9oXA1VWKNiYDYa6VKHBFFBBvZdvuhw1b2eD5Aka7YrVt",
+          "status": 200,
+          "ms": 337,
+          "cache": "MISS",
+          "age": "0",
+          "cacheControl": "public, max-age=0, must-revalidate",
+          "bytes": 7278
+        },
+        {
+          "mint": "26d5rwV5emnGJSzr5CKpgq66LmYqqddk33ybUMioYLTU",
+          "status": 200,
+          "ms": 178,
+          "cache": "MISS",
+          "age": "0",
+          "cacheControl": "public, max-age=0, must-revalidate",
+          "bytes": 3458
+        },
+        {
+          "mint": "AbkkkbRU8SZ69sZWsykkeutL1sf1Ds1fiu1yDQ8mMVo7",
+          "status": 200,
+          "ms": 159,
+          "cache": "MISS",
+          "age": "0",
+          "cacheControl": "public, max-age=0, must-revalidate",
+          "bytes": 9046
+        },
+        {
+          "mint": "8iYPW781jBDu8zkC6PFY8WpvtbHxSVMgBX8aPnNmRY3z",
+          "status": 200,
+          "ms": 754,
+          "cache": "MISS",
+          "age": "0",
+          "cacheControl": "public, max-age=0, must-revalidate",
+          "bytes": 1606
+        },
+        {
+          "mint": "4MjrGwD4SpjVN6JPZJfmHCUmnJynoTz56tbzCX71SxE9",
+          "status": 200,
+          "ms": 731,
+          "cache": "MISS",
+          "age": "0",
+          "cacheControl": "public, max-age=0, must-revalidate",
+          "bytes": 5700
+        },
+        {
+          "mint": "26Kg27kpPHBN2MHqgrsJh3LzMZboxZyUpbeVonmpZwVm",
+          "status": 200,
+          "ms": 1021,
+          "cache": "MISS",
+          "age": "0",
+          "cacheControl": "public, max-age=0, must-revalidate",
+          "bytes": 7790
+        },
+        {
+          "mint": "9LYpEqkpgCoZ99NsrPuoobDZsShteajdqtCtpKscStq7",
+          "status": 200,
+          "ms": 200,
+          "cache": "MISS",
+          "age": "0",
+          "cacheControl": "public, max-age=0, must-revalidate",
+          "bytes": 2266
+        },
+        {
+          "mint": "2Lt9MAeEdVyVCviZnEsDj9H3qn8KGjExaGud6yHT5ekj",
+          "status": 200,
+          "ms": 734,
+          "cache": "MISS",
+          "age": "0",
+          "cacheControl": "public, max-age=0, must-revalidate",
+          "bytes": 3336
+        },
+        {
+          "mint": "GHcha5wmPV629D2aUnXsAz8x5EgEXTwPzC2YvuFJua5u",
+          "status": 200,
+          "ms": 375,
+          "cache": "MISS",
+          "age": "0",
+          "cacheControl": "public, max-age=0, must-revalidate",
+          "bytes": 3478
+        }
+      ]
+    }
+  ],
+  "summaryDerivation": "Arithmetic median of the two middle sorted durations for10 samples; recalculated from unchanged captured rows."
+}

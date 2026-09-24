@@ -1,0 +1,109 @@
+{
+  "at": "2026-09-24T10:55:09.592Z",
+  "reviewedRevision": "e55be0f8f26e637ef5771d18df42604183a5c5f9",
+  "sourceTree": "95fd7dc73bb99f16376a973be57c45643f925949",
+  "hashMethod": "SHA-256 over exact git show REV:path blob bytes; no working-tree newline conversion",
+  "runtimeScope": "Read-only review of public relay/frontend behavior; no financial changes reviewed or approved",
+  "laterDocumentationCommits": "Any later documentation/evidence-only package commit is separate from this runtime review; verify unchanged reviewed blobs against this manifest.",
+  "reviewedFilesUnmodified": true,
+  "files": [
+    {
+      "path": "apps/api/token-image.ts",
+      "gitBlob": "4c765c0c539b95a096d22f1f9960b251cc1169c2",
+      "bytes": 7993,
+      "sha256": "7d4529acd612ba72168a7a33816edf043fcf510905fffee2ba79aafc13003f26"
+    },
+    {
+      "path": "apps/api/catalogue.ts",
+      "gitBlob": "4b7ed174c57415ba088dcc168416d6d281ef3bf4",
+      "bytes": 2361,
+      "sha256": "39cdf0b04e695a98b0a0c8112851a126fb46f950fd5d83331b57f1ea0b87e8ec"
+    },
+    {
+      "path": "packages/shared/token-image.ts",
+      "gitBlob": "8ca00974395d2c41cc3019f90f59236fb0d373cd",
+      "bytes": 1636,
+      "sha256": "bcce7379808598af608da47fec4d8c6ca6eadb5133c05040dd8556fc34199251"
+    },
+    {
+      "path": "apps/web/market.tsx",
+      "gitBlob": "b4b334a9a1888d56b10e10eb00bf24d79983ae37",
+      "bytes": 23143,
+      "sha256": "02e41b5f68cb19631c47c13b97363c053f620b6deba4425f496fa1f160ed217e"
+    },
+    {
+      "path": "apps/web/src.tsx",
+      "gitBlob": "a675fc97e08ae529349de16772612a28ccc6399a",
+      "bytes": 8217,
+      "sha256": "7b10ad9e2a6690910cceb87dfdf5c34ab7b420749246f0c96fe04719a58f7377"
+    },
+    {
+      "path": "apps/web/records.tsx",
+      "gitBlob": "5152661f6acb46d860131a235221537f258c9f13",
+      "bytes": 23114,
+      "sha256": "46d73541489469e1a2c379152c5acdb19cfcc4c391382b92659570bfb6fa6ea8"
+    },
+    {
+      "path": "apps/web/view-model.ts",
+      "gitBlob": "e357af4f3dca07fac51de79b6d740df60b5a73ae",
+      "bytes": 9401,
+      "sha256": "12cd95dad4132fa916b6688166df4e898ca91ce449452b7f39b034cbc58cdee1"
+    },
+    {
+      "path": "tests/token-image.test.ts",
+      "gitBlob": "9d9ee5a1c4519067e9b2845346df46034d58ae9c",
+      "bytes": 15458,
+      "sha256": "800ccbeeaa1e34783670a061f2ffe2071e7dbb6e45fdf5c69dd9b0d863cdfbcd"
+    },
+    {
+      "path": "tests/ui-r2.browser.mjs",
+      "gitBlob": "7f33daccf42b21630ee3585f3561df5542c65633",
+      "bytes": 9013,
+      "sha256": "d352ab5c1809a5c104005001874ec0ba391f64b1cd1594917eb9bbd409d2ac98"
+    },
+    {
+      "path": "tests/ui-r3.browser.mjs",
+      "gitBlob": "f16b41e1987acecaa5f2b86bab17363937a626cb",
+      "bytes": 14758,
+      "sha256": "6a06a5a68d0b7af412257d2b3e4277a7372417fb0d13c594dc30b8db9a8c136d"
+    },
+    {
+      "path": "scripts/audit/public-browser.mjs",
+      "gitBlob": "6ace306e1b477d3b793ff8444418f13126cdc3a3",
+      "bytes": 2834,
+      "sha256": "603d83f4a18e76112e36243f93c0006071dfd1fece0f7307c1a691fda6b40bde"
+    }
+  ],
+  "captures": [
+    {
+      "path": "independent-browser/frontend-r3-browser.json",
+      "bytes": 729,
+      "sha256": "6aa6b7a2d197c06c546affa19662883322ab5497d2e082ead04cfde1e8942ff2"
+    },
+    {
+      "path": "independent-browser/local-1440.png",
+      "bytes": 379859,
+      "sha256": "ce39589447e9a055d1206ed742597bfaf352408f36b73d5b099cc952a84d5f82"
+    },
+    {
+      "path": "independent-browser/local-320.png",
+      "bytes": 232777,
+      "sha256": "9af7af659e87ae00951fc0b1cea4092ea36ee8a4f684bcb89b15323fb67ca8b1"
+    },
+    {
+      "path": "independent-browser/local-375-detail.png",
+      "bytes": 76659,
+      "sha256": "50097a6af0a98b249128a03286b7c4039de50b75d05ee038e80507892bf02dc7"
+    },
+    {
+      "path": "independent-browser/local-375.png",
+      "bytes": 255704,
+      "sha256": "10e88092d9226383fa0f568f33323553cec0dd8f4aa016563917509dd87f3657"
+    },
+    {
+      "path": "independent-browser/local-browser.json",
+      "bytes": 571,
+      "sha256": "70c69d0f891a18f7750c0a08865dfaf5c62d0417c64054d4ef94483f78acd002"
+    }
+  ]
+}

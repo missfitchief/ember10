@@ -1,0 +1,36 @@
+{
+  "at": "2026-09-24T10:56:45.481Z",
+  "applicationRevision": "e55be0f8f26e637ef5771d18df42604183a5c5f9",
+  "node": "v24.17.0",
+  "npm": "11.13.0",
+  "typecheck": "passed",
+  "productionBuild": "passed",
+  "tests": {
+    "passed": 258,
+    "failed": 0,
+    "files": 20,
+    "startTime": 1790247172449
+  },
+  "browser": {
+    "runner": "Playwright1.61.1 with installed Chrome",
+    "base": "http://127.0.0.1:5196",
+    "r3Scenarios": 5,
+    "r2Assertions": 11,
+    "liveWidths": [
+      1440,
+      375,
+      320
+    ],
+    "pageErrors": 0,
+    "physicalDevice": false
+  },
+  "financialCodeChanged": false,
+  "financialExecutionEnabled": false,
+  "dependencyAudit": {
+    "high": 5,
+    "critical": 0,
+    "moderate": 0,
+    "clean": false
+  },
+  "externalReaudit": "pending"
+}
